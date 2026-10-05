@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <!-- Common -->
+    <string name="back">वापस</string>
+    <string name="close_selection">चयन बंद करें</string>
+    <string name="selected_count">चयनित (%1$d)</string>
+    <string name="all">सभी</string>
+    <string name="all_selected">सभी चयनित</string>
+    <string name="settings">सेटिंग्स</string>
+    <string name="delete">हटाएं</string>
+    <string name="loading">लोड हो रहा है...</string>
+    <string name="cancel">रद्द करें</string>
+    <string name="confirm">पुष्टि करें</string>
+
+    <!-- Bottom Navigation -->
+    <string name="apps_lock">ऐप लॉक</string>
+    <string name="vault">वॉल्ट</string>
+
+    <!-- Intruder -->
+    <string name="intruder">घुसपैठिया</string>
+    <string name="intruder_settings">घुसपैठिया सेटिंग्स</string>
+    <string name="intruder_camera">घुसपैठिया कैमरा</string>
+    <string name="capture_wrong_password">गलत पासवर्ड दर्ज करने वाले व्यक्ति की\nफोटो कैप्चर करें</string>
+    <string name="no_intruder_found">कोई घुसपैठिया नहीं मिला</string>
+    <string name="today">आज</string>
+    <string name="selected">चयनित</string>
+    <string name="intruder_photo">घुसपैठिया की फोटो</string>
+    <string name="intruder_photo_preview">घुसपैठिया की फोटो का पूर्वावलोकन</string>
+
+    <!-- Observation Time / Intruder Attempts -->
+    <string name="set_observation_time">प्रयासों की संख्या सेट करें</string>
+    <string name="set_observation_attempts">प्रयासों की संख्या सेट करें</string>
+    <string name="failed_to_unblock">अनलॉक करने में विफल होने की संख्या</string>
+    <string name="take_intruder_photo">गलत पासवर्ड प्रयासों के बाद घुसपैठिया की फोटो लें</string>
+    <string name="immediately">तुरंत</string>
+    <string name="never">कभी नहीं</string>
+    <string name="three_attempts">3 प्रयास</string>
+    <string name="five_attempts">5 प्रयास</string>
+    <string name="ten_attempts">10 प्रयास</string>
+
+    <!-- Camera Permission -->
+    <string name="camera_permission">कैमरा अनुमति</string>
+    <string name="camera_permission_denied">कैमरा अनुमति अस्वीकार कर दी गई है। घुसपैठिया कैमरा का उपयोग करने के लिए ऐप सेटिंग्स से कैमरा अनुमति दें।</string>
+
+    <!-- Delay to Re-Lock -->
+    <string name="five_seconds">5 सेकंड</string>
+    <string name="ten_seconds">10 सेकंड</string>
+    <string name="fifteen_seconds">15 सेकंड</string>
+    <string name="thirty_seconds">30 सेकंड</string>
+    <string name="one_minute">1 मिनट</string>
+    <string name="two_minutes">2 मिनट</string>
+    <string name="five_minutes">5 मिनट</string>
+
+    <!-- Languages -->
+    <string name="languages">भाषाएं</string>
+    <string name="select">चुनें</string>
+
+    <!-- Permissions -->
+    <string name="permissions_required">अनुमतियां आवश्यक हैं</string>
+    <string name="show_over_other_apps">अन्य ऐप्स के ऊपर दिखाएं</string>
+    <string name="allow_lock_screen">लॉक स्क्रीन को\nअन्य ऐप्स के ऊपर दिखाने की अनुमति दें</string>
+    <string name="detect_launched_app">चालू किए गए ऐप का पता लगाएं</string>
+    <string name="detect_launched_description">किस ऐप को खोला गया है यह पता लगाने के लिए\nएक्सेस की अनुमति दें...</string>
+    <string name="auto_start">ऑटो स्टार्ट</string>
+    <string name="keep_applock_running">AppLock Pro को हमेशा चालू रखें</string>
+    <string name="allow">अनुमति दें</string>
+    <string name="permissions_work_properly">ऐप को सही और प्रभावी ढंग से काम करने के लिए\nअनुमतियां आवश्यक हैं</string>
+
+    <!-- Vault -->
+    <string name="photos">फोटो</string>
+    <string name="videos">वीडियो</string>
+    <string name="add">जोड़ें</string>
+    <string name="add_image">फोटो जोड़ें</string>
+    <string name="add_video">वीडियो जोड़ें</string>
+    <string name="click_to_add_image">फोटो जोड़ने के लिए "+" दबाएं</string>
+    <string name="click_to_add_video">वीडियो जोड़ने के लिए "+" दबाएं</string>
+    <string name="hidden">छिपी हुई</string>
+    <string name="albums">एल्बम</string>
+    <string name="select_all">सभी चुनें</string>
+    <string name="hide">छिपाएं</string>
+    <string name="unhide">दिखाएं</string>
+    <string name="permission_required">अनुमति आवश्यक है</string>
+    <string name="photo_permission_required">आपकी फ़ोटो तक पहुँचने के लिए फ़ोटो की अनुमति आवश्यक है। कृपया ऐप की सेटिंग से अनुमति दें।</string>
+    <string name="video_permission_required">आपके वीडियो तक पहुँचने के लिए वीडियो की अनुमति आवश्यक है। कृपया ऐप की सेटिंग से अनुमति दें।</string>
+    <!-- Hide / Unhide -->
+    <string name="hide_video">वीडियो छिपाएं</string>
+    <string name="hide_image">फोटो छिपाएं</string>
+    <string name="hide_videos_question">क्या आप वाकई इन वीडियो को छिपाना चाहते हैं?</string>
+    <string name="hide_images_question">क्या आप वाकई इन फोटो को छिपाना चाहते हैं?</string>
+    <string name="unhide_video">वीडियो दिखाएं</string>
+    <string name="unhide_image">फोटो दिखाएं</string>
+    <string name="unhide_video_question">क्या आप इस वीडियो को दिखाना चाहते हैं?</string>
+    <string name="unhide_image_question">क्या आप इस फोटो को दिखाना चाहते हैं?</string>
+
+    <!-- Pin Create Screen -->
+    <string name="four_digit_pin">4 अंकों का पिन</string>
+    <string name="six_digit_pin">6 अंकों का पिन</string>
+    <string name="pattern">पैटर्न</string>
+    <string name="create_pin">%1$d अंकों का पिन बनाएं</string>
+    <string name="reset">रीसेट</string>
+    <string name="continue_text">जारी रखें</string>
+    <string name="create_pattern">पैटर्न बनाएं</string>
+    <string name="connect_four_dots">कम से कम 4 बिंदुओं को जोड़ें</string>
+
+    <!-- Pin Confirm -->
+    <string name="confirm_pattern">पैटर्न की पुष्टि करें</string>
+    <string name="confirm_passcode">पासकोड की पुष्टि करें</string>
+    <string name="draw_pattern_again">पैटर्न फिर से बनाएं</string>
+    <string name="confirm_pin">%1$d अंकों के पिन की पुष्टि करें</string>
+    <string name="password_not_match">पासवर्ड मेल नहीं खाता। कृपया फिर से प्रयास करें</string>
+    <string name="enter_correct_password">अपना सही पासवर्ड दर्ज करें</string>
+
+    <!-- Permission -->
+    <string name="allowed">अनुमति दी गई</string>
+
+    <!-- Security Questions -->
+    <string name="security_questions">सुरक्षा प्रश्न</string>
+    <string name="security_question_description">अपना पासकोड भूल जाने पर उसे पुनर्प्राप्त करने के लिए\nएक कीवर्ड सेट करें।</string>
+    <string name="select_security_questions">सुरक्षा प्रश्न चुनें</string>
+    <string name="select_security_question">सुरक्षा प्रश्न चुनें</string>
+    <string name="enter_security_answer">सुरक्षा उत्तर दर्ज करें</string>
+    <string name="enter_your_answer">अपना उत्तर दर्ज करें</string>
+    <string name="skip">छोड़ें</string>
+    <string name="save">सहेजें</string>
+
+    <string name="security_question_name">आपका नाम क्या है?</string>
+    <string name="security_question_father">आपके पिता का नाम क्या है?</string>
+    <string name="security_question_pet">आपके पालतू जानवर का नाम क्या है?</string>
+    <string name="security_question_job">आपकी सपनों की नौकरी क्या है?</string>
+
+    <!-- App List -->
+    <string name="app_lock">ऐप लॉक</string>
+    <string name="unlocked">अनलॉक</string>
+    <string name="locked">लॉक</string>
+    <string name="search">खोजें</string>
+    <string name="general">सामान्य</string>
+    <string name="unlock_app">%1$s अनलॉक करें</string>
+    <string name="lock_app">%1$s लॉक करें</string>
+
+    <!-- Settings Screen -->
+    <string name="language_description">भाषा चुनें</string>
+    <string name="lock_setting">लॉक सेटिंग</string>
+    <string name="lock_settings_description">लॉक सेटिंग्स</string>
+    <string name="hide_settings">छिपाने की सेटिंग्स</string>
+    <string name="hide_settings_description">छिपाने की सेटिंग्स</string>
+    <string name="rate_us">हमें रेट करें</string>
+    <string name="rate_us_description">हमें रेट करें</string>
+    <string name="share">साझा करें</string>
+    <string name="about">के बारे में</string>
+    <string name="about_applock">AppLock के बारे में</string>
+    <string name="privacy_policy">गोपनीयता नीति</string>
+    <string name="collapse">संक्षिप्त करें</string>
+    <string name="expand">विस्तृत करें</string>
+    <string name="open_item">%1$s खोलें</string>
+    <string name="hide_from_recent_screen">हाल की स्क्रीन से छिपाएं</string>
+    <string name="apps_hide_from_recent_screen">ऐप्स को हाल की स्क्रीन से छिपाएं</string>
+    <string name="password">पासवर्ड</string>
+    <string name="reset_password">पासवर्ड रीसेट करें</string>
+    <string name="security_settings">सुरक्षा सेटिंग्स</string>
+    <string name="set_security_email">सुरक्षा ईमेल सेट करें</string>
+    <string name="fingerprint_lock">फिंगरप्रिंट लॉक</string>
+    <string name="use_fingerprint_to_unlock">ऐप्स को अनलॉक करने के लिए फिंगरप्रिंट का उपयोग करें</string>
+    <string name="unlock">अनलॉक</string>
+    <string name="vibration">कंपन</string>
+    <string name="hide_track">ट्रैक छिपाएं</string>
+    <string name="hide_track_description">पैटर्न पासवर्ड बनाते समय ट्रैक छिपाएं</string>
+
+    <string name="relock_option">री-लॉक विकल्प</string>
+    <string name="relock_after_quitting">बाहर निकलने के बाद री-लॉक</string>
+    <string name="delay_to_relock">री-लॉक में देरी</string>
+    <string name="relock">री-लॉक</string>
+    <string name="relock_after_quitting_option">बाहर निकलने के बाद री-लॉक</string>
+    <string name="relock_after_screen_off">स्क्रीन बंद होने के बाद री-लॉक</string>
+
+    <!-- Unlock Screen -->
+    <string name="draw_pattern">पैटर्न बनाएं</string>
+    <string name="enter_passcode">पासकोड दर्ज करें</string>
+    <string name="enter_digit_pin">%1$d अंकों का पिन दर्ज करें</string>
+    <string name="pattern_not_match">पैटर्न मेल नहीं खाता</string>
+    <string name="forgot_password">पासवर्ड भूल गए?</string>
+
+    <string name="security_question">सुरक्षा प्रश्न</string>
+    <string name="answer">उत्तर</string>
+    <string name="security_question_not_set">आपने कोई सुरक्षा प्रश्न सेट नहीं किया है</string>
+    <string name="please_enter_your_answer">कृपया अपना उत्तर दर्ज करें</string>
+    <string name="incorrect_answer">गलत उत्तर</string>
+
+    <!-- Onboarding Screen -->
+    <string name="onboarding_secure_your_apps">अपने ऐप्स को सुरक्षित करें</string>
+    <string name="onboarding_quick_secure_access">त्वरित और सुरक्षित एक्सेस</string>
+    <string name="onboarding_privacy_protected">आपकी गोपनीयता, सुरक्षित</string>
+
+    <string name="onboarding_secure_your_apps_description">अपने निजी ऐप्स को सुरक्षित पासकोड और गोपनीयता की अतिरिक्त परत के साथ सुरक्षित रखें</string>
+    <string name="onboarding_quick_secure_access_description">अपने पासकोड या फिंगरप्रिंट से सुरक्षित ऐप्स को तुरंत अनलॉक करें</string>
+    <string name="onboarding_privacy_protected_description">उन ऐप्स को चुनें जिन्हें आप लॉक करना चाहते हैं और अपनी निजी सामग्री को अनचाहे एक्सेस से सुरक्षित रखें</string>
+
+    <string name="onboarding_next">अगला</string>
+    <string name="onboarding_get_started">शुरू करें</string>
+    <string name="onboarding_image_description">ऑनबोर्डिंग %1$d</string>
+
+    <!-- Premium Screen -->
+    <string name="premium_close">बंद करें</string>
+    <string name="premium_image_description">प्रीमियम</string>
+    <string name="premium_unlock">अनलॉक</string>
+    <string name="premium_all_features">सभी सुविधाएं</string>
+    <string name="premium_forever">हमेशा के लिए</string>
+
+    <string name="premium_description">एक बार भुगतान करें। आजीवन एक्सेस का आनंद लें\nबिना किसी बार-बार शुल्क के।</string>
+
+    <string name="premium_benefits">प्रीमियम लाभ</string>
+    <string name="premium_hide_unlimited">अनलिमिटेड फोटो और वीडियो छिपाएं</string>
+    <string name="premium_intruder_selfie">घुसपैठिया सेल्फी</string>
+    <string name="premium_no_ads">कोई विज्ञापन नहीं</string>
+    <string name="premium_priority_support">प्राथमिकता सहायता</string>
+    <string name="premium_best_value">सबसे अच्छा मूल्य</string>
+    <string name="premium_one_time_purchase">एक बार की खरीदारी</string>
+    <string name="premium_lifetime_access">जीवनभर एक्सेस</string>
+    <string name="premium_one_time_payment">एक बार का भुगतान</string>
+    <string name="premium_shield_description">शील्ड</string>
+    <string name="premium_no_subscription">कोई सब्सक्रिप्शन नहीं। एक बार भुगतान करें और हमेशा के लिए इसका आनंद लें।</string>
+    <string name="premium_unlock_button">प्रीमियम अनलॉक करें - एक बार की खरीदारी</string>
+    <string name="premium_terms_of_use">उपयोग की शर्तें</string>
+    <string name="premium_privacy_policy">गोपनीयता नीति</string>
+
+    <!-- Exit Screen -->
+    <string name="exit_screen_back">वापस</string>
+    <string name="exit_screen_title">App Lock से बाहर निकलें</string>
+    <string name="exit_image_description">App Lock से बाहर निकलें</string>
+    <string name="exit_app_lock_title">App Lock से बाहर निकलें?</string>
+    <string name="exit_app_lock_description">App Lock को फिर से एक्सेस करने के लिए आपको\nअपना पासकोड दर्ज करना होगा।</string>
+    <string name="exit_rating_description">आपकी एक छोटी सी रेटिंग हमारी टीम के लिए\nबहुत मायने रखती है।</string>
+    <string name="exit_stay_protected_description">सुरक्षित रहें</string>
+    <string name="exit_stay_protected">सुरक्षित रहें</string>
+    <string name="exit_anyway_description">फिर भी बाहर निकलें</string>
+    <string name="exit_anyway">फिर भी बाहर निकलें</string>
+
+    <!-- AppLock Protection -->
+    <string name="applock">AppLock</string>
+    <string name="enable_app_protection">ऐप सुरक्षा सक्षम करें</string>
+
+</resources>

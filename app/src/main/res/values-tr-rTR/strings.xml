@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="lifetime" translatable="false">lifetime</string>
+
+    <!-- Common -->
+    <string name="back">Geri</string>
+    <string name="close_selection">Seçimi kapat</string>
+    <string name="selected_count">Seçildi (%1$d)</string>
+    <string name="all">Tümü</string>
+    <string name="all_selected">Tümü seçildi</string>
+    <string name="settings">Ayarlar</string>
+    <string name="delete">Sil</string>
+    <string name="loading">Yükleniyor...</string>
+    <string name="cancel">İptal</string>
+    <string name="confirm">Onayla</string>
+
+    <!-- Bottom Navigation -->
+    <string name="apps_lock">Uygulama Kilidi</string>
+    <string name="vault">Kasa</string>
+
+    <!-- Intruder -->
+    <string name="intruder">Davetsiz Misafir</string>
+    <string name="intruder_settings">Davetsiz Misafir ayarları</string>
+    <string name="intruder_camera">Davetsiz Misafir Kamerası</string>
+    <string name="capture_wrong_password">Yanlış şifre giren kişilerin fotoğraflarını çek</string>
+    <string name="no_intruder_found">Davetsiz Misafir Bulunamadı</string>
+    <string name="today">Bugün</string>
+    <string name="selected">Seçildi</string>
+    <string name="intruder_photo">Davetsiz Misafir fotoğrafı</string>
+    <string name="intruder_photo_preview">Davetsiz Misafir fotoğrafı önizlemesi</string>
+
+    <!-- Observation Time / Intruder Attempts -->
+    <string name="set_observation_time">Deneme Sayısını Ayarla</string>
+    <string name="set_observation_attempts">Deneme sayısını ayarla</string>
+    <string name="failed_to_unblock">Kilidi açma başarısızlık sayısı</string>
+    <string name="take_intruder_photo">Yanlış şifre denemelerinden sonra davetsiz misafirin fotoğrafını çek</string>
+    <string name="immediately">Hemen</string>
+    <string name="never">Asla</string>
+    <string name="three_attempts">3 Deneme</string>
+    <string name="five_attempts">5 Deneme</string>
+    <string name="ten_attempts">10 Deneme</string>
+
+    <!-- Camera Permission -->
+    <string name="camera_permission">Kamera İzni</string>
+    <string name="camera_permission_denied">Kamera izni reddedildi. Davetsiz Misafir Kamerasını kullanmak için lütfen Uygulama Ayarları\'ndan Kamera iznine izin verin.</string>
+
+    <!-- Delay to Re-Lock -->
+    <string name="five_seconds">5 Saniye</string>
+    <string name="ten_seconds">10 Saniye</string>
+    <string name="fifteen_seconds">15 Saniye</string>
+    <string name="thirty_seconds">30 Saniye</string>
+    <string name="one_minute">1 Dakika</string>
+    <string name="two_minutes">2 Dakika</string>
+    <string name="five_minutes">5 Dakika</string>
+
+    <!-- Languages -->
+    <string name="languages">Diller</string>
+    <string name="select">Seç</string>
+
+    <!-- Permissions -->
+    <string name="permissions_required">Gerekli İzinler</string>
+    <string name="show_over_other_apps">Diğer Uygulamaların Üzerinde Göster</string>
+    <string name="allow_lock_screen">Kilit ekranının diğer uygulamaların\nüzerinde gösterilmesine izin ver</string>
+    <string name="detect_launched_app">Başlatılan Uygulamayı Algıla</string>
+    <string name="detect_launched_description">Hangi uygulamanın başlatıldığını algılamak için\nerişim izni verin...</string>
+    <string name="auto_start">Otomatik Başlat</string>
+    <string name="keep_applock_running">AppLock Pro\'yu Her Zaman Çalışır Tut</string>
+    <string name="allow">İzin Ver</string>
+    <string name="permissions_work_properly">Uygulamanın düzgün ve verimli çalışması için\nizinler gereklidir</string>
+
+    <!-- Vault -->
+    <string name="photos">Fotoğraflar</string>
+    <string name="videos">Videolar</string>
+    <string name="add">Ekle</string>
+    <string name="add_image">Resim Ekle</string>
+    <string name="add_video">Video Ekle</string>
+    <string name="click_to_add_image">Resim eklemek için "+" düğmesine tıklayın</string>
+    <string name="click_to_add_video">Video eklemek için "+" düğmesine tıklayın</string>
+    <string name="hidden">Gizli</string>
+    <string name="albums">Albümler</string>
+    <string name="select_all">Tümünü Seç</string>
+    <string name="hide">Gizle</string>
+    <string name="unhide">Gizlemeyi Kaldır</string>
+    <string name="permission_required">İzin Gerekli</string>
+    <string name="photo_permission_required">Fotoğraflarınıza erişmek için fotoğraf izni gereklidir. Lütfen uygulama ayarlarından izni verin.</string>
+    <string name="video_permission_required">Videolarınıza erişmek için video izni gereklidir. Lütfen uygulama ayarlarından izni verin.</string>
+    <!-- Hide / Unhide -->
+    <string name="hide_video">Videoyu Gizle</string>
+    <string name="hide_image">Resmi Gizle</string>
+    <string name="hide_videos_question">Bu videoları gizlemek istediğinizden emin misiniz?</string>
+    <string name="hide_images_question">Bu resimleri gizlemek istediğinizden emin misiniz?</string>
+    <string name="unhide_video">Videoyu Gizlemekten Çıkar</string>
+    <string name="unhide_image">Resmi Gizlemekten Çıkar</string>
+    <string name="unhide_video_question">Bu videonun gizliliğini kaldırmak istiyor musunuz?</string>
+    <string name="unhide_image_question">Bu resmin gizliliğini kaldırmak istiyor musunuz?</string>
+
+    <!-- Pin Create Screen -->
+    <string name="four_digit_pin">4 Haneli PIN</string>
+    <string name="six_digit_pin">6 Haneli PIN</string>
+    <string name="pattern">Desen</string>
+    <string name="create_pin">%1$d Haneli PIN Oluştur</string>
+    <string name="reset">Sıfırla</string>
+    <string name="continue_text">Devam Et</string>
+    <string name="create_pattern">Desen Oluştur</string>
+    <string name="connect_four_dots">En az 4 noktayı birleştirin</string>
+
+    <!-- Pin Confirm -->
+    <string name="confirm_pattern">Deseni onayla</string>
+    <string name="confirm_passcode">Şifreyi onayla</string>
+    <string name="draw_pattern_again">Deseni tekrar çizin</string>
+    <string name="confirm_pin">%1$d Haneli PIN\'i Onayla</string>
+    <string name="password_not_match">Şifre eşleşmiyor. Lütfen tekrar deneyin</string>
+    <string name="enter_correct_password">Doğru şifrenizi girin</string>
+
+    <!-- Permission -->
+    <string name="allowed">İzin Verildi</string>
+
+    <!-- Security Questions -->
+    <string name="security_questions">Güvenlik Soruları</string>
+    <string name="security_question_description">Unuttuğunuzda şifrenizi kurtarmak için\nbir anahtar kelime belirleyin.</string>
+    <string name="select_security_questions">Güvenlik Sorularını Seç</string>
+    <string name="select_security_question">Güvenlik Sorusu Seç</string>
+    <string name="enter_security_answer">Güvenlik Cevabını Gir</string>
+    <string name="enter_your_answer">Cevabınızı girin</string>
+    <string name="skip">Atla</string>
+    <string name="save">Kaydet</string>
+
+    <string name="security_question_name">Adınız nedir?</string>
+    <string name="security_question_father">Babanızın adı nedir?</string>
+    <string name="security_question_pet">Evcil hayvanınızın adı nedir?</string>
+    <string name="security_question_job">Hayalinizdeki meslek nedir?</string>
+
+    <!-- App List -->
+    <string name="app_lock">Uygulama Kilidi</string>
+    <string name="unlocked">Kilit Açık</string>
+    <string name="locked">Kilitli</string>
+    <string name="search">Ara</string>
+    <string name="general">Genel</string>
+    <string name="unlock_app">%1$s Kilidini Aç</string>
+    <string name="lock_app">%1$s Uygulamasını Kilitle</string>
+
+    <!-- Settings Screen -->
+    <string name="language_description">Dil seçin</string>
+    <string name="lock_setting">Kilit Ayarı</string>
+    <string name="lock_settings_description">Kilit ayarları</string>
+    <string name="hide_settings">Gizleme Ayarları</string>
+    <string name="hide_settings_description">Gizleme ayarları</string>
+    <string name="rate_us">Bizi Değerlendirin</string>
+    <string name="rate_us_description">Bizi değerlendirin</string>
+    <string name="share">Paylaş</string>
+    <string name="about">Hakkında</string>
+    <string name="about_applock">AppLock Hakkında</string>
+    <string name="privacy_policy">Gizlilik Politikası</string>
+    <string name="collapse">Daralt</string>
+    <string name="expand">Genişlet</string>
+    <string name="open_item">%1$s Aç</string>
+    <string name="hide_from_recent_screen">Son uygulamalardan gizle</string>
+    <string name="apps_hide_from_recent_screen">Uygulamaları son uygulamalardan gizle</string>
+    <string name="password">Şifre</string>
+    <string name="reset_password">Şifreyi Sıfırla</string>
+    <string name="security_settings">Güvenlik ayarları</string>
+    <string name="set_security_email">Güvenlik e-postası ayarla</string>
+    <string name="fingerprint_lock">Parmak izi kilidi</string>
+    <string name="use_fingerprint_to_unlock">Uygulamaların kilidini açmak için parmak izini kullan</string>
+    <string name="unlock">Kilidi Aç</string>
+    <string name="vibration">Titreşim</string>
+    <string name="hide_track">İzleri Gizle</string>
+    <string name="hide_track_description">Desen şifresi çizerken izi gizle</string>
+
+    <string name="relock_option">Yeniden Kilitleme Seçeneği</string>
+    <string name="relock_after_quitting">Çıkıştan sonra yeniden kilitle</string>
+    <string name="delay_to_relock">Yeniden Kilitleme Gecikmesi</string>
+    <string name="relock">Yeniden Kilitle</string>
+    <string name="relock_after_quitting_option">Çıkıştan Sonra Yeniden Kilitle</string>
+    <string name="relock_after_screen_off">Ekran kapandıktan sonra yeniden kilitle</string>
+
+    <!-- Unlock Screen -->
+    <string name="draw_pattern">Deseni çizin</string>
+    <string name="enter_passcode">Şifreyi girin</string>
+    <string name="enter_digit_pin">%1$d Haneli PIN\'i Girin</string>
+    <string name="pattern_not_match">Desen eşleşmiyor</string>
+    <string name="forgot_password">Şifrenizi mi Unuttunuz?</string>
+
+    <string name="security_question">Güvenlik Sorusu</string>
+    <string name="answer">Cevap</string>
+    <string name="security_question_not_set">Henüz bir güvenlik sorusu belirlemediniz</string>
+    <string name="please_enter_your_answer">Lütfen cevabınızı girin</string>
+    <string name="incorrect_answer">Yanlış cevap</string>
+
+    <!-- Onboarding Screen -->
+    <string name="onboarding_secure_your_apps">Uygulamalarınızı Güvence Altına Alın</string>
+    <string name="onboarding_quick_secure_access">Hızlı ve Güvenli Erişim</string>
+    <string name="onboarding_privacy_protected">Gizliliğiniz Koruma Altında</string>
+
+    <string name="onboarding_secure_your_apps_description">Özel uygulamalarınızı güvenli bir şifre ve ekstra gizlilik katmanıyla koruyun</string>
+    <string name="onboarding_quick_secure_access_description">Korumalı uygulamalarınızın kilidini şifreniz veya parmak izinizle anında açın</string>
+    <string name="onboarding_privacy_protected_description">Kilitlemek istediğiniz uygulamaları seçin ve kişisel içeriğinizi istenmeyen erişimlerden koruyun</string>
+
+    <string name="onboarding_next">İleri</string>
+    <string name="onboarding_get_started">Başlayın</string>
+    <string name="onboarding_image_description">Onboarding %1$d</string>
+
+    <!-- Premium Screen -->
+    <string name="premium_close">Kapat</string>
+    <string name="premium_image_description">Premium</string>
+    <string name="premium_unlock">Kilidi Aç</string>
+    <string name="premium_all_features"> Tüm Özellikler</string>
+    <string name="premium_forever">Sonsuza Kadar</string>
+
+    <string name="premium_description">Tek seferlik ödeme. Ömür boyu erişimin keyfini çıkarın\ntekrarlayan ücretler olmadan.</string>
+
+    <string name="premium_benefits">Premium Avantajları</string>
+    <string name="premium_hide_unlimited">Sınırsız fotoğraf ve video gizleme</string>
+    <string name="premium_intruder_selfie">Davetsiz Misafir selfiesi</string>
+    <string name="premium_no_ads">Reklam Yok</string>
+    <string name="premium_priority_support">Öncelikli Destek</string>
+    <string name="premium_best_value">En İyi Değer</string>
+    <string name="premium_one_time_purchase">Tek seferlik satın alma</string>
+    <string name="premium_lifetime_access">Ömür boyu erişim</string>
+    <string name="premium_one_time_payment">Tek Seferlik Ödeme</string>
+    <string name="premium_shield_description">kalkan</string>
+    <string name="premium_no_subscription">Abonelik yok. Bir kez ödeyin ve sonsuza kadar sizin olsun.</string>
+    <string name="premium_unlock_button">Premium\'u Aç - Tek Seferlik Satın Alma</string>
+    <string name="premium_terms_of_use">Kullanım Koşulları</string>
+    <string name="premium_privacy_policy">Gizlilik Politikası</string>
+
+    <!-- Exit Screen -->
+    <string name="exit_screen_back">Geri</string>
+    <string name="exit_screen_title">AppLock\'tan Çık</string>
+    <string name="exit_image_description">AppLock\'tan Çık</string>
+    <string name="exit_app_lock_title">AppLock\'tan Çıkılsın mı?</string>
+    <string name="exit_app_lock_description">App Lock\'a tekrar erişmek için\nşifrenizi girmeniz gerekecek.</string>
+    <string name="exit_rating_description">Kısa bir değerlendirmeniz\nekibimiz için çok şey ifade ediyor.</string>
+    <string name="exit_stay_protected_description">Korumaya Devam Et</string>
+    <string name="exit_stay_protected">Korumaya Devam Et</string>
+    <string name="exit_anyway_description">Yine de Çık</string>
+    <string name="exit_anyway">Yine de Çık</string>
+
+    <!-- AppLock Protection -->
+    <string name="applock">AppLock</string>
+    <string name="enable_app_protection">Uygulama Korumasını Etkinleştir</string>
+
+</resources>
+

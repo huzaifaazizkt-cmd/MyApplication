@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+
+
+    <!-- Common -->
+    <string name="back">Tilbake</string>
+    <string name="close_selection">Lukk utvalg</string>
+    <string name="selected_count">Valgt (%1$d)</string>
+    <string name="all">Alle</string>
+    <string name="all_selected">Alle valgt</string>
+    <string name="settings">Innstillinger</string>
+    <string name="delete">Slett</string>
+    <string name="loading">Laster inn...</string>
+    <string name="cancel">Avbryt</string>
+    <string name="confirm">Bekreft</string>
+
+    <!-- Bottom Navigation -->
+    <string name="apps_lock">Applås</string>
+    <string name="vault">Hvelv</string>
+
+    <!-- Intruder -->
+    <string name="intruder">Innbrudd</string>
+    <string name="intruder_settings">Innstillinger for innbrudd</string>
+    <string name="intruder_camera">Innbruddskamera</string>
+    <string name="capture_wrong_password">Ta bilder av alle som skriver inn\n feil passord</string>
+    <string name="no_intruder_found">Ingen innbrudd funnet</string>
+    <string name="today">I dag</string>
+    <string name="selected">Valgt</string>
+    <string name="intruder_photo">Innbruddsbilde</string>
+    <string name="intruder_photo_preview">Forhåndsvisning av innbruddsbilde</string>
+
+    <!-- Observation Time / Intruder Attempts -->
+    <string name="set_observation_time">Angi antall forsøk</string>
+    <string name="set_observation_attempts">Angi antall forsøk</string>
+    <string name="failed_to_unblock">Antall ganger opplåsingen mislyktes</string>
+    <string name="take_intruder_photo">Ta et innbruddsbilde etter feil passordforsøk</string>
+    <string name="immediately">Umiddelbart</string>
+    <string name="never">Aldri</string>
+    <string name="three_attempts">3 forsøk</string>
+    <string name="five_attempts">5 forsøk</string>
+    <string name="ten_attempts">10 forsøk</string>
+
+    <!-- Camera Permission -->
+    <string name="camera_permission">Kameratillatelse</string>
+    <string name="camera_permission_denied">Kameratillatelse ble avslått. Tillat kameratilgang fra appinnstillingene for å bruke innbruddskameraet.</string>
+
+    <!-- Delay to Re-Lock -->
+    <string name="five_seconds">5 sekunder</string>
+    <string name="ten_seconds">10 sekunder</string>
+    <string name="fifteen_seconds">15 sekunder</string>
+    <string name="thirty_seconds">30 sekunder</string>
+    <string name="one_minute">1 minutt</string>
+    <string name="two_minutes">2 minutter</string>
+    <string name="five_minutes">5 minutter</string>
+
+    <!-- Languages -->
+    <string name="languages">Språk</string>
+    <string name="select">Velg</string>
+
+    <!-- Permissions -->
+    <string name="permissions_required">Tillatelser kreves</string>
+    <string name="show_over_other_apps">Vis over andre apper</string>
+    <string name="allow_lock_screen">Tillat at låseskjermen vises over\nandre apper</string>
+    <string name="detect_launched_app">Oppdag åpnet app</string>
+    <string name="detect_launched_description">Tillat å oppdage hvilken app som\nåpnes ved å gi tilgang til...</string>
+    <string name="auto_start">Autostart</string>
+    <string name="keep_applock_running">Hold AppLock Pro alltid i gang</string>
+    <string name="allow">Tillat</string>
+    <string name="permissions_work_properly">Tillatelser kreves for at appen skal fungere\nriktig og effektivt</string>
+
+    <!-- Vault -->
+    <string name="photos">Bilder</string>
+    <string name="videos">Videoer</string>
+    <string name="add">Legg til</string>
+    <string name="add_image">Legg til bilde</string>
+    <string name="add_video">Legg til video</string>
+    <string name="click_to_add_image">Trykk på "+" for å legge til bilde</string>
+    <string name="click_to_add_video">Trykk på "+" for å legge til video</string>
+    <string name="hidden">Skjult</string>
+    <string name="albums">Album</string>
+    <string name="select_all">Velg alle</string>
+    <string name="hide">Skjul</string>
+    <string name="unhide">Vis</string>
+    <string name="permission_required">Tillatelse kreves</string>
+    <string name="photo_permission_required">Tilgang til bilder kreves for å få tilgang til bildene dine. Tillat tilgang fra appinnstillingene.</string>
+    <string name="video_permission_required">Tilgang til videoer kreves for å få tilgang til videoene dine. Tillat tilgang fra appinnstillingene.</string>
+    <!-- Hide / Unhide -->
+    <string name="hide_video">Skjul video</string>
+    <string name="hide_image">Skjul bilde</string>
+    <string name="hide_videos_question">Er du sikker på at du vil skjule disse videoene?</string>
+    <string name="hide_images_question">Er du sikker på at du vil skjule disse bildene?</string>
+    <string name="unhide_video">Vis video</string>
+    <string name="unhide_image">Vis bilde</string>
+    <string name="unhide_video_question">Vil du vise denne videoen?</string>
+    <string name="unhide_image_question">Vil du vise dette bildet?</string>
+
+    <!-- Pin Create Screen -->
+    <string name="four_digit_pin">4-sifret PIN-kode</string>
+    <string name="six_digit_pin">6-sifret PIN-kode</string>
+    <string name="pattern">Mønster</string>
+    <string name="create_pin">Opprett %1$d-sifret PIN-kode</string>
+    <string name="reset">Tilbakestill</string>
+    <string name="continue_text">Fortsett</string>
+    <string name="create_pattern">Opprett mønster</string>
+    <string name="connect_four_dots">Koble sammen minst 4 punkter</string>
+
+    <!-- Pin Confirm -->
+    <string name="confirm_pattern">Bekreft mønster</string>
+    <string name="confirm_passcode">Bekreft passord</string>
+    <string name="draw_pattern_again">Tegn mønsteret på nytt</string>
+    <string name="confirm_pin">Bekreft %1$d-sifret PIN-kode</string>
+    <string name="password_not_match">Passordene samsvarer ikke. Prøv igjen</string>
+    <string name="enter_correct_password">Skriv inn riktig passord</string>
+
+    <!-- Permission -->
+    <string name="allowed">Tillatt</string>
+
+    <!-- Security Questions -->
+    <string name="security_questions">Sikkerhetsspørsmål</string>
+    <string name="security_question_description">Angi et nøkkelord for å gjenopprette passordet ditt når du\nglemmer det.</string>
+    <string name="select_security_questions">Velg sikkerhetsspørsmål</string>
+    <string name="select_security_question">Velg sikkerhetsspørsmål</string>
+    <string name="enter_security_answer">Skriv inn sikkerhetssvar</string>
+    <string name="enter_your_answer">Skriv inn svaret ditt</string>
+    <string name="skip">Hopp over</string>
+    <string name="save">Lagre</string>
+
+    <string name="security_question_name">Hva heter du?</string>
+    <string name="security_question_father">Hva heter faren din?</string>
+    <string name="security_question_pet">Hva heter kjæledyret ditt?</string>
+    <string name="security_question_job">Hva er drømmejobben din?</string>
+
+    <!-- App List -->
+    <string name="app_lock">Applås</string>
+    <string name="unlocked">Ulåst</string>
+    <string name="locked">Låst</string>
+    <string name="search">Søk</string>
+    <string name="general">Generelt</string>
+    <string name="unlock_app">Lås opp %1$s</string>
+    <string name="lock_app">Lås %1$s</string>
+
+    <!-- Settings Screen -->
+    <string name="language_description">Velg språk</string>
+    <string name="lock_setting">Låsinnstilling</string>
+    <string name="lock_settings_description">Låsinnstillinger</string>
+    <string name="hide_settings">Skjul innstillinger</string>
+    <string name="hide_settings_description">Skjul innstillinger</string>
+    <string name="rate_us">Vurder oss</string>
+    <string name="rate_us_description">Vurder oss</string>
+    <string name="share">Del</string>
+    <string name="about">Om</string>
+    <string name="about_applock">Om AppLock</string>
+    <string name="privacy_policy">Personvernregler</string>
+    <string name="collapse">Skjul</string>
+    <string name="expand">Utvid</string>
+    <string name="open_item">Åpne %1$s</string>
+    <string name="hide_from_recent_screen">Skjul fra nylige apper</string>
+    <string name="apps_hide_from_recent_screen">Apper skjult fra nylige apper</string>
+    <string name="password">Passord</string>
+    <string name="reset_password">Tilbakestill passord</string>
+    <string name="security_settings">Sikkerhetsinnstillinger</string>
+    <string name="set_security_email">Angi sikkerhets-e-post</string>
+    <string name="fingerprint_lock">Fingeravtrykklås</string>
+    <string name="use_fingerprint_to_unlock">Bruk fingeravtrykk for å låse opp apper</string>
+    <string name="unlock">Lås opp</string>
+    <string name="vibration">Vibrasjon</string>
+    <string name="hide_track">Skjul spor</string>
+    <string name="hide_track_description">Skjul sporet når du tegner mønsterpassordet</string>
+
+    <string name="relock_option">Alternativ for ny låsing</string>
+    <string name="relock_after_quitting">Lås på nytt etter avslutning</string>
+    <string name="delay_to_relock">Forsinkelse før ny låsing</string>
+    <string name="relock">Lås på nytt</string>
+    <string name="relock_after_quitting_option">Lås på nytt etter avslutning</string>
+    <string name="relock_after_screen_off">Lås på nytt etter at skjermen slås av</string>
+
+    <!-- Unlock Screen -->
+    <string name="draw_pattern">Tegn mønster</string>
+    <string name="enter_passcode">Skriv inn passord</string>
+    <string name="enter_digit_pin">Skriv inn %1$d-sifret PIN-kode</string>
+    <string name="pattern_not_match">Mønsteret samsvarer ikke</string>
+    <string name="forgot_password">Glemt passord?</string>
+
+    <string name="security_question">Sikkerhetsspørsmål</string>
+    <string name="answer">Svar</string>
+    <string name="security_question_not_set">Du har ikke angitt et sikkerhetsspørsmål</string>
+    <string name="please_enter_your_answer">Vennligst skriv inn svaret ditt</string>
+    <string name="incorrect_answer">Feil svar</string>
+
+    <!-- Onboarding Screen -->
+    <string name="onboarding_secure_your_apps">Sikre appene dine</string>
+    <string name="onboarding_quick_secure_access">Rask og sikker tilgang</string>
+    <string name="onboarding_privacy_protected">Personvernet ditt er beskyttet</string>
+
+    <string name="onboarding_secure_your_apps_description">Hold private apper beskyttet med et sikkert passord og et ekstra lag med personvern</string>
+    <string name="onboarding_quick_secure_access_description">Lås opp beskyttede apper umiddelbart med passordet eller fingeravtrykket ditt</string>
+    <string name="onboarding_privacy_protected_description">Velg appene du vil låse, og hold ditt personlige innhold trygt mot uønsket tilgang</string>
+
+    <string name="onboarding_next">Neste</string>
+    <string name="onboarding_get_started">Kom i gang</string>
+    <string name="onboarding_image_description">Introduksjon %1$d</string>
+
+    <!-- Premium Screen -->
+    <string name="premium_close">Lukk</string>
+    <string name="premium_image_description">Premium</string>
+    <string name="premium_unlock">Lås opp</string>
+    <string name="premium_all_features"> Alle funksjoner</string>
+    <string name="premium_forever">For alltid</string>
+
+    <string name="premium_description">Engangsbetaling. Nyt livstidstilgang\nuten gjentakende kostnader.</string>
+    <string name="premium_benefits">Premium-fordeler</string>
+    <string name="premium_hide_unlimited">Skjul ubegrenset antall bilder og videoer</string>
+    <string name="premium_intruder_selfie">Innbruddsselfie</string>
+    <string name="premium_no_ads">Ingen annonser</string>
+    <string name="premium_priority_support">Prioritert kundestøtte</string>
+    <string name="premium_best_value">Beste verdi</string>
+    <string name="premium_one_time_purchase">Engangskjøp</string>
+    <string name="premium_lifetime_access">Livstidstilgang</string>
+    <string name="premium_one_time_payment">Engangsbetaling</string>
+    <string name="premium_shield_description">skjold</string>
+    <string name="premium_no_subscription">Ingen abonnement. Betal én gang og behold det for alltid.</string>
+    <string name="premium_unlock_button">Lås opp Premium – engangskjøp</string>
+    <string name="premium_terms_of_use">Bruksvilkår</string>
+    <string name="premium_privacy_policy">Personvernregler</string>
+
+    <!-- Exit Screen -->
+    <string name="exit_screen_back">Tilbake</string>
+    <string name="exit_screen_title">Avslutt AppLock</string>
+    <string name="exit_image_description">Avslutt AppLock</string>
+    <string name="exit_app_lock_title">Avslutte AppLock?</string>
+    <string name="exit_app_lock_description">Du må skrive inn passordet ditt\npå nytt for å få tilgang til AppLock.</string>
+    <string name="exit_rating_description">En rask vurdering fra deg betyr\nmye for teamet vårt.</string>
+    <string name="exit_stay_protected_description">Forbli beskyttet</string>
+    <string name="exit_stay_protected">Forbli beskyttet</string>
+    <string name="exit_anyway_description">Avslutt likevel</string>
+    <string name="exit_anyway">Avslutt likevel</string>
+
+    <!-- AppLock Protection -->
+    <string name="applock">AppLock</string>
+    <string name="enable_app_protection">Aktiver appbeskyttelse</string>
+
+</resources>
+

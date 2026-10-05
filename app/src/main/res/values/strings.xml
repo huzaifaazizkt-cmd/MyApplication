@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <string name="app_name" translatable="false">My Application</string>
+    <string name="lifetime" translatable="false">lifetime</string>
+
+    <!-- Common -->
+    <string name="back">Back</string>
+    <string name="close_selection">Close selection</string>
+    <string name="selected_count">Selected (%1$d)</string>
+    <string name="all">All</string>
+    <string name="all_selected">All selected</string>
+    <string name="settings">Settings</string>
+    <string name="delete">Delete</string>
+    <string name="loading">Loading...</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+
+    <!-- Bottom Navigation -->
+    <string name="apps_lock">Apps Lock</string>
+    <string name="vault">Vault</string>
+
+    <!-- Intruder -->
+    <string name="intruder">Intruder</string>
+    <string name="intruder_settings">Intruder settings</string>
+    <string name="intruder_camera">Intruder Camera</string>
+    <string name="capture_wrong_password">Capture photos of anyone who enters\n the wrong password</string>
+    <string name="no_intruder_found">No Intruder Found</string>
+    <string name="today">Today</string>
+    <string name="selected">Selected</string>
+    <string name="intruder_photo">Intruder photo</string>
+    <string name="intruder_photo_preview">Intruder photo preview</string>
+
+    <!-- Observation Time / Intruder Attempts -->
+    <string name="set_observation_time">Set Observation Attempts</string>
+    <string name="set_observation_attempts">Set observation attempts</string>
+    <string name="failed_to_unblock">Number of times failed to unblocked</string>
+    <string name="take_intruder_photo">Take an intruder photo after wrong password attempts</string>
+    <string name="immediately">Immediately</string>
+    <string name="never">Never</string>
+    <string name="three_attempts">3 Attempts</string>
+    <string name="five_attempts">5 Attempts</string>
+    <string name="ten_attempts">10 Attempts</string>
+
+    <!-- Camera Permission -->
+    <string name="camera_permission">Camera Permission</string>
+    <string name="camera_permission_denied">Camera permission was denied. Please allow Camera permission from App Settings to use Intruder Camera.</string>
+
+    <!-- Delay to Re-Lock -->
+    <string name="five_seconds">5 Seconds</string>
+    <string name="ten_seconds">10 Seconds</string>
+    <string name="fifteen_seconds">15 Seconds</string>
+    <string name="thirty_seconds">30 Seconds</string>
+    <string name="one_minute">1 Minute</string>
+    <string name="two_minutes">2 Minutes</string>
+    <string name="five_minutes">5 Minutes</string>
+
+    <!-- Languages -->
+    <string name="languages">Languages</string>
+    <string name="select">Select</string>
+
+    <!-- Permissions -->
+    <string name="permissions_required">Permissions Required</string>
+    <string name="show_over_other_apps">Show Over Other Apps</string>
+    <string name="allow_lock_screen">Allow Lock Screen to show over\nother apps</string>
+    <string name="detect_launched_app">Detect Launched App</string>
+    <string name="detect_launched_description">Permit to detect which app is\nlaunched by granting access to...</string>
+    <string name="auto_start">Auto Start</string>
+    <string name="keep_applock_running">Always Keep AppLock Pro Running</string>
+    <string name="allow">Allow</string>
+    <string name="permissions_work_properly">Permissions are required for the application to work\nproperly and efficiently</string>
+
+    <!-- Vault -->
+    <string name="photos">Photos</string>
+    <string name="videos">Videos</string>
+    <string name="add">Add</string>
+    <string name="add_image">Add Image</string>
+    <string name="add_video">Add Video</string>
+    <string name="click_to_add_image">Click "+" To add image</string>
+    <string name="click_to_add_video">Click "+" To add video</string>
+    <string name="hidden">Hidden</string>
+    <string name="albums">Albums</string>
+    <string name="select_all">Select All</string>
+    <string name="hide">Hide</string>
+    <string name="unhide">Unhide</string>
+    <string name="permission_required">Permission Required</string>
+    <string name="photo_permission_required">Photo permission is required to access your photos. Please allow the permission from App Settings.</string>
+    <string name="video_permission_required">Video permission is required to access your videos. Please allow the permission from App Settings.</string>
+    <!-- Hide / Unhide -->
+    <string name="hide_video">Hide Video</string>
+    <string name="hide_image">Hide Image</string>
+    <string name="hide_videos_question">Are you sure you want to hide these videos?</string>
+    <string name="hide_images_question">Are you sure you want to hide these images?</string>
+    <string name="unhide_video">Unhide Video</string>
+    <string name="unhide_image">Unhide Image</string>
+    <string name="unhide_video_question">Do you want to unhide this video?</string>
+    <string name="unhide_image_question">Do you want to unhide this image?</string>
+
+    <!-- Pin Create Screen -->
+    <string name="four_digit_pin">4 - Digit pin</string>
+    <string name="six_digit_pin">6 - Digit pin</string>
+    <string name="pattern">Pattern</string>
+    <string name="create_pin">Create %1$d - Digit pin</string>
+    <string name="reset">Reset</string>
+    <string name="continue_text">Continue</string>
+    <string name="create_pattern">Create Pattern</string>
+    <string name="connect_four_dots">Connect at least 4 dots</string>
+
+    <!-- Pin Confirm -->
+    <string name="confirm_pattern">Confirm pattern</string>
+    <string name="confirm_passcode">Confirm passcode</string>
+    <string name="draw_pattern_again">Draw pattern again</string>
+    <string name="confirm_pin">Confirm %1$d - Digit pin</string>
+    <string name="password_not_match">Password does not match. Please try again</string>
+    <string name="enter_correct_password">Enter your correct password</string>
+
+    <!-- Permission -->
+    <string name="allowed">Allowed</string>
+
+    <!-- Security Questions -->
+    <string name="security_questions">Security Questions</string>
+    <string name="security_question_description">Set a keyword to Recover your passcode when you\nforget it.</string>
+    <string name="select_security_questions">Select Security Questions</string>
+    <string name="select_security_question">Select Security Question</string>
+    <string name="enter_security_answer">Enter Security Answer</string>
+    <string name="enter_your_answer">Enter your answer</string>
+    <string name="skip">Skip</string>
+    <string name="save">Save</string>
+
+    <string name="security_question_name">What is your Name ?</string>
+    <string name="security_question_father">What is your father name ?</string>
+    <string name="security_question_pet">What is your Pet Name?</string>
+    <string name="security_question_job">What is your dream job?</string>
+
+    <!-- App List -->
+    <string name="app_lock">App Lock</string>
+    <string name="unlocked">Unlocked</string>
+    <string name="locked">Locked</string>
+    <string name="search">Search</string>
+    <string name="general">General</string>
+    <string name="unlock_app">Unlock %1$s</string>
+    <string name="lock_app">Lock %1$s</string>
+
+    <!-- Settings Screen -->
+    <string name="language_description">Select language</string>
+    <string name="lock_setting">Lock Setting</string>
+    <string name="lock_settings_description">Lock settings</string>
+    <string name="hide_settings">Hide Settings</string>
+    <string name="hide_settings_description">Hide settings</string>
+    <string name="rate_us">Rate Us</string>
+    <string name="rate_us_description">Rate us</string>
+    <string name="share">Share</string>
+    <string name="about">About</string>
+    <string name="about_applock">About AppLock</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="collapse">Collapse</string>
+    <string name="expand">Expand</string>
+    <string name="open_item">Open %1$s</string>
+    <string name="hide_from_recent_screen">Hide from recent screen</string>
+    <string name="apps_hide_from_recent_screen">Apps Hide-from recent screen</string>
+    <string name="password">Password</string>
+    <string name="reset_password">Reset Password</string>
+    <string name="security_settings">Security settings</string>
+    <string name="set_security_email">Set security email</string>
+    <string name="fingerprint_lock">Fingerprint lock</string>
+    <string name="use_fingerprint_to_unlock">use Fingerprint to unlock apps</string>
+    <string name="unlock">Unlock</string>
+    <string name="vibration">Vibration</string>
+    <string name="hide_track">Hide Track</string>
+    <string name="hide_track_description">Hide track when you draw pattern password</string>
+
+    <string name="relock_option">Re-Lock option</string>
+    <string name="relock_after_quitting">Re-lock after Quitting</string>
+    <string name="delay_to_relock">Delay to Re-Lock</string>
+    <string name="relock">Re-Lock</string>
+    <string name="relock_after_quitting_option">Re-Lock After Quitting</string>
+    <string name="relock_after_screen_off">Re-Lock after screen off</string>
+
+    <!-- Unlock Screen -->
+    <string name="draw_pattern">Draw pattern</string>
+    <string name="enter_passcode">Enter passcode</string>
+    <string name="enter_digit_pin">Enter %1$d - Digit pin</string>
+    <string name="pattern_not_match">Pattern does not match</string>
+    <string name="forgot_password">Forgot Password?</string>
+
+    <string name="security_question">Security Question</string>
+    <string name="answer">Answer</string>
+    <string name="security_question_not_set">You have not set a security question</string>
+    <string name="please_enter_your_answer">Please enter your answer</string>
+    <string name="incorrect_answer">Incorrect answer</string>
+
+    <!-- Onboarding Screen -->
+    <string name="onboarding_secure_your_apps">Secure Your Apps</string>
+    <string name="onboarding_quick_secure_access">Quick &amp; Secure Access</string>
+    <string name="onboarding_privacy_protected">Your Privacy, Protected</string>
+
+    <string name="onboarding_secure_your_apps_description">Keep your private apps protected with a secure passcode and an extra layer of privacy</string>
+    <string name="onboarding_quick_secure_access_description">Unlock your protected apps instantly with your passcode or fingerprint</string>
+    <string name="onboarding_privacy_protected_description">Choose the apps you want to lock and keep your personal content safe from unwanted access</string>
+
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_image_description">Onboarding %1$d</string>
+
+    <!-- Premium Screen -->
+    <string name="premium_close">Close</string>
+    <string name="premium_image_description">Premium</string>
+    <string name="premium_unlock">Unlock</string>
+    <string name="premium_all_features"> All Features</string>
+    <string name="premium_forever">Forever</string>
+
+    <string name="premium_description">One-time payment. Enjoy lifetime access\nwith no recurring charges.</string>
+
+    <string name="premium_benefits">Premium Benefits</string>
+    <string name="premium_hide_unlimited">Hide Unlimited photos &amp; videos</string>
+    <string name="premium_intruder_selfie">Intruder selfie</string>
+    <string name="premium_no_ads">No Ads</string>
+    <string name="premium_priority_support">Priority Support</string>
+    <string name="premium_best_value">Best Value</string>
+    <string name="premium_one_time_purchase">One-time purchase</string>
+    <string name="premium_lifetime_access">Lifetime access</string>
+    <string name="premium_one_time_payment">One-time Payment</string>
+    <string name="premium_shield_description">shield</string>
+    <string name="premium_no_subscription">No subscription. Pay once and it’s yours forever.</string>
+    <string name="premium_unlock_button">Unlock Premium - One-time Purchase</string>
+    <string name="premium_terms_of_use">Terms of Use</string>
+    <string name="premium_privacy_policy">Privacy Policy</string>
+
+    <!-- Exit Screen -->
+    <string name="exit_screen_back">Back</string>
+    <string name="exit_screen_title">Exit App lock</string>
+    <string name="exit_image_description">Exit App Lock</string>
+    <string name="exit_app_lock_title">Exit App Lock?</string>
+    <string name="exit_app_lock_description">You will need to enter your passcode\nagain to access App Lock.</string>
+    <string name="exit_rating_description">A Quick rating from you means\na lot to our team.</string>
+    <string name="exit_stay_protected_description">Stay Protected</string>
+    <string name="exit_stay_protected">Stay Protected</string>
+    <string name="exit_anyway_description">Exit Anyway</string>
+    <string name="exit_anyway">Exit Anyway</string>
+
+    <!-- AppLock Protection -->
+    <string name="applock">AppLock</string>
+    <string name="enable_app_protection">Enable App Protection</string>
+
+
+    <string name="open_with">Open with</string>
+
+
+
+
+</resources>

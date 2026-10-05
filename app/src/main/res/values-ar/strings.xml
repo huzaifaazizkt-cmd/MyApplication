@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<resources>
+
+    <string name="lifetime" translatable="false">مدى الحياة</string>
+
+    <!-- Common -->
+    <string name="back">رجوع</string>
+    <string name="close_selection">إغلاق التحديد</string>
+    <string name="selected_count">تم تحديد (%1$d)</string>
+    <string name="all">الكل</string>
+    <string name="all_selected">تم تحديد الكل</string>
+    <string name="settings">الإعدادات</string>
+    <string name="delete">حذف</string>
+    <string name="loading">جارٍ التحميل...</string>
+    <string name="cancel">إلغاء</string>
+    <string name="confirm">تأكيد</string>
+
+    <!-- Bottom Navigation -->
+    <string name="apps_lock">قفل التطبيقات</string>
+    <string name="vault">الخزنة</string>
+
+    <!-- Intruder -->
+    <string name="intruder">المتطفل</string>
+    <string name="intruder_settings">إعدادات المتطفل</string>
+    <string name="intruder_camera">كاميرا المتطفل</string>
+    <string name="capture_wrong_password">التقاط صور لأي شخص يُدخل\nكلمة مرور خاطئة</string>
+    <string name="no_intruder_found">لم يتم العثور على متطفلين</string>
+    <string name="today">اليوم</string>
+    <string name="selected">محدد</string>
+    <string name="intruder_photo">صورة المتطفل</string>
+    <string name="intruder_photo_preview">معاينة صورة المتطفل</string>
+
+    <!-- Observation Time / Intruder Attempts -->
+    <string name="set_observation_time">تعيين محاولات المتطفل</string>
+    <string name="set_observation_attempts">تعيين محاولات المراقبة</string>
+    <string name="failed_to_unblock">عدد مرات فشل إلغاء القفل</string>
+    <string name="take_intruder_photo">التقاط صورة للمتطفل بعد محاولات كلمة المرور الخاطئة</string>
+    <string name="immediately">فورًا</string>
+    <string name="never">أبدًا</string>
+    <string name="three_attempts">3 محاولات</string>
+    <string name="five_attempts">5 محاولات</string>
+    <string name="ten_attempts">10 محاولات</string>
+
+    <!-- Camera Permission -->
+    <string name="camera_permission">إذن الكاميرا</string>
+    <string name="camera_permission_denied">تم رفض إذن الكاميرا. يُرجى السماح بإذن الكاميرا من إعدادات التطبيق لاستخدام كاميرا المتطفل.</string>
+
+    <!-- Delay to Re-Lock -->
+    <string name="five_seconds">5 ثوانٍ</string>
+    <string name="ten_seconds">10 ثوانٍ</string>
+    <string name="fifteen_seconds">15 ثانية</string>
+    <string name="thirty_seconds">30 ثانية</string>
+    <string name="one_minute">دقيقة واحدة</string>
+    <string name="two_minutes">دقيقتان</string>
+    <string name="five_minutes">5 دقائق</string>
+
+    <!-- Languages -->
+    <string name="languages">اللغات</string>
+    <string name="select">اختيار</string>
+
+    <!-- Permissions -->
+    <string name="permissions_required">الأذونات المطلوبة</string>
+    <string name="show_over_other_apps">الظهور فوق التطبيقات الأخرى</string>
+    <string name="allow_lock_screen">السماح لشاشة القفل بالظهور فوق\nالتطبيقات الأخرى</string>
+    <string name="detect_launched_app">اكتشاف التطبيق الذي تم تشغيله</string>
+    <string name="detect_launched_description">السماح باكتشاف التطبيق الذي تم\nتشغيله من خلال منح الوصول إلى...</string>
+    <string name="auto_start">التشغيل التلقائي</string>
+    <string name="keep_applock_running">إبقاء AppLock Pro قيد التشغيل دائمًا</string>
+    <string name="allow">السماح</string>
+    <string name="permissions_work_properly">الأذونات مطلوبة لكي يعمل التطبيق\nبشكل صحيح وفعال</string>
+
+    <!-- Vault -->
+    <string name="photos">الصور</string>
+    <string name="videos">الفيديوهات</string>
+    <string name="add">إضافة</string>
+    <string name="add_image">إضافة صورة</string>
+    <string name="add_video">إضافة فيديو</string>
+    <string name="click_to_add_image">اضغط على "+" لإضافة صورة</string>
+    <string name="click_to_add_video">اضغط على "+" لإضافة فيديو</string>
+    <string name="hidden">مخفي</string>
+    <string name="albums">الألبومات</string>
+    <string name="select_all">تحديد الكل</string>
+    <string name="hide">إخفاء</string>
+    <string name="unhide">إظهار</string>
+    <string name="permission_required">الإذن مطلوب</string>
+    <string name="photo_permission_required">يلزم السماح بالوصول إلى الصور للوصول إلى صورك. يرجى السماح بالإذن من إعدادات التطبيق.</string>
+    <string name="video_permission_required">يلزم السماح بالوصول إلى الفيديوهات للوصول إلى فيديوهاتك. يرجى السماح بالإذن من إعدادات التطبيق.</string>
+    <!-- Hide / Unhide -->
+    <string name="hide_video">إخفاء الفيديو</string>
+    <string name="hide_image">إخفاء الصورة</string>
+    <string name="hide_videos_question">هل أنت متأكد من رغبتك في إخفاء هذه الفيديوهات؟</string>
+    <string name="hide_images_question">هل أنت متأكد من رغبتك في إخفاء هذه الصور؟</string>
+    <string name="unhide_video">إظهار الفيديو</string>
+    <string name="unhide_image">إظهار الصورة</string>
+    <string name="unhide_video_question">هل تريد إظهار هذا الفيديو؟</string>
+    <string name="unhide_image_question">هل تريد إظهار هذه الصورة؟</string>
+
+    <!-- Pin Create Screen -->
+    <string name="four_digit_pin">رمز PIN من 4 أرقام</string>
+    <string name="six_digit_pin">رمز PIN من 6 أرقام</string>
+    <string name="pattern">النمط</string>
+    <string name="create_pin">إنشاء رمز PIN من %1$d أرقام</string>
+    <string name="reset">إعادة تعيين</string>
+    <string name="continue_text">متابعة</string>
+    <string name="create_pattern">إنشاء نمط</string>
+    <string name="connect_four_dots">قم بتوصيل 4 نقاط على الأقل</string>
+
+    <!-- Pin Confirm -->
+    <string name="confirm_pattern">تأكيد النمط</string>
+    <string name="confirm_passcode">تأكيد رمز المرور</string>
+    <string name="draw_pattern_again">ارسم النمط مرة أخرى</string>
+    <string name="confirm_pin">تأكيد رمز PIN من %1$d أرقام</string>
+    <string name="password_not_match">كلمة المرور غير متطابقة. يُرجى المحاولة مرة أخرى</string>
+    <string name="enter_correct_password">أدخل كلمة المرور الصحيحة</string>
+
+    <!-- Permission -->
+    <string name="allowed">مسموح</string>
+
+    <!-- Security Questions -->
+    <string name="security_questions">أسئلة الأمان</string>
+    <string name="security_question_description">عيّن كلمة مفتاحية لاستعادة رمز المرور\nعند نسيانه.</string>
+    <string name="select_security_questions">اختيار أسئلة الأمان</string>
+    <string name="select_security_question">اختيار سؤال الأمان</string>
+    <string name="enter_security_answer">أدخل إجابة الأمان</string>
+    <string name="enter_your_answer">أدخل إجابتك</string>
+    <string name="skip">تخطي</string>
+    <string name="save">حفظ</string>
+
+    <string name="security_question_name">ما اسمك؟</string>
+    <string name="security_question_father">ما اسم والدك؟</string>
+    <string name="security_question_pet">ما اسم حيوانك الأليف؟</string>
+    <string name="security_question_job">ما هي وظيفة أحلامك؟</string>
+
+    <!-- App List -->
+    <string name="app_lock">قفل التطبيقات</string>
+    <string name="unlocked">غير مقفل</string>
+    <string name="locked">مقفل</string>
+    <string name="search">بحث</string>
+    <string name="general">عام</string>
+    <string name="unlock_app">فتح قفل %1$s</string>
+    <string name="lock_app">قفل %1$s</string>
+
+    <!-- Settings Screen -->
+    <string name="language_description">اختيار اللغة</string>
+    <string name="lock_setting">إعدادات القفل</string>
+    <string name="lock_settings_description">إعدادات القفل</string>
+    <string name="hide_settings">إعدادات الإخفاء</string>
+    <string name="hide_settings_description">إعدادات الإخفاء</string>
+    <string name="rate_us">قيّمنا</string>
+    <string name="rate_us_description">قيّم التطبيق</string>
+    <string name="share">مشاركة</string>
+    <string name="about">حول</string>
+    <string name="about_applock">حول AppLock</string>
+    <string name="privacy_policy">سياسة الخصوصية</string>
+    <string name="collapse">طي</string>
+    <string name="expand">توسيع</string>
+    <string name="open_item">فتح %1$s</string>
+    <string name="hide_from_recent_screen">إخفاء من شاشة التطبيقات الأخيرة</string>
+    <string name="apps_hide_from_recent_screen">إخفاء التطبيقات من شاشة التطبيقات الأخيرة</string>
+    <string name="password">كلمة المرور</string>
+    <string name="reset_password">إعادة تعيين كلمة المرور</string>
+    <string name="security_settings">إعدادات الأمان</string>
+    <string name="set_security_email">تعيين بريد إلكتروني للأمان</string>
+    <string name="fingerprint_lock">قفل ببصمة الإصبع</string>
+    <string name="use_fingerprint_to_unlock">استخدام بصمة الإصبع لفتح التطبيقات</string>
+    <string name="unlock">فتح القفل</string>
+    <string name="vibration">الاهتزاز</string>
+    <string name="hide_track">إخفاء المسار</string>
+    <string name="hide_track_description">إخفاء المسار عند رسم نمط كلمة المرور</string>
+
+    <string name="relock_option">خيار إعادة القفل</string>
+    <string name="relock_after_quitting">إعادة القفل بعد الخروج</string>
+    <string name="delay_to_relock">تأخير إعادة القفل</string>
+    <string name="relock">إعادة القفل</string>
+    <string name="relock_after_quitting_option">إعادة القفل بعد الخروج</string>
+    <string name="relock_after_screen_off">إعادة القفل بعد إيقاف الشاشة</string>
+
+    <!-- Unlock Screen -->
+    <string name="draw_pattern">ارسم النمط</string>
+    <string name="enter_passcode">أدخل رمز المرور</string>
+    <string name="enter_digit_pin">أدخل رمز PIN من %1$d أرقام</string>
+    <string name="pattern_not_match">النمط غير متطابق</string>
+    <string name="forgot_password">هل نسيت كلمة المرور؟</string>
+
+    <string name="security_question">سؤال الأمان</string>
+    <string name="answer">الإجابة</string>
+    <string name="security_question_not_set">لم تقم بتعيين سؤال أمان</string>
+    <string name="please_enter_your_answer">يُرجى إدخال إجابتك</string>
+    <string name="incorrect_answer">إجابة غير صحيحة</string>
+
+    <!-- Onboarding Screen -->
+    <string name="onboarding_secure_your_apps">احمِ تطبيقاتك</string>
+    <string name="onboarding_quick_secure_access">وصول سريع وآمن</string>
+    <string name="onboarding_privacy_protected">خصوصيتك محمية</string>
+
+    <string name="onboarding_secure_your_apps_description">حافظ على حماية تطبيقاتك الخاصة باستخدام رمز مرور آمن وطبقة إضافية من الخصوصية</string>
+    <string name="onboarding_quick_secure_access_description">افتح تطبيقاتك المحمية فورًا باستخدام رمز المرور أو بصمة الإصبع</string>
+    <string name="onboarding_privacy_protected_description">اختر التطبيقات التي تريد قفلها وحافظ على أمان محتواك الشخصي من الوصول غير المرغوب فيه</string>
+
+    <string name="onboarding_next">التالي</string>
+    <string name="onboarding_get_started">البدء</string>
+    <string name="onboarding_image_description">التعريف %1$d</string>
+
+    <!-- Premium Screen -->
+    <string name="premium_close">إغلاق</string>
+    <string name="premium_image_description">مميز</string>
+    <string name="premium_unlock">فتح القفل</string>
+    <string name="premium_all_features"> جميع الميزات</string>
+    <string name="premium_forever">للأبد</string>
+
+    <string name="premium_description">دفعة واحدة. استمتع بالوصول مدى الحياة\nبدون أي رسوم متكررة.</string>
+
+    <string name="premium_benefits">مزايا Premium</string>
+    <string name="premium_hide_unlimited">إخفاء عدد غير محدود من الصور والفيديوهات</string>
+    <string name="premium_intruder_selfie">صورة سيلفي للمتطفل</string>
+    <string name="premium_no_ads">بدون إعلانات</string>
+    <string name="premium_priority_support">دعم ذو أولوية</string>
+    <string name="premium_best_value">أفضل قيمة</string>
+    <string name="premium_one_time_purchase">شراء لمرة واحدة</string>
+    <string name="premium_lifetime_access">وصول مدى الحياة</string>
+    <string name="premium_one_time_payment">دفعة واحدة</string>
+    <string name="premium_shield_description">درع</string>
+    <string name="premium_no_subscription">لا يوجد اشتراك. ادفع مرة واحدة وسيبقى لك إلى الأبد.</string>
+    <string name="premium_unlock_button">فتح Premium - شراء لمرة واحدة</string>
+    <string name="premium_terms_of_use">شروط الاستخدام</string>
+    <string name="premium_privacy_policy">سياسة الخصوصية</string>
+
+    <!-- Exit Screen -->
+    <string name="exit_screen_back">رجوع</string>
+    <string name="exit_screen_title">الخروج من AppLock</string>
+    <string name="exit_image_description">الخروج من AppLock</string>
+    <string name="exit_app_lock_title">الخروج من AppLock؟</string>
+    <string name="exit_app_lock_description">ستحتاج إلى إدخال رمز المرور الخاص بك\nمرة أخرى للوصول إلى AppLock.</string>
+    <string name="exit_rating_description">تقييم سريع منك يعني\nالكثير لفريقنا.</string>
+    <string name="exit_stay_protected_description">ابقَ محميًا</string>
+    <string name="exit_stay_protected">ابقَ محميًا</string>
+    <string name="exit_anyway_description">الخروج على أي حال</string>
+    <string name="exit_anyway">الخروج على أي حال</string>
+
+    <!-- AppLock Protection -->
+    <string name="applock">AppLock</string>
+    <string name="enable_app_protection">تفعيل حماية التطبيقات</string>
+
+</resources>
+
