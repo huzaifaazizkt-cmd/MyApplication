@@ -2,6 +2,16 @@
 
 <resources>
 
-    <style name="Theme.MyApplication" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
+    <style
+        name="Theme.MyApplication"
+        parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
+        <!-- Dark gray status bar -->
+        <item name="android:statusBarColor">#212121</item>
+
+        <!-- White status bar icons -->
+        <item name="android:windowLightStatusBar">false</item>
+
+    </style>
 
 </resources>

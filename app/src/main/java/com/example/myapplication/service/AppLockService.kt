@@ -1,3 +1,4 @@
+
 package com.example.myapplication.service
 
 import android.accessibilityservice.AccessibilityService
@@ -13,8 +14,8 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.view.accessibility.AccessibilityEvent
 import android.util.Log
+import android.view.accessibility.AccessibilityEvent
 
 import com.example.myapplication.Design.screens.LockScreenActivity
 import com.example.myapplication.data.DataStoreManager
@@ -27,7 +28,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
 
 class AppLockService : AccessibilityService() {
 
@@ -49,40 +49,72 @@ class AppLockService : AccessibilityService() {
             1001
     }
 
+    // =========================================================
+    // COROUTINE
+    // =========================================================
+
     private val serviceScope =
         CoroutineScope(
-            SupervisorJob() + Dispatchers.IO
+            SupervisorJob() +
+                    Dispatchers.IO
         )
 
+    // =========================================================
+    // HANDLER
+    // =========================================================
+
     private val handler =
-        Handler(Looper.getMainLooper())
+        Handler(
+            Looper.getMainLooper()
+        )
 
-    private var lastPackageName: String? = null
+    // =========================================================
+    // STATE
+    // =========================================================
 
-    private var checkingPackage: String? = null
+    private var lastPackageName: String? =
+        null
+
+    private var checkingPackage: String? =
+        null
+
+    /*
+     * This represents the last REAL foreground package.
+     *
+     * IMPORTANT:
+     * We do NOT replace this with System UI.
+     */
+    private var foregroundPackage: String? =
+        null
 
     @Volatile
-    private var appProtectionEnabled = false
+    private var appProtectionEnabled =
+        false
 
     @Volatile
     private var relockOption =
         RELOCK_AFTER_QUITTING
 
     @Volatile
-    private var relockDelay = "never"
+    private var relockDelay =
+        "never"
 
     @Volatile
-    private var serviceConnected = false
+    private var serviceConnected =
+        false
 
     @Volatile
-    private var lockedAppsCache: Set<String> =
+    private var lockedAppsCache:
+            Set<String> =
         emptySet()
 
     @Volatile
-    private var lockedAppsCacheReady = false
+    private var lockedAppsCacheReady =
+        false
 
-    private var homePackageName: String? = null
-
+    private var homePackageName:
+            String? =
+        null
 
     // =========================================================
     // RESET UNLOCKED APP
@@ -91,21 +123,49 @@ class AppLockService : AccessibilityService() {
     private val resetUnlockedAppRunnable =
         Runnable {
 
-            AppLockServiceHolder.currentUnlockedApp =
+            Log.d(
+                TAG,
+                "========================================"
+            )
+
+            Log.d(
+                TAG,
+                "RELOCK TIMER FIRED"
+            )
+
+            Log.d(
+                TAG,
+                "currentUnlockedApp BEFORE = " +
+                        AppLockServiceHolder
+                            .currentUnlockedApp
+            )
+
+            AppLockServiceHolder
+                .currentUnlockedApp =
                 null
 
-            AppLockServiceHolder.lastUnlockTime =
+            AppLockServiceHolder
+                .lastUnlockTime =
                 0L
-
-            AppLockServiceHolder.isLockScreenOpen =
-                false
 
             AppLockServiceHolder
                 .clearSuppressedPackage()
 
-            checkingPackage = null
-        }
+            checkingPackage =
+                null
 
+            Log.d(
+                TAG,
+                "currentUnlockedApp AFTER = " +
+                        AppLockServiceHolder
+                            .currentUnlockedApp
+            )
+
+            Log.d(
+                TAG,
+                "========================================"
+            )
+        }
 
     // =========================================================
     // SCREEN OFF RECEIVER
@@ -123,27 +183,55 @@ class AppLockService : AccessibilityService() {
                     intent?.action !=
                     Intent.ACTION_SCREEN_OFF
                 ) {
+
                     return
                 }
 
-                if (!appProtectionEnabled) {
+                Log.d(
+                    TAG,
+                    "SCREEN OFF"
+                )
+
+                if (
+                    !appProtectionEnabled
+                ) {
+
                     return
                 }
 
                 if (
                     relockOption ==
-                    RELOCK_AFTER_SCREEN_OFF &&
-                    AppLockServiceHolder
-                        .currentUnlockedApp != null
+                    RELOCK_AFTER_SCREEN_OFF
                 ) {
 
-                    scheduleRelock(
-                        "SCREEN_OFF"
-                    )
+                    if (
+                        AppLockServiceHolder
+                            .currentUnlockedApp != null
+                    ) {
+
+                        scheduleRelock(
+                            "SCREEN_OFF"
+                        )
+                    }
+                }
+
+                else if (
+                    relockOption ==
+                    RELOCK_AFTER_QUITTING
+                ) {
+
+                    if (
+                        AppLockServiceHolder
+                            .currentUnlockedApp != null
+                    ) {
+
+                        scheduleRelock(
+                            "SCREEN_OFF_QUITTING_MODE"
+                        )
+                    }
                 }
             }
         }
-
 
     // =========================================================
     // FOREGROUND NOTIFICATION
@@ -209,7 +297,10 @@ class AppLockService : AccessibilityService() {
 
                 } else {
 
-                    @Suppress("DEPRECATION")
+                    @Suppress(
+                        "DEPRECATION"
+                    )
+
                     Notification.Builder(this)
                         .setContentTitle(
                             "AppLock is active"
@@ -228,7 +319,6 @@ class AppLockService : AccessibilityService() {
                         .build()
                 }
 
-
             if (
                 Build.VERSION.SDK_INT >=
                 Build.VERSION_CODES.Q
@@ -243,7 +333,10 @@ class AppLockService : AccessibilityService() {
 
             } else {
 
-                @Suppress("DEPRECATION")
+                @Suppress(
+                    "DEPRECATION"
+                )
+
                 startForeground(
                     NOTIFICATION_ID,
                     notification
@@ -264,7 +357,6 @@ class AppLockService : AccessibilityService() {
             )
         }
     }
-
 
     // =========================================================
     // HOME / LAUNCHER
@@ -310,6 +402,9 @@ class AppLockService : AccessibilityService() {
         }
     }
 
+    // =========================================================
+    // CLEAR PROTECTION STATE
+    // =========================================================
 
     private fun clearProtectionState() {
 
@@ -317,23 +412,91 @@ class AppLockService : AccessibilityService() {
             resetUnlockedAppRunnable
         )
 
-        AppLockServiceHolder.currentUnlockedApp =
+        AppLockServiceHolder
+            .currentUnlockedApp =
             null
 
-        AppLockServiceHolder.lastUnlockTime =
+        AppLockServiceHolder
+            .lastUnlockTime =
             0L
 
-        AppLockServiceHolder.isLockScreenOpen =
+        AppLockServiceHolder
+            .isLockScreenOpen =
             false
 
         AppLockServiceHolder
             .clearSuppressedPackage()
 
-        checkingPackage = null
+        checkingPackage =
+            null
 
-        lastPackageName = null
+        lastPackageName =
+            null
+
+        foregroundPackage =
+            null
     }
 
+    // =========================================================
+    // CLEAR UNLOCKED APP
+    // =========================================================
+
+    private fun clearUnlockedApp(
+        reason: String
+    ) {
+
+        Log.d(
+            TAG,
+            "========================================"
+        )
+
+        Log.d(
+            TAG,
+            "CLEAR UNLOCKED APP"
+        )
+
+        Log.d(
+            TAG,
+            "REASON = $reason"
+        )
+
+        Log.d(
+            TAG,
+            "currentUnlockedApp BEFORE = " +
+                    AppLockServiceHolder
+                        .currentUnlockedApp
+        )
+
+        handler.removeCallbacks(
+            resetUnlockedAppRunnable
+        )
+
+        AppLockServiceHolder
+            .currentUnlockedApp =
+            null
+
+        AppLockServiceHolder
+            .lastUnlockTime =
+            0L
+
+        AppLockServiceHolder
+            .clearSuppressedPackage()
+
+        checkingPackage =
+            null
+
+        Log.d(
+            TAG,
+            "currentUnlockedApp AFTER = " +
+                    AppLockServiceHolder
+                        .currentUnlockedApp
+        )
+
+        Log.d(
+            TAG,
+            "========================================"
+        )
+    }
 
     // =========================================================
     // SERVICE CREATE
@@ -360,9 +523,8 @@ class AppLockService : AccessibilityService() {
 
         resolveHomePackage()
 
-
         // -----------------------------------------------------
-        // Screen OFF receiver
+        // SCREEN OFF RECEIVER
         // -----------------------------------------------------
 
         try {
@@ -385,7 +547,10 @@ class AppLockService : AccessibilityService() {
 
             } else {
 
-                @Suppress("DEPRECATION")
+                @Suppress(
+                    "DEPRECATION"
+                )
+
                 registerReceiver(
                     screenOffReceiver,
                     filter
@@ -401,9 +566,8 @@ class AppLockService : AccessibilityService() {
             )
         }
 
-
         // -----------------------------------------------------
-        // App protection
+        // APP PROTECTION
         // -----------------------------------------------------
 
         serviceScope.launch {
@@ -426,7 +590,12 @@ class AppLockService : AccessibilityService() {
 
                         if (!enabled) {
 
-                            clearProtectionState()
+                            withContext(
+                                Dispatchers.Main
+                            ) {
+
+                                clearProtectionState()
+                            }
                         }
                     }
 
@@ -440,9 +609,8 @@ class AppLockService : AccessibilityService() {
             }
         }
 
-
         // -----------------------------------------------------
-        // Locked apps
+        // LOCKED APPS
         // -----------------------------------------------------
 
         serviceScope.launch {
@@ -477,9 +645,8 @@ class AppLockService : AccessibilityService() {
             }
         }
 
-
         // -----------------------------------------------------
-        // Relock option
+        // RELOCK OPTION
         // -----------------------------------------------------
 
         serviceScope.launch {
@@ -511,9 +678,8 @@ class AppLockService : AccessibilityService() {
             }
         }
 
-
         // -----------------------------------------------------
-        // Relock delay
+        // RELOCK DELAY
         // -----------------------------------------------------
 
         serviceScope.launch {
@@ -577,7 +743,6 @@ class AppLockService : AccessibilityService() {
         }
     }
 
-
     // =========================================================
     // ACCESSIBILITY SERVICE CONNECTED
     // =========================================================
@@ -601,7 +766,6 @@ class AppLockService : AccessibilityService() {
             "========================================"
         )
 
-
         val info =
             AccessibilityServiceInfo().apply {
 
@@ -623,31 +787,32 @@ class AppLockService : AccessibilityService() {
                         .FLAG_REPORT_VIEW_IDS
             }
 
-        serviceInfo = info
+        serviceInfo =
+            info
 
-        serviceConnected = true
-
-
-        // IMPORTANT:
-        // Start foreground notification only after
-        // AccessibilityService is connected.
+        serviceConnected =
+            true
 
         startForegroundServiceNotification()
-
 
         handler.removeCallbacks(
             resetUnlockedAppRunnable
         )
 
         AppLockServiceHolder
-            .isLockScreenOpen = false
+            .isLockScreenOpen =
+            false
 
-        checkingPackage = null
+        checkingPackage =
+            null
 
-        lastPackageName = null
+        lastPackageName =
+            null
+
+        foregroundPackage =
+            null
 
         resolveHomePackage()
-
 
         Log.d(
             TAG,
@@ -655,12 +820,12 @@ class AppLockService : AccessibilityService() {
         )
     }
 
-
     // =========================================================
     // RELOCK DELAY
     // =========================================================
 
-    private fun getRelockDelayMillis(): Long {
+    private fun getRelockDelayMillis():
+            Long {
 
         return when (relockDelay) {
 
@@ -696,18 +861,68 @@ class AppLockService : AccessibilityService() {
         }
     }
 
+    // =========================================================
+    // SCHEDULE RELOCK
+    // =========================================================
 
     private fun scheduleRelock(
         reason: String
     ) {
 
-        if (!appProtectionEnabled) {
+        if (
+            !appProtectionEnabled
+        ) {
+
+            return
+        }
+
+        val unlockedApp =
+            AppLockServiceHolder
+                .currentUnlockedApp
+
+        /*
+         * Nothing is currently unlocked.
+         */
+        if (
+            unlockedApp.isNullOrEmpty()
+        ) {
+
+            Log.d(
+                TAG,
+                "RELOCK IGNORED - NO UNLOCKED APP"
+            )
+
             return
         }
 
         Log.d(
             TAG,
-            "SCHEDULE RELOCK = $reason"
+            "========================================"
+        )
+
+        Log.d(
+            TAG,
+            "SCHEDULE RELOCK"
+        )
+
+        Log.d(
+            TAG,
+            "REASON = $reason"
+        )
+
+        Log.d(
+            TAG,
+            "UNLOCKED APP = $unlockedApp"
+        )
+
+        Log.d(
+            TAG,
+            "RELOCK OPTION = $relockOption"
+        )
+
+        Log.d(
+            TAG,
+            "RELOCK DELAY = $relockDelay"
         )
 
         handler.removeCallbacks(
@@ -717,21 +932,21 @@ class AppLockService : AccessibilityService() {
         val delayMillis =
             getRelockDelayMillis()
 
-        if (delayMillis <= 0L) {
+        /*
+         * Never:
+         *
+         * No timer.
+         *
+         * The important part is that SYSTEM_UI does not call
+         * this function anymore.
+         */
+        if (
+            delayMillis <= 0L
+        ) {
 
-            AppLockServiceHolder
-                .currentUnlockedApp = null
-
-            AppLockServiceHolder
-                .lastUnlockTime = 0L
-
-            AppLockServiceHolder
-                .isLockScreenOpen = false
-
-            AppLockServiceHolder
-                .clearSuppressedPackage()
-
-            checkingPackage = null
+            clearUnlockedApp(
+                "IMMEDIATE_$reason"
+            )
 
             return
         }
@@ -740,11 +955,20 @@ class AppLockService : AccessibilityService() {
             resetUnlockedAppRunnable,
             delayMillis
         )
+
+        Log.d(
+            TAG,
+            "RELOCK TIMER = $delayMillis ms"
+        )
+
+        Log.d(
+            TAG,
+            "========================================"
+        )
     }
 
-
     // =========================================================
-    // CHECK LAUNCHER
+    // LAUNCHER CHECK
     // =========================================================
 
     private fun isLauncherPackage(
@@ -753,8 +977,10 @@ class AppLockService : AccessibilityService() {
 
         if (
             homePackageName != null &&
-            packageName == homePackageName
+            packageName ==
+            homePackageName
         ) {
+
             return true
         }
 
@@ -764,6 +990,17 @@ class AppLockService : AccessibilityService() {
         )
     }
 
+    // =========================================================
+    // SYSTEM UI CHECK
+    // =========================================================
+
+    private fun isSystemUiPackage(
+        packageName: String
+    ): Boolean {
+
+        return packageName ==
+                "com.android.systemui"
+    }
 
     // =========================================================
     // OPEN LOCK SCREEN
@@ -773,9 +1010,23 @@ class AppLockService : AccessibilityService() {
         packageName: String
     ) {
 
-        if (!appProtectionEnabled) {
+        if (
+            !appProtectionEnabled
+        ) {
 
-            checkingPackage = null
+            checkingPackage =
+                null
+
+            return
+        }
+
+        if (
+            packageName ==
+            applicationContext.packageName
+        ) {
+
+            checkingPackage =
+                null
 
             return
         }
@@ -785,19 +1036,27 @@ class AppLockService : AccessibilityService() {
                 .isLockScreenOpen
         ) {
 
-            checkingPackage = null
+            Log.d(
+                TAG,
+                "LOCK SCREEN ALREADY OPEN"
+            )
+
+            checkingPackage =
+                null
 
             return
         }
-
 
         handler.post {
 
             try {
 
-                if (!appProtectionEnabled) {
+                if (
+                    !appProtectionEnabled
+                ) {
 
-                    checkingPackage = null
+                    checkingPackage =
+                        null
 
                     return@post
                 }
@@ -807,15 +1066,21 @@ class AppLockService : AccessibilityService() {
                         .isLockScreenOpen
                 ) {
 
-                    checkingPackage = null
+                    checkingPackage =
+                        null
 
                     return@post
                 }
 
+                /*
+                 * IMPORTANT:
+                 *
+                 * Set this BEFORE startActivity().
+                 */
 
                 AppLockServiceHolder
-                    .isLockScreenOpen = true
-
+                    .isLockScreenOpen =
+                    true
 
                 val lockIntent =
                     Intent(
@@ -830,14 +1095,37 @@ class AppLockService : AccessibilityService() {
 
                         addFlags(
                             Intent.FLAG_ACTIVITY_NEW_TASK or
-                                    Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+                                    Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or
+                                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                                    Intent.FLAG_ACTIVITY_CLEAR_TOP
                         )
                     }
 
+                Log.d(
+                    TAG,
+                    "========================================"
+                )
 
                 Log.d(
                     TAG,
-                    "OPENING LOCK SCREEN FOR = $packageName"
+                    "OPENING LOCK SCREEN"
+                )
+
+                Log.d(
+                    TAG,
+                    "PACKAGE = $packageName"
+                )
+
+                Log.d(
+                    TAG,
+                    "currentUnlockedApp = " +
+                            AppLockServiceHolder
+                                .currentUnlockedApp
+                )
+
+                Log.d(
+                    TAG,
+                    "========================================"
                 )
 
                 startActivity(
@@ -853,15 +1141,94 @@ class AppLockService : AccessibilityService() {
                 )
 
                 AppLockServiceHolder
-                    .isLockScreenOpen = false
+                    .isLockScreenOpen =
+                    false
 
             } finally {
 
-                checkingPackage = null
+                checkingPackage =
+                    null
             }
         }
     }
 
+    // =========================================================
+    // HANDLE FOREGROUND PACKAGE
+    // =========================================================
+
+    private fun handleForegroundPackage(
+        packageName: String
+    ) {
+
+        val previousPackage =
+            foregroundPackage
+
+        /*
+         * Same package = no real foreground change.
+         */
+
+        if (
+            previousPackage ==
+            packageName
+        ) {
+
+            return
+        }
+
+        Log.d(
+            TAG,
+            "FOREGROUND CHANGED: " +
+                    "$previousPackage -> $packageName"
+        )
+
+        /*
+         * Check whether an unlocked protected app was
+         * actually left.
+         */
+
+        val unlockedApp =
+            AppLockServiceHolder
+                .currentUnlockedApp
+
+        if (
+            !unlockedApp.isNullOrEmpty() &&
+            previousPackage ==
+            unlockedApp &&
+            packageName != unlockedApp
+        ) {
+
+            if (
+                relockOption ==
+                RELOCK_AFTER_QUITTING
+            ) {
+
+                Log.d(
+                    TAG,
+                    "UNLOCKED APP LEFT"
+                )
+
+                Log.d(
+                    TAG,
+                    "LEFT APP = $unlockedApp"
+                )
+
+                Log.d(
+                    TAG,
+                    "NEW APP = $packageName"
+                )
+
+                scheduleRelock(
+                    "APP_LEFT_$packageName"
+                )
+            }
+        }
+
+        /*
+         * Now store the REAL foreground package.
+         */
+        foregroundPackage =
+            packageName
+    }
 
     // =========================================================
     // ACCESSIBILITY EVENTS
@@ -876,9 +1243,9 @@ class AppLockService : AccessibilityService() {
             !serviceConnected ||
             event == null
         ) {
+
             return
         }
-
 
         if (
             event.eventType !=
@@ -888,115 +1255,257 @@ class AppLockService : AccessibilityService() {
             AccessibilityEvent
                 .TYPE_WINDOWS_CHANGED
         ) {
+
             return
         }
-
 
         val packageName =
             event.packageName
                 ?.toString()
                 ?: return
 
+        Log.d(
+            TAG,
+            "----------------------------------------"
+        )
 
         Log.d(
             TAG,
-            "ACCESSIBILITY EVENT = $packageName"
+            "ACCESSIBILITY EVENT"
         )
 
+        Log.d(
+            TAG,
+            "PACKAGE = $packageName"
+        )
 
-        // Android System UI
+        Log.d(
+            TAG,
+            "currentUnlockedApp = " +
+                    AppLockServiceHolder
+                        .currentUnlockedApp
+        )
+
+        Log.d(
+            TAG,
+            "isLockScreenOpen = " +
+                    AppLockServiceHolder
+                        .isLockScreenOpen
+        )
+
+        Log.d(
+            TAG,
+            "foregroundPackage = $foregroundPackage"
+        )
+
+        // =====================================================
+        // SYSTEM UI
+        // =====================================================
+
         if (
-            packageName ==
-            "com.android.systemui"
+            isSystemUiPackage(
+                packageName
+            )
         ) {
+
+            /*
+             * IMPORTANT FIX
+             *
+             * System UI is often emitted while:
+             *
+             * - opening an app
+             * - closing an activity
+             * - opening recent apps
+             * - showing transitions
+             * - displaying system dialogs
+             *
+             * Therefore DO NOT clear currentUnlockedApp here.
+             *
+             * Also DO NOT replace foregroundPackage with
+             * System UI.
+             *
+             * We wait for the next REAL package.
+             */
+
+            Log.d(
+                TAG,
+                "SYSTEM UI EVENT - IGNORED"
+            )
+
+            Log.d(
+                TAG,
+                "KEEPING currentUnlockedApp = " +
+                        AppLockServiceHolder
+                            .currentUnlockedApp
+            )
+
+            Log.d(
+                TAG,
+                "KEEPING foregroundPackage = " +
+                        foregroundPackage
+            )
+
+            checkingPackage =
+                null
+
             return
         }
 
+        // =====================================================
+        // LAUNCHER / HOME
+        // =====================================================
 
-        // Launcher / Home
         if (
             isLauncherPackage(
                 packageName
             )
         ) {
 
-            AppLockServiceHolder
-                .isLockScreenOpen = false
+            Log.d(
+                TAG,
+                "LAUNCHER DETECTED = $packageName"
+            )
 
-            checkingPackage = null
+            val unlockedApp =
+                AppLockServiceHolder
+                    .currentUnlockedApp
+
+            /*
+             * Launcher is a REAL foreground destination.
+             *
+             * If user left unlocked app and went Home,
+             * relock according to quitting mode.
+             */
+
+            if (
+                !unlockedApp.isNullOrEmpty() &&
+                foregroundPackage ==
+                unlockedApp &&
+                relockOption ==
+                RELOCK_AFTER_QUITTING
+            ) {
+
+                Log.d(
+                    TAG,
+                    "UNLOCKED APP LEFT -> LAUNCHER"
+                )
+
+                scheduleRelock(
+                    "LAUNCHER"
+                )
+            }
+
+            foregroundPackage =
+                packageName
 
             lastPackageName =
                 packageName
 
-
-            if (
-                AppLockServiceHolder
-                    .currentUnlockedApp != null
-            ) {
-
-                handler.removeCallbacks(
-                    resetUnlockedAppRunnable
-                )
-
-                if (
-                    relockOption ==
-                    RELOCK_AFTER_QUITTING
-                ) {
-
-                    scheduleRelock(
-                        "APP_LEFT"
-                    )
-                }
-            }
+            checkingPackage =
+                null
 
             return
         }
 
+        // =====================================================
+        // OUR APP
+        // =====================================================
 
-        // Our own app
         if (
             packageName ==
             applicationContext.packageName
         ) {
 
+            /*
+             * Our own app can generate accessibility events
+             * while LockScreenActivity is visible.
+             *
+             * Do not clear currentUnlockedApp here.
+             */
+
+            foregroundPackage =
+                packageName
+
             lastPackageName =
                 packageName
+
+            checkingPackage =
+                null
 
             return
         }
 
+        // =====================================================
+        // REAL FOREGROUND PACKAGE
+        // =====================================================
 
-        // Lock screen already open
+        handleForegroundPackage(
+            packageName
+        )
+
+        // =====================================================
+        // LOCK SCREEN ALREADY OPEN
+        // =====================================================
+
         if (
             AppLockServiceHolder
                 .isLockScreenOpen
         ) {
+
+            checkingPackage =
+                null
+
             return
         }
 
+        // =====================================================
+        // ALREADY UNLOCKED
+        // =====================================================
 
-        // Already unlocked
         if (
             AppLockServiceHolder
                 .currentUnlockedApp ==
             packageName
         ) {
 
+            /*
+             * IMPORTANT:
+             *
+             * The app that was just unlocked is still allowed.
+             *
+             * Never open LockScreenActivity again for it.
+             */
+
+            Log.d(
+                TAG,
+                "APP ALREADY UNLOCKED = $packageName"
+            )
+
             lastPackageName =
                 packageName
+
+            checkingPackage =
+                null
 
             return
         }
 
+        // =====================================================
+        // ALREADY CHECKING
+        // =====================================================
 
-        // Already checking
         if (
             checkingPackage ==
             packageName
         ) {
+
+            Log.d(
+                TAG,
+                "ALREADY CHECKING = $packageName"
+            )
+
             return
         }
-
 
         checkingPackage =
             packageName
@@ -1004,12 +1513,13 @@ class AppLockService : AccessibilityService() {
         lastPackageName =
             packageName
 
+        // =====================================================
+        // LOCKED APPS CACHE
+        // =====================================================
 
-        // -----------------------------------------------------
-        // Cached locked apps
-        // -----------------------------------------------------
-
-        if (lockedAppsCacheReady) {
+        if (
+            lockedAppsCacheReady
+        ) {
 
             if (
                 lockedAppsCache.contains(
@@ -1028,16 +1538,21 @@ class AppLockService : AccessibilityService() {
 
             } else {
 
-                checkingPackage = null
+                Log.d(
+                    TAG,
+                    "APP NOT LOCKED = $packageName"
+                )
+
+                checkingPackage =
+                    null
             }
 
             return
         }
 
-
-        // -----------------------------------------------------
-        // First load
-        // -----------------------------------------------------
+        // =====================================================
+        // FIRST LOAD
+        // =====================================================
 
         serviceScope.launch {
 
@@ -1050,19 +1565,16 @@ class AppLockService : AccessibilityService() {
                         .lockedAppsFlow
                         .first()
 
-
                 lockedAppsCache =
                     lockedApps.toSet()
 
                 lockedAppsCacheReady =
                     true
 
-
                 Log.d(
                     TAG,
                     "LOADED LOCKED APPS = $lockedAppsCache"
                 )
-
 
                 if (
                     lockedApps.contains(
@@ -1081,7 +1593,8 @@ class AppLockService : AccessibilityService() {
 
                 } else {
 
-                    checkingPackage = null
+                    checkingPackage =
+                        null
                 }
 
             } catch (e: Exception) {
@@ -1092,11 +1605,11 @@ class AppLockService : AccessibilityService() {
                     e
                 )
 
-                checkingPackage = null
+                checkingPackage =
+                    null
             }
         }
     }
-
 
     // =========================================================
     // INTERRUPT
@@ -1109,7 +1622,6 @@ class AppLockService : AccessibilityService() {
             "ACCESSIBILITY SERVICE INTERRUPTED"
         )
     }
-
 
     // =========================================================
     // UNBIND
@@ -1124,13 +1636,14 @@ class AppLockService : AccessibilityService() {
             "ACCESSIBILITY SERVICE UNBOUND"
         )
 
-        serviceConnected = false
+        serviceConnected =
+            false
 
-        checkingPackage = null
+        checkingPackage =
+            null
 
         return true
     }
-
 
     // =========================================================
     // REBIND
@@ -1149,22 +1662,29 @@ class AppLockService : AccessibilityService() {
             "ACCESSIBILITY SERVICE REBOUND"
         )
 
-        serviceConnected = true
+        serviceConnected =
+            true
 
-        checkingPackage = null
+        checkingPackage =
+            null
 
-        lastPackageName = null
+        lastPackageName =
+            null
 
-        lockedAppsCacheReady = false
+        foregroundPackage =
+            null
+
+        lockedAppsCacheReady =
+            false
 
         AppLockServiceHolder
-            .isLockScreenOpen = false
+            .isLockScreenOpen =
+            false
 
         resolveHomePackage()
 
         startForegroundServiceNotification()
     }
-
 
     // =========================================================
     // DESTROY
@@ -1177,24 +1697,31 @@ class AppLockService : AccessibilityService() {
             "ACCESSIBILITY SERVICE DESTROYED"
         )
 
-        serviceConnected = false
+        serviceConnected =
+            false
 
         handler.removeCallbacks(
             resetUnlockedAppRunnable
         )
 
-        checkingPackage = null
+        checkingPackage =
+            null
 
-        lastPackageName = null
+        lastPackageName =
+            null
+
+        foregroundPackage =
+            null
 
         lockedAppsCache =
             emptySet()
 
-        lockedAppsCacheReady = false
+        lockedAppsCacheReady =
+            false
 
         AppLockServiceHolder
-            .isLockScreenOpen = false
-
+            .isLockScreenOpen =
+            false
 
         try {
 
@@ -1211,9 +1738,7 @@ class AppLockService : AccessibilityService() {
             )
         }
 
-
         serviceScope.cancel()
-
 
         if (
             Build.VERSION.SDK_INT >=
@@ -1226,11 +1751,14 @@ class AppLockService : AccessibilityService() {
 
         } else {
 
-            @Suppress("DEPRECATION")
+            @Suppress(
+                "DEPRECATION"
+            )
+
             stopForeground(true)
         }
-
 
         super.onDestroy()
     }
 }
+

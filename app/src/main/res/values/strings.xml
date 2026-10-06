@@ -162,7 +162,7 @@
     <string name="password">Password</string>
     <string name="reset_password">Reset Password</string>
     <string name="security_settings">Security settings</string>
-    <string name="set_security_email">Set security email</string>
+    <string name="set_security_email">Set security question</string>
     <string name="fingerprint_lock">Fingerprint lock</string>
     <string name="use_fingerprint_to_unlock">use Fingerprint to unlock apps</string>
     <string name="unlock">Unlock</string>

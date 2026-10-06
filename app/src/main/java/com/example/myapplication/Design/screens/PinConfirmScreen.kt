@@ -1,7 +1,5 @@
-
 package com.example.myapplication.Design.screens
 
-import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -25,12 +23,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,7 +34,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -52,15 +47,14 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-
 import androidx.navigation.NavController
 
+import com.example.myapplication.AppPermissionFlow
 import com.example.myapplication.Design.components.NumberPad
-import com.example.myapplication.data.DataStoreManager
 import com.example.myapplication.R
+import com.example.myapplication.data.DataStoreManager
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -70,44 +64,28 @@ import kotlinx.coroutines.withContext
 
 import kotlin.math.sqrt
 
-
 @Composable
 fun PinConfirmScreen(
     navController: NavController,
     context: Context,
     type: String,
     value: String,
-    isReset: Boolean = false
+    isReset: Boolean = false,
+    permissionOnly: Boolean = false
 ) {
-
     val scope = rememberCoroutineScope()
-
     val appContext = remember {
         context.applicationContext
     }
-
     val dataStore = remember {
         DataStoreManager(appContext)
     }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    /*
-     * =========================================================
-     * APP LIST CACHE
-     * =========================================================
-     */
+    val lifecycleOwner =
+        LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
         AppListCache.preload(appContext)
     }
-
-
-    /*
-     * =========================================================
-     * PIN / PATTERN STATES
-     * =========================================================
-     */
 
     var confirmPin by remember {
         mutableStateOf("")
@@ -133,13 +111,6 @@ fun PinConfirmScreen(
         mutableStateOf<Job?>(null)
     }
 
-
-    /*
-     * =========================================================
-     * DIALOG STATES
-     * =========================================================
-     */
-
     var showPermissionDialog by remember {
         mutableStateOf(false)
     }
@@ -152,18 +123,9 @@ fun PinConfirmScreen(
         mutableStateOf(false)
     }
 
-
-    /*
-     * =========================================================
-     * PERMISSION STATES
-     * =========================================================
-     */
-
     var overlayAllowed by remember {
         mutableStateOf(
-            Settings.canDrawOverlays(
-                context
-            )
+            Settings.canDrawOverlays(context)
         )
     }
 
@@ -175,29 +137,9 @@ fun PinConfirmScreen(
         )
     }
 
-
-    /*
-     * =========================================================
-     * AUTO START STATES
-     * =========================================================
-     */
-
     var autoStartAvailable by remember {
         mutableStateOf(false)
     }
-
-    /*
-     * IMPORTANT:
-     *
-     * This state becomes TRUE when the user opens
-     * Auto Start settings and comes back to the app.
-     *
-     * This makes the button:
-     *
-     * Allow -> Allowed
-     *
-     * green after returning.
-     */
 
     var autoStartAllowed by remember {
         mutableStateOf(false)
@@ -206,13 +148,6 @@ fun PinConfirmScreen(
     var autoStartOpened by remember {
         mutableStateOf(false)
     }
-
-
-    /*
-     * =========================================================
-     * SECURITY QUESTION STATES
-     * =========================================================
-     */
 
     var selectedQuestion by remember {
         mutableStateOf("")
@@ -233,13 +168,6 @@ fun PinConfirmScreen(
     var securityQuestionLocked by remember {
         mutableStateOf(false)
     }
-
-
-    /*
-     * =========================================================
-     * PATTERN / COLORS
-     * =========================================================
-     */
 
     val isPattern =
         type.equals(
@@ -262,13 +190,6 @@ fun PinConfirmScreen(
     val pinLength =
         value.length
 
-
-    /*
-     * =========================================================
-     * STRINGS
-     * =========================================================
-     */
-
     val passwordNotMatchText =
         stringResource(
             R.string.password_not_match
@@ -279,33 +200,16 @@ fun PinConfirmScreen(
             R.string.enter_correct_password
         )
 
-
-    /*
-     * =========================================================
-     * CHECK AUTO START AVAILABILITY
-     * =========================================================
-     */
-
     LaunchedEffect(Unit) {
-
         autoStartAvailable =
             getAutoStartIntent(
                 appContext
             ) != null
     }
 
-
-    /*
-     * =========================================================
-     * SHOW RESET TOAST
-     * =========================================================
-     */
-
     fun showResetToast() {
-
         val toastView =
             TextView(context).apply {
-
                 text =
                     "Password reset successfully"
 
@@ -318,9 +222,7 @@ fun PinConfirmScreen(
                 )
 
                 textSize = 14f
-
-                gravity =
-                    Gravity.CENTER
+                gravity = Gravity.CENTER
 
                 setPadding(
                     28,
@@ -331,25 +233,20 @@ fun PinConfirmScreen(
 
                 background =
                     GradientDrawable().apply {
-
                         setColor(
                             android.graphics.Color.WHITE
                         )
-
-                        cornerRadius =
-                            30f
+                        cornerRadius = 30f
                     }
 
                 elevation = 6f
             }
 
         Toast(context).apply {
-
             duration =
                 Toast.LENGTH_LONG
 
-            view =
-                toastView
+            view = toastView
 
             setGravity(
                 Gravity.BOTTOM or
@@ -362,15 +259,7 @@ fun PinConfirmScreen(
         }
     }
 
-
-    /*
-     * =========================================================
-     * CHECK PERMISSIONS
-     * =========================================================
-     */
-
     fun checkPermissions() {
-
         overlayAllowed =
             Settings.canDrawOverlays(
                 context
@@ -382,73 +271,41 @@ fun PinConfirmScreen(
             )
     }
 
-
-    /*
-     * =========================================================
-     * ALL REQUIRED PERMISSIONS
-     * =========================================================
-     *
-     * Auto Start is NOT included here.
-     *
-     * Security Question should open when:
-     *
-     * Overlay + Accessibility
-     *
-     * are allowed.
-     */
-
     fun allPermissionsAllowed(): Boolean {
-
         return overlayAllowed &&
                 accessibilityAllowed
     }
 
-
-    /*
-     * =========================================================
-     * OPEN SECURITY QUESTION
-     * =========================================================
-     */
-
     fun openSecurityQuestion() {
+        showPermissionDialog = false
 
-        showPermissionDialog =
-            false
+        securityAnswer = ""
+        securityAnswerError = false
+        securityDropdownExpanded = false
+        selectedQuestion = ""
+        securityQuestionLocked = false
 
-        securityAnswer =
-            ""
-
-        securityAnswerError =
-            false
-
-        securityDropdownExpanded =
-            false
-
-        selectedQuestion =
-            ""
-
-        securityQuestionLocked =
-            false
-
-        showSecurityDialog =
-            true
+        showSecurityDialog = true
     }
 
-
     /*
-     * =========================================================
-     * LIFECYCLE
-     * =========================================================
+     * Permission pending hone par
+     * direct permission dialog open hoga.
      *
-     * This is important for:
-     *
-     * Overlay
-     * Accessibility
-     * Auto Start
-     *
-     * When user comes back from Android Settings,
-     * ON_RESUME runs.
+     * PIN/Pattern confirmation UI
+     * dobara show nahi hoga.
      */
+    LaunchedEffect(permissionOnly) {
+        if (permissionOnly) {
+            checkPermissions()
+
+            if (allPermissionsAllowed()) {
+                openSecurityQuestion()
+            } else {
+                showPermissionDialog = true
+            }
+        }
+    }
 
     val currentShowPermissionDialog =
         rememberUpdatedState(
@@ -460,25 +317,18 @@ fun PinConfirmScreen(
             autoStartOpened
         )
 
-
     DisposableEffect(
         lifecycleOwner
     ) {
-
         val observer =
-            LifecycleEventObserver { _, event ->
+            LifecycleEventObserver {
+                    _,
+                    event ->
 
                 if (
                     event ==
                     Lifecycle.Event.ON_RESUME
                 ) {
-
-                    /*
-                     * -------------------------------------------------
-                     * Refresh Overlay + Accessibility
-                     * -------------------------------------------------
-                     */
-
                     val newOverlayAllowed =
                         Settings.canDrawOverlays(
                             context
@@ -495,54 +345,18 @@ fun PinConfirmScreen(
                     accessibilityAllowed =
                         newAccessibilityAllowed
 
-
-                    /*
-                     * -------------------------------------------------
-                     * AUTO START
-                     * -------------------------------------------------
-                     *
-                     * Android does not provide one universal API
-                     * to read the Auto Start switch on every OEM.
-                     *
-                     * Therefore:
-                     *
-                     * Auto Start opened
-                     * +
-                     * user returned
-                     *
-                     * = Allowed
-                     *
-                     * This gives the same UI behavior as requested:
-                     *
-                     * Allow -> Allowed
-                     */
-
                     if (
                         currentAutoStartOpened.value
                     ) {
-
-                        autoStartAllowed =
-                            true
-
-                        autoStartOpened =
-                            false
+                        autoStartAllowed = true
+                        autoStartOpened = false
                     }
-
-
-                    /*
-                     * -------------------------------------------------
-                     * OPEN SECURITY QUESTION
-                     * -------------------------------------------------
-                     *
-                     * Only Overlay + Accessibility are required.
-                     */
 
                     if (
                         currentShowPermissionDialog.value &&
                         newOverlayAllowed &&
                         newAccessibilityAllowed
                     ) {
-
                         showPermissionDialog =
                             false
 
@@ -551,162 +365,87 @@ fun PinConfirmScreen(
                 }
             }
 
-        lifecycleOwner.lifecycle.addObserver(
-            observer
-        )
+        lifecycleOwner.lifecycle
+            .addObserver(observer)
 
         onDispose {
-
-            lifecycleOwner.lifecycle.removeObserver(
-                observer
-            )
+            lifecycleOwner.lifecycle
+                .removeObserver(
+                    observer
+                )
         }
     }
-
-
-    /*
-     * =========================================================
-     * PERMISSION DIALOG EFFECT
-     * =========================================================
-     */
 
     LaunchedEffect(
         showPermissionDialog
     ) {
-
         if (showPermissionDialog) {
-
             checkPermissions()
 
-            if (
-                allPermissionsAllowed()
-            ) {
-
-                showPermissionDialog =
-                    false
-
+            if (allPermissionsAllowed()) {
+                showPermissionDialog = false
                 openSecurityQuestion()
             }
         }
     }
 
-
-    /*
-     * =========================================================
-     * PERMISSION STATE EFFECT
-     * =========================================================
-     */
-
     LaunchedEffect(
         overlayAllowed,
         accessibilityAllowed
     ) {
-
         if (
             showPermissionDialog &&
             overlayAllowed &&
             accessibilityAllowed
         ) {
-
-            showPermissionDialog =
-                false
-
+            showPermissionDialog = false
             openSecurityQuestion()
         }
     }
 
-
-    /*
-     * =========================================================
-     * CLEAR PATTERN ERROR
-     * =========================================================
-     */
-
     fun clearPatternError() {
-
         clearErrorJob?.cancel()
+        clearErrorJob = null
 
-        clearErrorJob =
-            null
-
-        patternError =
-            false
-
-        error =
-            ""
-
-        confirmPattern =
-            emptyList()
+        patternError = false
+        error = ""
+        confirmPattern = emptyList()
     }
 
-
-    /*
-     * =========================================================
-     * SHOW PATTERN ERROR
-     * =========================================================
-     */
-
     fun showPatternError() {
-
         clearErrorJob?.cancel()
 
-        patternError =
-            true
-
-        error =
-            passwordNotMatchText
+        patternError = true
+        error = passwordNotMatchText
 
         clearErrorJob =
             scope.launch {
-
                 delay(1500)
 
                 confirmPattern =
                     emptyList()
 
-                patternError =
-                    false
+                patternError = false
+                error = ""
 
-                error =
-                    ""
-
-                clearErrorJob =
-                    null
+                clearErrorJob = null
             }
     }
 
-
-    /*
-     * =========================================================
-     * FINISH RESET
-     * =========================================================
-     */
-
     fun finishReset() {
-
-        if (
-            isNavigatingToAppList
-        ) {
+        if (isNavigatingToAppList) {
             return
         }
 
-        isNavigatingToAppList =
-            true
-
-        showSecurityDialog =
-            false
-
-        showPermissionDialog =
-            false
+        isNavigatingToAppList = true
+        showSecurityDialog = false
+        showPermissionDialog = false
 
         scope.launch(
             Dispatchers.IO
         ) {
-
             try {
-
                 if (isPattern) {
-
                     dataStore.savePattern(
                         value
                     )
@@ -714,9 +453,7 @@ fun PinConfirmScreen(
                     dataStore.saveAuthType(
                         "pattern"
                     )
-
                 } else {
-
                     dataStore.savePin(
                         value
                     )
@@ -724,42 +461,33 @@ fun PinConfirmScreen(
                     dataStore.saveAuthType(
                         "pin"
                     )
-
                 }
 
                 withContext(
                     Dispatchers.Main
                 ) {
-
                     showResetToast()
 
                     if (
-                        !navController.popBackStack(
-                            "appList",
-                            false
-                        )
+                        !navController
+                            .popBackStack(
+                                "appList",
+                                false
+                            )
                     ) {
-
                         navController.navigate(
                             "appList"
                         ) {
-
-                            launchSingleTop =
-                                true
+                            launchSingleTop = true
                         }
                     }
                 }
-
-            } catch (
-                e: Exception
-            ) {
-
+            } catch (e: Exception) {
                 e.printStackTrace()
 
                 withContext(
                     Dispatchers.Main
                 ) {
-
                     isNavigatingToAppList =
                         false
 
@@ -773,40 +501,24 @@ fun PinConfirmScreen(
         }
     }
 
-
-    /*
-     * =========================================================
-     * CONTINUE WITH PIN
-     * =========================================================
-     */
-
     fun continueWithPin() {
-
         if (isReset) {
-
             finishReset()
-
             return
         }
 
         checkPermissions()
 
-        /*
-         * Always show permission dialog first.
-         *
-         * If Overlay + Accessibility are already allowed,
-         * LaunchedEffect will immediately open Security Question.
-         */
-
-        showPermissionDialog =
-            true
+        AppPermissionFlow.savePendingSetup(
+            context = appContext,
+            type = "pin",
+            value = value
+        )
 
         scope.launch(
             Dispatchers.IO
         ) {
-
             try {
-
                 dataStore.savePin(
                     value
                 )
@@ -814,47 +526,32 @@ fun PinConfirmScreen(
                 dataStore.saveAuthType(
                     "pin"
                 )
-
-            } catch (
-                e: Exception
-            ) {
-
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
+
+        showPermissionDialog = true
     }
 
-
-    /*
-     * =========================================================
-     * CONTINUE WITH PATTERN
-     * =========================================================
-     */
-
     fun continueWithPattern() {
-
         if (isReset) {
-
             finishReset()
-
             return
         }
 
         checkPermissions()
 
-        /*
-         * Always show permission dialog first.
-         */
-
-        showPermissionDialog =
-            true
+        AppPermissionFlow.savePendingSetup(
+            context = appContext,
+            type = "pattern",
+            value = value
+        )
 
         scope.launch(
             Dispatchers.IO
         ) {
-
             try {
-
                 dataStore.savePattern(
                     value
                 )
@@ -862,27 +559,16 @@ fun PinConfirmScreen(
                 dataStore.saveAuthType(
                     "pattern"
                 )
-
-            } catch (
-                e: Exception
-            ) {
-
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
+
+        showPermissionDialog = true
     }
 
-
-    /*
-     * =========================================================
-     * OPEN OVERLAY PERMISSION
-     * =========================================================
-     */
-
     fun openOverlayPermission() {
-
         try {
-
             val intent =
                 Intent(
                     Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
@@ -891,141 +577,61 @@ fun PinConfirmScreen(
                     )
                 )
 
-            context.startActivity(
-                intent
-            )
-
-        } catch (
-            e: Exception
-        ) {
-
+            context.startActivity(intent)
+        } catch (e: Exception) {
             try {
-
                 context.startActivity(
                     Intent(
                         Settings.ACTION_MANAGE_OVERLAY_PERMISSION
                     )
                 )
-
-            } catch (
-                e2: Exception
-            ) {
-
+            } catch (e2: Exception) {
                 try {
-
                     context.startActivity(
                         Intent(
                             Settings.ACTION_SETTINGS
                         )
                     )
-
-                } catch (
-                    e3: Exception
-                ) {
-
+                } catch (e3: Exception) {
                     e3.printStackTrace()
                 }
             }
         }
     }
 
-
-    /*
-     * =========================================================
-     * OPEN ACCESSIBILITY SETTINGS
-     * =========================================================
-     */
-
     fun openAccessibilitySettings() {
-
         try {
-
             context.startActivity(
                 Intent(
                     Settings.ACTION_ACCESSIBILITY_SETTINGS
                 )
             )
-
-        } catch (
-            e: Exception
-        ) {
-
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-
-    /*
-     * =========================================================
-     * OPEN AUTO START SETTINGS
-     * =========================================================
-     *
-     * IMPORTANT:
-     *
-     * autoStartOpened = true
-     * before opening settings.
-     *
-     * When user returns:
-     *
-     * ON_RESUME
-     *
-     * detects autoStartOpened == true
-     *
-     * and changes:
-     *
-     * autoStartAllowed = true
-     *
-     * So button becomes:
-     *
-     * GREEN
-     * Allowed
-     */
-
     fun openAutoStartSettings() {
-
         val autoStartIntent =
             getAutoStartIntent(
                 context
             )
 
-        if (
-            autoStartIntent == null
-        ) {
-
-            autoStartAvailable =
-                false
-
+        if (autoStartIntent == null) {
+            autoStartAvailable = false
             return
         }
 
-        /*
-         * Mark that Auto Start settings
-         * has been opened.
-         */
-
-        autoStartOpened =
-            true
+        autoStartOpened = true
 
         try {
-
             context.startActivity(
                 autoStartIntent
             )
-
-        } catch (
-            e: Exception
-        ) {
-
-            /*
-             * If OEM Auto Start page failed,
-             * don't mark it as opened.
-             */
-
-            autoStartOpened =
-                false
+        } catch (e: Exception) {
+            autoStartOpened = false
 
             try {
-
                 context.startActivity(
                     Intent(
                         Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
@@ -1034,170 +640,131 @@ fun PinConfirmScreen(
                         )
                     )
                 )
-
-            } catch (
-                e2: Exception
-            ) {
-
+            } catch (e2: Exception) {
                 e2.printStackTrace()
             }
         }
     }
 
-
-    /*
-     * =========================================================
-     * GO TO APP LIST
-     * =========================================================
-     */
-
     fun goToAppList() {
-
-        if (
-            isNavigatingToAppList
-        ) {
+        if (isNavigatingToAppList) {
             return
         }
 
-        isNavigatingToAppList =
-            true
+        isNavigatingToAppList = true
 
-        showSecurityDialog =
-            false
-
-        showPermissionDialog =
-            false
+        showSecurityDialog = false
+        showPermissionDialog = false
 
         scope.launch {
-
             try {
-
                 dataStore.saveAppInitialized(
                     true
                 )
 
-            } catch (
-                e: Exception
-            ) {
-
+                AppPermissionFlow.clearPendingSetup(
+                    appContext
+                )
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
 
             navController.navigate(
                 "appList"
             ) {
-
-                popUpTo(
-                    "create"
-                ) {
-                    inclusive = true
+                if (permissionOnly) {
+                    popUpTo(
+                        "permissionGate"
+                    ) {
+                        inclusive = true
+                    }
+                } else {
+                    popUpTo(
+                        "create"
+                    ) {
+                        inclusive = true
+                    }
                 }
 
-                launchSingleTop =
-                    true
+                launchSingleTop = true
             }
         }
     }
 
-
-    /*
-     * =========================================================
-     * MAIN SCREEN
-     * =========================================================
-     */
-
     Box(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .background(
-                    backgroundColor
-                )
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                backgroundColor
+            )
     ) {
 
-        Column(
-            modifier =
-                Modifier
+        if (!permissionOnly) {
+
+            Column(
+                modifier = Modifier
                     .fillMaxSize()
                     .padding(
                         horizontal = 30.dp
                     ),
+                horizontalAlignment =
+                    Alignment.CenterHorizontally,
+                verticalArrangement =
+                    Arrangement.Center
+            ) {
 
-            horizontalAlignment =
-                Alignment.CenterHorizontally,
-
-            verticalArrangement =
-                Arrangement.Center
-        ) {
-
-            Text(
-                text =
-                    if (isPattern) {
-
+                Text(
+                    text = if (isPattern) {
                         stringResource(
                             R.string.confirm_pattern
                         )
-
                     } else {
-
                         stringResource(
                             R.string.confirm_passcode
                         )
                     },
+                    color = Color.White,
+                    fontSize = 25.sp
+                )
 
-                color =
-                    Color.White,
-
-                fontSize =
-                    25.sp
-            )
-
-            Spacer(
-                modifier =
+                Spacer(
                     Modifier.height(28.dp)
-            )
+                )
 
-            Row(
-                verticalAlignment =
-                    Alignment.CenterVertically
-            ) {
+                Row(
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
 
-                Box(
-                    modifier =
-                        Modifier
+                    Box(
+                        modifier = Modifier
                             .size(25.dp)
                             .border(
                                 2.dp,
                                 Color.White,
                                 CircleShape
                             ),
+                        contentAlignment =
+                            Alignment.Center
+                    ) {
+                        Text(
+                            text = "1",
+                            color = Color.White,
+                            fontSize = 12.sp
+                        )
+                    }
 
-                    contentAlignment =
-                        Alignment.Center
-                ) {
-
-                    Text(
-                        text = "1",
-                        color =
-                            Color.White,
-                        fontSize =
-                            12.sp
-                    )
-                }
-
-                Box(
-                    modifier =
-                        Modifier
+                    Box(
+                        modifier = Modifier
                             .width(95.dp)
                             .height(2.dp)
                             .background(
                                 Color.White
                             )
-                )
+                    )
 
-                Box(
-                    modifier =
-                        Modifier
+                    Box(
+                        modifier = Modifier
                             .size(31.dp)
                             .background(
                                 Color.White.copy(
@@ -1212,130 +779,87 @@ fun PinConfirmScreen(
                                 ),
                                 CircleShape
                             ),
-
-                    contentAlignment =
-                        Alignment.Center
-                ) {
-
-                    Box(
-                        modifier =
-                            Modifier
+                        contentAlignment =
+                            Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
                                 .size(21.dp)
                                 .background(
                                     Color.White,
                                     CircleShape
                                 ),
+                            contentAlignment =
+                                Alignment.Center
+                        ) {
+                            Text(
+                                text = "2",
+                                color =
+                                    backgroundColor,
+                                fontSize = 15.sp
+                            )
+                        }
+                    }
+                }
 
+                Spacer(
+                    Modifier.height(65.dp)
+                )
+
+                if (isPattern) {
+
+                    Text(
+                        text = stringResource(
+                            R.string.draw_pattern_again
+                        ),
+                        color = Color.White,
+                        fontSize = 18.sp
+                    )
+
+                    Spacer(
+                        Modifier.height(18.dp)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(24.dp),
                         contentAlignment =
                             Alignment.Center
                     ) {
-
-                        Text(
-                            text = "2",
-                            color =
-                                backgroundColor,
-                            fontSize =
-                                15.sp
-                        )
+                        if (error.isNotEmpty()) {
+                            Text(
+                                text = error,
+                                color = Color.Red,
+                                fontSize = 15.sp
+                            )
+                        }
                     }
-                }
-            }
 
-            Spacer(
-                modifier =
-                    Modifier.height(65.dp)
-            )
-
-            /*
-             * =================================================
-             * PATTERN
-             * =================================================
-             */
-
-            if (isPattern) {
-
-                Text(
-                    text =
-                        stringResource(
-                            R.string.draw_pattern_again
-                        ),
-
-                    color =
-                        Color.White,
-
-                    fontSize =
-                        18.sp
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.height(18.dp)
-                )
-
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(24.dp),
-
-                    contentAlignment =
-                        Alignment.Center
-                ) {
-
-                    if (
-                        error.isNotEmpty()
-                    ) {
-
-                        Text(
-                            text =
-                                error,
-
-                            color =
-                                Color.Red,
-
-                            fontSize =
-                                15.sp
-                        )
-                    }
-                }
-
-                Spacer(
-                    modifier =
+                    Spacer(
                         Modifier.height(38.dp)
-                )
+                    )
 
-                ConfirmPatternGrid(
-                    selectedDots =
-                        confirmPattern,
-
-                    isError =
-                        patternError,
-
-                    onPatternChanged =
-                        { dots ->
+                    ConfirmPatternGrid(
+                        selectedDots =
+                            confirmPattern,
+                        isError =
+                            patternError,
+                        onPatternChanged = {
+                                dots ->
 
                             confirmPattern =
                                 dots
 
-                            if (
-                                patternError
-                            ) {
-
+                            if (patternError) {
                                 clearErrorJob?.cancel()
-
-                                clearErrorJob =
-                                    null
-
-                                patternError =
-                                    false
-
-                                error =
-                                    ""
+                                clearErrorJob = null
+                                patternError = false
+                                error = ""
                             }
                         },
-
-                    onPatternFinished =
-                        { pattern ->
+                        onPatternFinished = {
+                                pattern ->
 
                             val originalPattern =
                                 value
@@ -1344,12 +868,8 @@ fun PinConfirmScreen(
                                         it.toIntOrNull()
                                     }
 
-                            if (
-                                pattern.size < 4
-                            ) {
-
+                            if (pattern.size < 4) {
                                 showPatternError()
-
                                 return@ConfirmPatternGrid
                             }
 
@@ -1357,22 +877,15 @@ fun PinConfirmScreen(
                                 pattern !=
                                 originalPattern
                             ) {
-
                                 showPatternError()
-
                                 return@ConfirmPatternGrid
                             }
 
                             clearErrorJob?.cancel()
+                            clearErrorJob = null
 
-                            clearErrorJob =
-                                null
-
-                            patternError =
-                                false
-
-                            error =
-                                ""
+                            patternError = false
+                            error = ""
 
                             confirmPattern =
                                 pattern
@@ -1380,117 +893,82 @@ fun PinConfirmScreen(
                             patternConfirmed =
                                 true
                         },
+                        dotColor =
+                            patternDotColor,
+                        errorColor =
+                            errorColor,
+                        backgroundColor =
+                            backgroundColor
+                    )
 
-                    dotColor =
-                        patternDotColor,
-
-                    errorColor =
-                        errorColor,
-
-                    backgroundColor =
-                        backgroundColor
-                )
-
-                Spacer(
-                    modifier =
+                    Spacer(
                         Modifier.height(55.dp)
-                )
+                    )
 
-                Row(
-                    modifier =
-                        Modifier
+                    Row(
+                        modifier = Modifier
                             .fillMaxWidth()
                             .padding(
                                 end = 30.dp
                             ),
-
-                    horizontalArrangement =
-                        Arrangement.End
-                ) {
-
-                    Text(
-                        text =
-                            stringResource(
+                        horizontalArrangement =
+                            Arrangement.End
+                    ) {
+                        Text(
+                            text = stringResource(
                                 R.string.continue_text
                             ),
-
-                        color =
-                            if (
-                                patternConfirmed
-                            ) {
-                                Color.White
-                            } else {
-                                Color.White.copy(
-                                    alpha = 0.35f
-                                )
-                            },
-
-                        fontSize =
-                            20.sp,
-
-                        modifier =
-                            Modifier
+                            color =
+                                if (patternConfirmed) {
+                                    Color.White
+                                } else {
+                                    Color.White.copy(
+                                        alpha = 0.35f
+                                    )
+                                },
+                            fontSize = 20.sp,
+                            modifier = Modifier
                                 .clickable(
                                     enabled =
                                         patternConfirmed,
-
-                                    indication =
-                                        null,
-
+                                    indication = null,
                                     interactionSource =
                                         remember {
                                             MutableInteractionSource()
                                         }
                                 ) {
-
                                     continueWithPattern()
                                 }
-                                .padding(
-                                    10.dp
-                                )
-                    )
-                }
+                                .padding(10.dp)
+                        )
+                    }
 
-            } else {
+                } else {
 
-                /*
-                 * =================================================
-                 * PIN
-                 * =================================================
-                 */
-
-                Text(
-                    text =
-                        stringResource(
+                    Text(
+                        text = stringResource(
                             R.string.confirm_passcode
                         ),
+                        color = Color.White,
+                        fontSize = 18.sp
+                    )
 
-                    color =
-                        Color.White,
-
-                    fontSize =
-                        18.sp
-                )
-
-                Spacer(
-                    modifier =
+                    Spacer(
                         Modifier.height(18.dp)
-                )
+                    )
 
-                Row(
-                    horizontalArrangement =
-                        Arrangement.spacedBy(
-                            14.dp
-                        )
-                ) {
+                    Row(
+                        horizontalArrangement =
+                            Arrangement.spacedBy(
+                                14.dp
+                            )
+                    ) {
+                        repeat(
+                            pinLength
+                        ) { index ->
 
-                    repeat(
-                        pinLength
-                    ) { index ->
-
-                        Box(
-                            modifier =
-                                Modifier
+                            Box(
+                                modifier = Modifier
                                     .size(20.dp)
                                     .border(
                                         1.5.dp,
@@ -1508,274 +986,190 @@ fun PinConfirmScreen(
                                         },
                                         CircleShape
                                     )
-                        )
+                            )
+                        }
                     }
-                }
 
-                Spacer(
-                    modifier =
+                    Spacer(
                         Modifier.height(15.dp)
-                )
+                    )
 
-                Box(
-                    modifier =
-                        Modifier
+                    Box(
+                        modifier = Modifier
                             .fillMaxWidth()
                             .height(22.dp)
                             .padding(
                                 top = 5.dp
                             ),
-
-                    contentAlignment =
-                        Alignment.Center
-                ) {
-
-                    if (
-                        error.isNotEmpty()
+                        contentAlignment =
+                            Alignment.Center
                     ) {
-
-                        Text(
-                            text =
-                                error,
-
-                            color =
-                                Color.Red,
-
-                            fontSize =
-                                16.sp,
-
-                            textAlign =
-                                TextAlign.Center
-                        )
+                        if (error.isNotEmpty()) {
+                            Text(
+                                text = error,
+                                color = Color.Red,
+                                fontSize = 16.sp,
+                                textAlign =
+                                    TextAlign.Center
+                            )
+                        }
                     }
-                }
 
-                Spacer(
-                    modifier =
+                    Spacer(
                         Modifier.height(50.dp)
-                )
+                    )
 
-                NumberPad(
-                    onNumberClick =
-                        { number ->
+                    NumberPad(
+                        onNumberClick = {
+                                number ->
 
                             if (
                                 confirmPin.length <
                                 pinLength
                             ) {
-
                                 confirmPin +=
                                     number
-
-                                error =
-                                    ""
+                                error = ""
                             }
                         },
+                        onDelete = {
+                            if (
+                                confirmPin.isNotEmpty()
+                            ) {
+                                confirmPin =
+                                    confirmPin.dropLast(
+                                        1
+                                    )
+                                error = ""
+                            }
+                        },
+                        buttonColor =
+                            numberButtonColor
+                    )
 
-                    onDelete = {
-
-                        if (
-                            confirmPin.isNotEmpty()
-                        ) {
-
-                            confirmPin =
-                                confirmPin.dropLast(
-                                    1
-                                )
-
-                            error =
-                                ""
-                        }
-                    },
-
-                    buttonColor =
-                        numberButtonColor
-                )
-
-                Spacer(
-                    modifier =
+                    Spacer(
                         Modifier.height(55.dp)
-                )
+                    )
 
-                Row(
-                    modifier =
-                        Modifier
+                    Row(
+                        modifier = Modifier
                             .fillMaxWidth()
                             .padding(
                                 end = 30.dp
                             ),
+                        horizontalArrangement =
+                            Arrangement.spacedBy(
+                                30.dp,
+                                Alignment.End
+                            )
+                    ) {
 
-                    horizontalArrangement =
-                        Arrangement.spacedBy(
-                            30.dp,
-                            Alignment.End
-                        )
-                ) {
-
-                    Text(
-                        text =
-                            stringResource(
+                        Text(
+                            text = stringResource(
                                 R.string.reset
                             ),
-
-                        color =
-                            if (
-                                confirmPin.isEmpty()
-                            ) {
-                                Color.White.copy(
-                                    alpha = 0.35f
-                                )
-                            } else {
-                                Color.White
-                            },
-
-                        fontSize =
-                            20.sp,
-
-                        modifier =
-                            Modifier
+                            color =
+                                if (
+                                    confirmPin.isEmpty()
+                                ) {
+                                    Color.White.copy(
+                                        alpha = 0.35f
+                                    )
+                                } else {
+                                    Color.White
+                                },
+                            fontSize = 20.sp,
+                            modifier = Modifier
                                 .clickable(
                                     enabled =
                                         confirmPin.isNotEmpty(),
-
-                                    indication =
-                                        null,
-
+                                    indication = null,
                                     interactionSource =
                                         remember {
                                             MutableInteractionSource()
                                         }
                                 ) {
-
-                                    confirmPin =
-                                        ""
-
-                                    error =
-                                        ""
+                                    confirmPin = ""
+                                    error = ""
                                 }
-                                .padding(
-                                    10.dp
-                                )
-                    )
+                                .padding(10.dp)
+                        )
 
-                    Text(
-                        text =
-                            stringResource(
+                        Text(
+                            text = stringResource(
                                 R.string.continue_text
                             ),
-
-                        color =
-                            if (
-                                confirmPin.length ==
-                                pinLength
-                            ) {
-                                Color.White
-                            } else {
-                                Color.White.copy(
-                                    alpha = 0.35f
-                                )
-                            },
-
-                        fontSize =
-                            20.sp,
-
-                        modifier =
-                            Modifier
+                            color =
+                                if (
+                                    confirmPin.length ==
+                                    pinLength
+                                ) {
+                                    Color.White
+                                } else {
+                                    Color.White.copy(
+                                        alpha = 0.35f
+                                    )
+                                },
+                            fontSize = 20.sp,
+                            modifier = Modifier
                                 .clickable(
                                     enabled =
                                         confirmPin.length ==
                                                 pinLength,
-
-                                    indication =
-                                        null,
-
+                                    indication = null,
                                     interactionSource =
                                         remember {
                                             MutableInteractionSource()
                                         }
                                 ) {
-
                                     if (
                                         confirmPin !=
                                         value
                                     ) {
-
                                         error =
                                             enterCorrectPasswordText
-
-                                        confirmPin =
-                                            ""
-
+                                        confirmPin = ""
                                         return@clickable
                                     }
 
                                     continueWithPin()
                                 }
-                                .padding(
-                                    10.dp
-                                )
-                    )
+                                .padding(10.dp)
+                        )
+                    }
                 }
             }
         }
 
-
-        /*
-         * =========================================================
-         * PERMISSION DIALOG
-         * =========================================================
-         */
-
-        if (
-            showPermissionDialog
-        ) {
-
+        if (showPermissionDialog) {
             PermissionRequiredDialog(
-
                 autoStartAvailable =
                     autoStartAvailable,
-
                 autoStartAllowed =
                     autoStartAllowed,
-
                 overlayAllowed =
                     overlayAllowed,
-
                 accessibilityAllowed =
                     accessibilityAllowed,
 
-                onAutoStartAllow =
-                    {
-                        openAutoStartSettings()
-                    },
+                onAutoStartAllow = {
+                    openAutoStartSettings()
+                },
 
-                onOverlayAllow =
-                    {
-                        openOverlayPermission()
-                    },
+                onOverlayAllow = {
+                    openOverlayPermission()
+                },
 
-                onAccessibilityAllow =
-                    {
-                        openAccessibilitySettings()
-                    },
+                onAccessibilityAllow = {
+                    openAccessibilitySettings()
+                },
 
                 onDone = {}
             )
         }
 
-
-        /*
-         * =========================================================
-         * SECURITY QUESTION
-         * =========================================================
-         */
-
-        if (
-            showSecurityDialog
-        ) {
-
+        if (showSecurityDialog) {
             SecurityQuestionDialog(
-
                 selectedQuestion =
                     selectedQuestion,
 
@@ -1794,117 +1188,92 @@ fun PinConfirmScreen(
                 answerError =
                     securityAnswerError,
 
-                onDropdownClick =
-                    {
+                onDropdownClick = {
+                    if (
+                        !securityQuestionLocked
+                    ) {
+                        securityDropdownExpanded =
+                            !securityDropdownExpanded
+                    }
+                },
 
-                        if (
-                            !securityQuestionLocked
-                        ) {
+                onQuestionSelected = {
+                        question ->
 
-                            securityDropdownExpanded =
-                                !securityDropdownExpanded
-                        }
-                    },
+                    if (
+                        !securityQuestionLocked
+                    ) {
+                        selectedQuestion =
+                            question
 
-                onQuestionSelected =
-                    { question ->
-
-                        if (
-                            !securityQuestionLocked
-                        ) {
-
-                            selectedQuestion =
-                                question
-
-                            securityDropdownExpanded =
-                                false
-
-                            securityAnswerError =
-                                false
-                        }
-                    },
-
-                onAnswerChanged =
-                    { newAnswer ->
-
-                        securityAnswer =
-                            newAnswer
+                        securityDropdownExpanded =
+                            false
 
                         securityAnswerError =
                             false
-                    },
+                    }
+                },
 
-                onSkip =
-                    {
+                onAnswerChanged = {
+                        newAnswer ->
 
-                        if (!isReset) {
-                            goToAppList()
-                        }
-                    },
+                    securityAnswer =
+                        newAnswer
 
-                onSave =
-                    {
+                    securityAnswerError =
+                        false
+                },
 
-                        scope.launch {
+                onSkip = {
+                    if (!isReset) {
+                        goToAppList()
+                    }
+                },
 
-                            try {
+                onSave = {
+                    scope.launch {
+                        try {
+                            val question =
+                                selectedQuestion.trim()
 
-                                val question =
-                                    selectedQuestion
-                                        .trim()
+                            val enteredAnswer =
+                                securityAnswer.trim()
 
-                                val enteredAnswer =
-                                    securityAnswer
-                                        .trim()
-
-                                if (
-                                    question.isEmpty() ||
-                                    enteredAnswer.isEmpty()
-                                ) {
-
-                                    securityAnswerError =
-                                        true
-
-                                    return@launch
-                                }
-
-                                dataStore
-                                    .saveSecurityQuestion(
-                                        question
-                                    )
-
-                                dataStore
-                                    .saveSecurityAnswer(
-                                        enteredAnswer
-                                    )
-
-                                securityAnswerError =
-                                    false
-
-                                goToAppList()
-
-                            } catch (
-                                e: Exception
+                            if (
+                                question.isEmpty() ||
+                                enteredAnswer.isEmpty()
                             ) {
-
-                                e.printStackTrace()
-
                                 securityAnswerError =
                                     true
+                                return@launch
                             }
+
+                            dataStore
+                                .saveSecurityQuestion(
+                                    question
+                                )
+
+                            dataStore
+                                .saveSecurityAnswer(
+                                    enteredAnswer
+                                )
+
+                            securityAnswerError =
+                                false
+
+                            goToAppList()
+
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            securityAnswerError =
+                                true
                         }
                     }
+                }
             )
         }
     }
 }
-
-
-/*
- * =============================================================
- * PERMISSION REQUIRED DIALOG
- * =============================================================
- */
 
 @Composable
 private fun PermissionRequiredDialog(
@@ -1917,35 +1286,27 @@ private fun PermissionRequiredDialog(
     onAccessibilityAllow: () -> Unit,
     onDone: () -> Unit
 ) {
-
     Dialog(
         onDismissRequest = {},
-
-        properties =
-            DialogProperties(
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false,
-                usePlatformDefaultWidth = false
-            )
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false,
+            usePlatformDefaultWidth = false
+        )
     ) {
-
         val dialogWindow =
             (
                     LocalView.current.parent
                             as? DialogWindowProvider
                     )?.window
 
-        DisposableEffect(
-            dialogWindow
-        ) {
-
+        DisposableEffect(dialogWindow) {
             dialogWindow?.setSoftInputMode(
                 WindowManager.LayoutParams
                     .SOFT_INPUT_ADJUST_NOTHING
             )
 
             onDispose {
-
                 dialogWindow?.setSoftInputMode(
                     WindowManager.LayoutParams
                         .SOFT_INPUT_ADJUST_RESIZE
@@ -1954,108 +1315,72 @@ private fun PermissionRequiredDialog(
         }
 
         Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(
-                        Color.Transparent
-                    ),
-
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Transparent),
             contentAlignment =
                 Alignment.Center
         ) {
-
             Column(
-                modifier =
-                    Modifier
-                        .fillMaxWidth(0.90f)
-                        .wrapContentHeight()
-                        .background(
-                            Color.White,
-                            RoundedCornerShape(
-                                20.dp
-                            )
-                        )
-                        .padding(
-                            start = 25.dp,
-                            end = 25.dp,
-                            top = 24.dp,
-                            bottom = 24.dp
-                        )
+                modifier = Modifier
+                    .fillMaxWidth(0.90f)
+                    .wrapContentHeight()
+                    .background(
+                        Color.White,
+                        RoundedCornerShape(20.dp)
+                    )
+                    .padding(
+                        start = 25.dp,
+                        end = 25.dp,
+                        top = 24.dp,
+                        bottom = 24.dp
+                    )
             ) {
 
                 Text(
-                    text =
-                        stringResource(
-                            R.string.permissions_required
+                    text = stringResource(
+                        R.string.permissions_required
+                    ),
+                    color = Color(0xFF333333),
+                    fontSize = 20.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            bottom = 24.dp
                         ),
-
-                    color =
-                        Color(0xFF333333),
-
-                    fontSize =
-                        20.sp,
-
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                bottom = 24.dp
-                            ),
-
-                    textAlign =
-                        TextAlign.Center
+                    textAlign = TextAlign.Center
                 )
 
-
-                /*
-                 * =================================================
-                 * AUTO START
-                 * =================================================
-                 */
-
-                if (
-                    autoStartAvailable
-                ) {
+                if (autoStartAvailable) {
 
                     PermissionRow(
-
                         icon = {
-
                             Image(
                                 painter =
                                     painterResource(
                                         R.drawable.group3
                                     ),
-
                                 contentDescription =
                                     stringResource(
                                         R.string.auto_start
                                     ),
-
                                 modifier =
                                     Modifier.size(
                                         20.dp
                                     ),
-
                                 contentScale =
                                     ContentScale.Fit
                             )
                         },
-
-                        title =
-                            stringResource(
-                                R.string.auto_start
-                            ),
-
+                        title = stringResource(
+                            R.string.auto_start
+                        ),
                         description =
                             stringResource(
                                 R.string.keep_applock_running
                             ),
-
                         allowed =
                             autoStartAllowed,
-
                         onAllow =
                             onAutoStartAllow
                     )
@@ -2063,128 +1388,80 @@ private fun PermissionRequiredDialog(
                     PermissionDivider()
                 }
 
-
-                /*
-                 * =================================================
-                 * OVERLAY
-                 * =================================================
-                 */
-
                 PermissionRow(
-
                     icon = {
-
                         Image(
                             painter =
                                 painterResource(
                                     R.drawable.group1
                                 ),
-
                             contentDescription =
                                 stringResource(
                                     R.string.show_over_other_apps
                                 ),
-
                             modifier =
                                 Modifier.size(
                                     20.dp
                                 ),
-
                             contentScale =
                                 ContentScale.Fit
                         )
                     },
-
-                    title =
-                        stringResource(
-                            R.string.show_over_other_apps
-                        ),
-
+                    title = stringResource(
+                        R.string.show_over_other_apps
+                    ),
                     description =
                         stringResource(
                             R.string.allow_lock_screen
                         ),
-
                     allowed =
                         overlayAllowed,
-
                     onAllow =
                         onOverlayAllow
                 )
 
                 PermissionDivider()
 
-
-                /*
-                 * =================================================
-                 * ACCESSIBILITY
-                 * =================================================
-                 */
-
                 PermissionRow(
-
                     icon = {
-
                         Image(
                             painter =
                                 painterResource(
                                     R.drawable.group2
                                 ),
-
                             contentDescription =
                                 stringResource(
                                     R.string.detect_launched_app
                                 ),
-
                             modifier =
                                 Modifier.size(
                                     20.dp
                                 ),
-
                             contentScale =
                                 ContentScale.Fit
                         )
                     },
-
-                    title =
-                        stringResource(
-                            R.string.detect_launched_app
-                        ),
-
+                    title = stringResource(
+                        R.string.detect_launched_app
+                    ),
                     description =
                         stringResource(
                             R.string.detect_launched_description
                         ),
-
                     allowed =
                         accessibilityAllowed,
-
                     onAllow =
                         onAccessibilityAllow
                 )
 
-
-                /*
-                 * =================================================
-                 * BOTTOM TEXT
-                 * =================================================
-                 */
-
                 Text(
-                    text =
-                        stringResource(
-                            R.string.permissions_work_properly
-                        ),
-
+                    text = stringResource(
+                        R.string.permissions_work_properly
+                    ),
                     color =
                         Color(0xFFBDBDBD),
-
-                    fontSize =
-                        12.sp,
-
-                    lineHeight =
-                        13.sp,
-
+                    fontSize = 12.sp,
+                    lineHeight = 13.sp,
                     modifier =
                         Modifier.padding(
                             start = 12.dp,
@@ -2196,13 +1473,6 @@ private fun PermissionRequiredDialog(
     }
 }
 
-
-/*
- * =============================================================
- * PERMISSION ROW
- * =============================================================
- */
-
 @Composable
 private fun PermissionRow(
     icon: @Composable () -> Unit,
@@ -2211,190 +1481,108 @@ private fun PermissionRow(
     allowed: Boolean,
     onAllow: () -> Unit
 ) {
-
     Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(
-                    vertical = 8.dp
-                ),
-
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
         verticalAlignment =
             Alignment.Top
     ) {
 
         Box(
-            modifier =
-                Modifier
-                    .width(32.dp)
-                    .padding(
-                        top = 4.dp
-                    ),
-
+            modifier = Modifier
+                .width(32.dp)
+                .padding(top = 4.dp),
             contentAlignment =
                 Alignment.Center
         ) {
-
             icon()
         }
 
-
         Column(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .padding(
-                        start = 8.dp
-                    )
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp)
         ) {
 
             Text(
-                text =
-                    title,
-
-                color =
-                    Color(0xFF333333),
-
-                fontSize =
-                    15.sp
+                text = title,
+                color = Color(0xFF333333),
+                fontSize = 15.sp
             )
 
             Spacer(
-                modifier =
-                    Modifier.height(7.dp)
+                Modifier.height(7.dp)
             )
 
             Text(
-                text =
-                    description,
-
-                color =
-                    Color(0xFFBDBDBD),
-
-                fontSize =
-                    13.sp,
-
-                lineHeight =
-                    18.sp
+                text = description,
+                color = Color(0xFFBDBDBD),
+                fontSize = 13.sp,
+                lineHeight = 18.sp
             )
         }
 
-
-        /*
-         * =========================================================
-         * ALLOW / ALLOWED BUTTON
-         * =========================================================
-         */
-
         Box(
-            modifier =
-                Modifier
-                    .padding(
-                        top = 8.dp
-                    )
-                    .width(72.dp)
-                    .height(40.dp)
-                    .background(
-                        if (allowed) {
-
-                            /*
-                             * GREEN
-                             */
-
-                            Color(0xFF4CAF50)
-
-                        } else {
-
-                            /*
-                             * BLUE
-                             */
-
-                            Color(0xFF2196F3)
-                        },
-
-                        RoundedCornerShape(
-                            4.dp
-                        )
-                    )
-                    .clickable(
-                        enabled = !allowed
-                    ) {
-
-                        if (!allowed) {
-                            onAllow()
-                        }
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .width(72.dp)
+                .height(40.dp)
+                .background(
+                    if (allowed) {
+                        Color(0xFF4CAF50)
+                    } else {
+                        Color(0xFF2196F3)
                     },
-
+                    RoundedCornerShape(4.dp)
+                )
+                .clickable(
+                    enabled = !allowed
+                ) {
+                    if (!allowed) {
+                        onAllow()
+                    }
+                },
             contentAlignment =
                 Alignment.Center
         ) {
-
             Text(
-                text =
-                    if (allowed) {
-
-                        stringResource(
-                            R.string.allowed
-                        )
-
-                    } else {
-
-                        stringResource(
-                            R.string.allow
-                        )
-                    },
-
-                color =
-                    Color.White,
-
-                fontSize =
-                    13.sp,
-
-                textAlign =
-                    TextAlign.Center
+                text = if (allowed) {
+                    stringResource(
+                        R.string.allowed
+                    )
+                } else {
+                    stringResource(
+                        R.string.allow
+                    )
+                },
+                color = Color.White,
+                fontSize = 13.sp,
+                textAlign = TextAlign.Center
             )
         }
     }
 }
 
-
-/*
- * =============================================================
- * PERMISSION DIVIDER
- * =============================================================
- */
-
 @Composable
 private fun PermissionDivider() {
-
     Spacer(
-        modifier =
-            Modifier.height(9.dp)
+        Modifier.height(9.dp)
     )
 
     Box(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(
-                    Color(0xFFE5E5E5)
-                )
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(
+                Color(0xFFE5E5E5)
+            )
     )
 
     Spacer(
-        modifier =
-            Modifier.height(9.dp)
+        Modifier.height(9.dp)
     )
 }
-
-
-/*
- * =============================================================
- * SECURITY QUESTION DIALOG
- * =============================================================
- */
 
 @Composable
 private fun SecurityQuestionDialog(
@@ -2410,56 +1598,42 @@ private fun SecurityQuestionDialog(
     onSkip: () -> Unit,
     onSave: () -> Unit
 ) {
-
-    val questions =
-        listOf(
-
-            stringResource(
-                R.string.security_question_name
-            ),
-
-            stringResource(
-                R.string.security_question_father
-            ),
-
-            stringResource(
-                R.string.security_question_pet
-            ),
-
-            stringResource(
-                R.string.security_question_job
-            )
+    val questions = listOf(
+        stringResource(
+            R.string.security_question_name
+        ),
+        stringResource(
+            R.string.security_question_father
+        ),
+        stringResource(
+            R.string.security_question_pet
+        ),
+        stringResource(
+            R.string.security_question_job
         )
-
+    )
 
     Dialog(
         onDismissRequest = {},
-
-        properties =
-            DialogProperties(
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false,
-                usePlatformDefaultWidth = false
-            )
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false,
+            usePlatformDefaultWidth = false
+        )
     ) {
-
         val dialogWindow =
             (
                     LocalView.current.parent
                             as? DialogWindowProvider
                     )?.window
 
-        DisposableEffect(
-            dialogWindow
-        ) {
-
+        DisposableEffect(dialogWindow) {
             dialogWindow?.setSoftInputMode(
                 WindowManager.LayoutParams
                     .SOFT_INPUT_ADJUST_NOTHING
             )
 
             onDispose {
-
                 dialogWindow?.setSoftInputMode(
                     WindowManager.LayoutParams
                         .SOFT_INPUT_ADJUST_RESIZE
@@ -2467,157 +1641,108 @@ private fun SecurityQuestionDialog(
             }
         }
 
-
         Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(
-                        Color.Transparent
-                    ),
-
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Transparent),
             contentAlignment =
                 Alignment.Center
         ) {
 
             Column(
-                modifier =
-                    Modifier
-                        .fillMaxWidth(0.90f)
-                        .wrapContentHeight()
-                        .background(
-                            Color.White,
-                            RoundedCornerShape(
-                                26.dp
-                            )
-                        )
-                        .padding(
-                            start = 25.dp,
-                            end = 25.dp,
-                            top = 30.dp,
-                            bottom = 30.dp
-                        )
+                modifier = Modifier
+                    .fillMaxWidth(0.90f)
+                    .wrapContentHeight()
+                    .background(
+                        Color.White,
+                        RoundedCornerShape(26.dp)
+                    )
+                    .padding(
+                        start = 25.dp,
+                        end = 25.dp,
+                        top = 30.dp,
+                        bottom = 30.dp
+                    )
             ) {
 
                 Text(
-                    text =
-                        stringResource(
-                            R.string.security_questions
-                        ),
-
-                    color =
-                        Color(0xFF333333),
-
-                    fontSize =
-                        19.sp,
-
+                    text = stringResource(
+                        R.string.security_questions
+                    ),
+                    color = Color(0xFF333333),
+                    fontSize = 19.sp,
                     modifier =
                         Modifier.fillMaxWidth(),
-
                     textAlign =
                         TextAlign.Center
                 )
 
                 Spacer(
-                    modifier =
-                        Modifier.height(8.dp)
+                    Modifier.height(8.dp)
                 )
 
                 Text(
-                    text =
-                        stringResource(
-                            R.string.security_question_description
-                        ),
-
-                    color =
-                        Color(0xFFBDBDBD),
-
-                    fontSize =
-                        11.sp,
-
-                    lineHeight =
-                        18.sp,
-
+                    text = stringResource(
+                        R.string.security_question_description
+                    ),
+                    color = Color(0xFFBDBDBD),
+                    fontSize = 11.sp,
+                    lineHeight = 18.sp,
                     modifier =
                         Modifier.fillMaxWidth(),
-
                     textAlign =
                         TextAlign.Center
                 )
 
                 Spacer(
-                    modifier =
-                        Modifier.height(28.dp)
+                    Modifier.height(28.dp)
                 )
 
                 Text(
-                    text =
-                        stringResource(
-                            R.string.select_security_questions
-                        ),
-
-                    color =
-                        Color(0xFF333333),
-
-                    fontSize =
-                        14.sp
+                    text = stringResource(
+                        R.string.select_security_questions
+                    ),
+                    color = Color(0xFF333333),
+                    fontSize = 14.sp
                 )
 
                 Spacer(
-                    modifier =
-                        Modifier.height(8.dp)
+                    Modifier.height(8.dp)
                 )
-
-
-                /*
-                 * =================================================
-                 * QUESTION DROPDOWN
-                 * =================================================
-                 */
 
                 Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
                 ) {
 
                     Row(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .height(40.dp)
-                                .background(
-                                    Color(0xFFF8F8F8),
-                                    RoundedCornerShape(
-                                        15.dp
-                                    )
-                                )
-                                .clickable(
-                                    enabled =
-                                        !questionLocked,
-
-                                    indication =
-                                        null,
-
-                                    interactionSource =
-                                        remember {
-                                            MutableInteractionSource()
-                                        }
-                                ) {
-
-                                    if (
-                                        !questionLocked
-                                    ) {
-
-                                        onDropdownClick()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .background(
+                                Color(0xFFF8F8F8),
+                                RoundedCornerShape(15.dp)
+                            )
+                            .clickable(
+                                enabled =
+                                    !questionLocked,
+                                indication = null,
+                                interactionSource =
+                                    remember {
+                                        MutableInteractionSource()
                                     }
+                            ) {
+                                if (
+                                    !questionLocked
+                                ) {
+                                    onDropdownClick()
                                 }
-                                .padding(
-                                    start = 18.dp,
-                                    end = 14.dp
-                                ),
-
+                            }
+                            .padding(
+                                start = 18.dp,
+                                end = 14.dp
+                            ),
                         verticalAlignment =
                             Alignment.CenterVertically
                     ) {
@@ -2627,57 +1752,39 @@ private fun SecurityQuestionDialog(
                                 if (
                                     selectedQuestion.isEmpty()
                                 ) {
-
                                     stringResource(
                                         R.string.select_security_question
                                     )
-
                                 } else {
-
                                     selectedQuestion
                                 },
-
                             color =
                                 if (
                                     selectedQuestion.isEmpty()
                                 ) {
-
                                     Color(0xFFBDBDBD)
-
                                 } else {
-
                                     Color(0xFF333333)
                                 },
-
-                            fontSize =
-                                14.sp,
-
-                            maxLines =
-                                1,
-
+                            fontSize = 14.sp,
+                            maxLines = 1,
                             modifier =
-                                Modifier.weight(
-                                    1f
-                                )
+                                Modifier.weight(1f)
                         )
-
 
                         if (
                             !questionLocked
                         ) {
-
                             Icon(
                                 imageVector =
-                                    Icons.Outlined.KeyboardArrowDown,
-
+                                    Icons.Outlined
+                                        .KeyboardArrowDown,
                                 contentDescription =
                                     stringResource(
                                         R.string.select_security_question
                                     ),
-
                                 tint =
                                     Color(0xFF8F8F8F),
-
                                 modifier =
                                     Modifier.size(
                                         22.dp
@@ -2685,13 +1792,6 @@ private fun SecurityQuestionDialog(
                             )
                         }
                     }
-
-
-                    /*
-                     * =================================================
-                     * POPUP QUESTIONS
-                     * =================================================
-                     */
 
                     if (
                         dropdownExpanded &&
@@ -2701,11 +1801,9 @@ private fun SecurityQuestionDialog(
                         Popup(
                             alignment =
                                 Alignment.TopEnd,
-
                             onDismissRequest = {
                                 onDropdownClick()
                             },
-
                             properties =
                                 PopupProperties(
                                     focusable = true
@@ -2713,236 +1811,171 @@ private fun SecurityQuestionDialog(
                         ) {
 
                             Column(
-                                modifier =
-                                    Modifier
-                                        .width(210.dp)
-                                        .background(
-                                            Color.White,
-                                            RoundedCornerShape(
-                                                15.dp
-                                            )
+                                modifier = Modifier
+                                    .width(210.dp)
+                                    .background(
+                                        Color.White,
+                                        RoundedCornerShape(
+                                            15.dp
                                         )
-                                        .border(
-                                            1.dp,
-                                            Color(0xFFE5E5E5),
-                                            RoundedCornerShape(
-                                                15.dp
-                                            )
+                                    )
+                                    .border(
+                                        1.dp,
+                                        Color(0xFFE5E5E5),
+                                        RoundedCornerShape(
+                                            15.dp
                                         )
+                                    )
                             ) {
 
-                                questions.forEachIndexed {
-                                        index,
-                                        question ->
+                                questions
+                                    .forEachIndexed {
+                                            index,
+                                            question ->
 
-                                    Text(
-                                        text =
-                                            question,
-
-                                        color =
-                                            Color(0xFF333333),
-
-                                        fontSize =
-                                            13.sp,
-
-                                        maxLines =
-                                            1,
-
-                                        modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .clickable(
-                                                    indication =
-                                                        null,
-
-                                                    interactionSource =
-                                                        remember {
-                                                            MutableInteractionSource()
-                                                        }
-                                                ) {
-
-                                                    onQuestionSelected(
-                                                        question
-                                                    )
-                                                }
-                                                .padding(
-                                                    horizontal =
-                                                        18.dp,
-
-                                                    vertical =
-                                                        14.dp
-                                                )
-                                    )
-
-                                    if (
-                                        index <
-                                        questions.lastIndex
-                                    ) {
-
-                                        Box(
+                                        Text(
+                                            text = question,
+                                            color =
+                                                Color(
+                                                    0xFF333333
+                                                ),
+                                            fontSize = 13.sp,
+                                            maxLines = 1,
                                             modifier =
                                                 Modifier
                                                     .fillMaxWidth()
-                                                    .height(1.dp)
-                                                    .background(
-                                                        Color(
-                                                            0xFFF0F0F0
+                                                    .clickable(
+                                                        indication = null,
+                                                        interactionSource =
+                                                            remember {
+                                                                MutableInteractionSource()
+                                                            }
+                                                    ) {
+                                                        onQuestionSelected(
+                                                            question
                                                         )
+                                                    }
+                                                    .padding(
+                                                        horizontal = 18.dp,
+                                                        vertical = 14.dp
                                                     )
                                         )
+
+                                        if (
+                                            index <
+                                            questions.lastIndex
+                                        ) {
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .height(1.dp)
+                                                        .background(
+                                                            Color(
+                                                                0xFFF0F0F0
+                                                            )
+                                                        )
+                                            )
+                                        }
                                     }
-                                }
                             }
                         }
                     }
                 }
 
-
                 Spacer(
-                    modifier =
-                        Modifier.height(23.dp)
+                    Modifier.height(23.dp)
                 )
-
-
-                /*
-                 * =================================================
-                 * ANSWER
-                 * =================================================
-                 */
 
                 Text(
-                    text =
-                        stringResource(
-                            R.string.enter_security_answer
-                        ),
-
-                    color =
-                        Color(0xFF333333),
-
-                    fontSize =
-                        14.sp
+                    text = stringResource(
+                        R.string.enter_security_answer
+                    ),
+                    color = Color(0xFF333333),
+                    fontSize = 14.sp
                 )
 
                 Spacer(
-                    modifier =
-                        Modifier.height(8.dp)
+                    Modifier.height(8.dp)
                 )
 
                 BasicTextField(
-                    value =
-                        answer,
-
+                    value = answer,
                     onValueChange =
                         onAnswerChanged,
-
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .background(
-                                Color(0xFFF8F8F8),
-                                RoundedCornerShape(
-                                    15.dp
-                                )
-                            )
-                            .padding(
-                                horizontal = 15.dp
-                            ),
-
-                    singleLine =
-                        true,
-
-                    textStyle =
-                        TextStyle(
-                            color =
-                                Color(0xFF333333),
-
-                            fontSize =
-                                12.sp,
-
-                            lineHeight =
-                                16.sp
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                        .background(
+                            Color(0xFFF8F8F8),
+                            RoundedCornerShape(15.dp)
+                        )
+                        .padding(
+                            horizontal = 15.dp
                         ),
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        color =
+                            Color(0xFF333333),
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    ),
+                    decorationBox = {
+                            innerTextField ->
 
-                    decorationBox =
-                        { innerTextField ->
+                        Box(
+                            modifier =
+                                Modifier.fillMaxSize(),
+                            contentAlignment =
+                                Alignment.CenterStart
+                        ) {
 
-                            Box(
-                                modifier =
-                                    Modifier.fillMaxSize(),
-
-                                contentAlignment =
-                                    Alignment.CenterStart
+                            if (
+                                answer.isEmpty()
                             ) {
-
-                                if (
-                                    answer.isEmpty()
-                                ) {
-
-                                    Text(
-                                        text =
-                                            stringResource(
-                                                R.string.enter_your_answer
-                                            ),
-
-                                        color =
-                                            Color(0xFFBDBDBD),
-
-                                        fontSize =
-                                            12.sp
-                                    )
-                                }
-
-                                innerTextField()
+                                Text(
+                                    text =
+                                        stringResource(
+                                            R.string.enter_your_answer
+                                        ),
+                                    color =
+                                        Color(
+                                            0xFFBDBDBD
+                                        ),
+                                    fontSize = 12.sp
+                                )
                             }
+
+                            innerTextField()
                         }
+                    }
                 )
 
-
-                if (
-                    answerError
-                ) {
+                if (answerError) {
 
                     Spacer(
-                        modifier =
-                            Modifier.height(5.dp)
+                        Modifier.height(5.dp)
                     )
 
                     Text(
                         text =
                             "Enter your correct answer",
-
-                        color =
-                            Color.Red,
-
-                        fontSize =
-                            12.sp,
-
+                        color = Color.Red,
+                        fontSize = 12.sp,
                         modifier =
                             Modifier.fillMaxWidth()
                     )
                 }
 
-
                 Spacer(
-                    modifier =
-                        Modifier.height(30.dp)
+                    Modifier.height(30.dp)
                 )
-
-
-                /*
-                 * =================================================
-                 * BUTTONS
-                 * =================================================
-                 */
 
                 Row(
                     modifier =
                         Modifier.fillMaxWidth(),
-
                     horizontalArrangement =
                         Arrangement.End,
-
                     verticalAlignment =
                         Alignment.CenterVertically
                 ) {
@@ -2950,97 +1983,68 @@ private fun SecurityQuestionDialog(
                     if (!isReset) {
 
                         Text(
-                            text =
-                                stringResource(
-                                    R.string.skip
-                                ),
-
+                            text = stringResource(
+                                R.string.skip
+                            ),
                             color =
                                 Color(0xFF2196F3),
-
-                            fontSize =
-                                16.sp,
-
+                            fontSize = 16.sp,
                             modifier =
                                 Modifier
                                     .clickable(
-                                        indication =
-                                            null,
-
+                                        indication = null,
                                         interactionSource =
                                             remember {
                                                 MutableInteractionSource()
                                             }
                                     ) {
-
                                         onSkip()
                                     }
                                     .padding(
-                                        horizontal =
-                                            20.dp,
-
-                                        vertical =
-                                            10.dp
+                                        horizontal = 20.dp,
+                                        vertical = 10.dp
                                     )
                         )
 
                         Spacer(
-                            modifier =
-                                Modifier.width(
-                                    20.dp
-                                )
+                            Modifier.width(20.dp)
                         )
                     }
 
-
                     val saveEnabled =
-                        selectedQuestion.isNotEmpty() &&
-                                answer.trim()
+                        selectedQuestion
+                            .isNotEmpty() &&
+                                answer
+                                    .trim()
                                     .isNotEmpty()
 
-
                     Text(
-                        text =
-                            stringResource(
-                                R.string.save
-                            ),
-
+                        text = stringResource(
+                            R.string.save
+                        ),
                         color =
                             if (saveEnabled) {
-
                                 Color(0xFF2196F3)
-
                             } else {
-
                                 Color(0xFF90CAF9)
                             },
-
-                        fontSize =
-                            16.sp,
-
+                        fontSize = 16.sp,
                         modifier =
                             Modifier
                                 .clickable(
                                     enabled =
                                         saveEnabled,
-
-                                    indication =
-                                        null,
-
+                                    indication = null,
                                     interactionSource =
                                         remember {
                                             MutableInteractionSource()
                                         }
                                 ) {
-
                                     onSave()
                                 }
                                 .padding(
-                                    horizontal =
-                                        20.dp,
-
-                                    vertical =
-                                        10.dp
+                                    horizontal = 20.dp,
+                                    vertical = 10.dp
                                 )
                     )
                 }
@@ -3049,31 +2053,21 @@ private fun SecurityQuestionDialog(
     }
 }
 
-
-/*
- * =============================================================
- * ACCESSIBILITY SERVICE CHECK
- * =============================================================
- */
-
 private fun isAccessibilityServiceEnabled(
     context: Context
 ): Boolean {
-
     return try {
-
         val enabledServices =
             Settings.Secure.getString(
                 context.contentResolver,
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+                Settings.Secure
+                    .ENABLED_ACCESSIBILITY_SERVICES
             )
 
         if (
             enabledServices.isNullOrEmpty()
         ) {
-
             false
-
         } else {
 
             val packageName =
@@ -3084,9 +2078,10 @@ private fun isAccessibilityServiceEnabled(
                 .any { serviceName ->
 
                     val component =
-                        ComponentName.unflattenFromString(
-                            serviceName
-                        )
+                        ComponentName
+                            .unflattenFromString(
+                                serviceName
+                            )
 
                     component
                         ?.packageName
@@ -3097,22 +2092,11 @@ private fun isAccessibilityServiceEnabled(
                 }
         }
 
-    } catch (
-        e: Exception
-    ) {
-
+    } catch (e: Exception) {
         e.printStackTrace()
-
         false
     }
 }
-
-
-/*
- * =============================================================
- * AUTO START INTENT
- * =============================================================
- */
 
 private fun getAutoStartIntent(
     context: Context
@@ -3121,26 +2105,16 @@ private fun getAutoStartIntent(
     val manufacturer =
         Build.MANUFACTURER.lowercase()
 
-
     val intents =
         when {
-
-            /*
-             * -----------------------------------------------------
-             * XIAOMI
-             * -----------------------------------------------------
-             */
 
             manufacturer.contains(
                 "xiaomi"
             ) -> {
-
                 listOf(
-
                     Intent(
                         "miui.intent.action.OP_AUTO_START"
                     ),
-
                     Intent().setComponent(
                         ComponentName(
                             "com.miui.securitycenter",
@@ -3150,23 +2124,13 @@ private fun getAutoStartIntent(
                 )
             }
 
-
-            /*
-             * -----------------------------------------------------
-             * OPPO
-             * -----------------------------------------------------
-             */
-
             manufacturer.contains(
                 "oppo"
             ) -> {
-
                 listOf(
-
                     Intent(
                         "oppo.intent.action.OPPO_AUTO_START"
                     ),
-
                     Intent().setComponent(
                         ComponentName(
                             "com.coloros.safecenter",
@@ -3176,23 +2140,13 @@ private fun getAutoStartIntent(
                 )
             }
 
-
-            /*
-             * -----------------------------------------------------
-             * VIVO
-             * -----------------------------------------------------
-             */
-
             manufacturer.contains(
                 "vivo"
             ) -> {
-
                 listOf(
-
                     Intent(
                         "vivo.intent.action.OP_AUTO_START"
                     ),
-
                     Intent().setComponent(
                         ComponentName(
                             "com.vivo.permissionmanager",
@@ -3202,19 +2156,10 @@ private fun getAutoStartIntent(
                 )
             }
 
-
-            /*
-             * -----------------------------------------------------
-             * HUAWEI
-             * -----------------------------------------------------
-             */
-
             manufacturer.contains(
                 "huawei"
             ) -> {
-
                 listOf(
-
                     Intent().setComponent(
                         ComponentName(
                             "com.huawei.systemmanager",
@@ -3224,19 +2169,10 @@ private fun getAutoStartIntent(
                 )
             }
 
-
-            /*
-             * -----------------------------------------------------
-             * HONOR
-             * -----------------------------------------------------
-             */
-
             manufacturer.contains(
                 "honor"
             ) -> {
-
                 listOf(
-
                     Intent().setComponent(
                         ComponentName(
                             "com.hihonor.systemmanager",
@@ -3246,65 +2182,36 @@ private fun getAutoStartIntent(
                 )
             }
 
-
-            /*
-             * -----------------------------------------------------
-             * OTHER DEVICES
-             * -----------------------------------------------------
-             */
-
             else -> {
                 emptyList()
             }
         }
 
-
-    /*
-     * =========================================================
-     * FIND WORKING INTENT
-     * =========================================================
-     */
-
-    for (
-    intent in intents
-    ) {
-
+    for (intent in intents) {
         try {
-
             if (
                 intent.resolveActivity(
                     context.packageManager
                 ) != null
             ) {
-
                 return intent
             }
-
-        } catch (
-            e: Exception
-        ) {
-
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-
     return null
 }
-
-
-/*
- * =============================================================
- * CONFIRM PATTERN GRID
- * =============================================================
- */
 
 @Composable
 private fun ConfirmPatternGrid(
     selectedDots: List<Int>,
     isError: Boolean,
-    onPatternChanged: (List<Int>) -> Unit,
-    onPatternFinished: (List<Int>) -> Unit,
+    onPatternChanged:
+        (List<Int>) -> Unit,
+    onPatternFinished:
+        (List<Int>) -> Unit,
     dotColor: Color =
         Color(0xFF83CCFF),
     errorColor: Color =
@@ -3323,132 +2230,115 @@ private fun ConfirmPatternGrid(
         onPatternFinished
     )
 
-
     Box(
-        modifier =
-            Modifier
-                .size(330.dp)
-                .pointerInput(Unit) {
+        modifier = Modifier
+            .size(330.dp)
+            .pointerInput(Unit) {
 
-                    var currentDots =
-                        mutableListOf<Int>()
+                var currentDots =
+                    mutableListOf<Int>()
 
-                    var patternFinished =
-                        false
+                var patternFinished =
+                    false
 
+                detectDragGestures(
 
-                    detectDragGestures(
+                    onDragStart = { offset ->
 
-                        onDragStart =
-                            { offset ->
+                        currentDots =
+                            mutableListOf()
 
-                                currentDots =
-                                    mutableListOf()
+                        patternFinished =
+                            false
 
-                                patternFinished =
-                                    false
+                        val dot =
+                            findConfirmDot(
+                                offset,
+                                size.width.toFloat(),
+                                size.height.toFloat()
+                            )
 
-                                val dot =
-                                    findConfirmDot(
-                                        offset,
-                                        size.width.toFloat(),
-                                        size.height.toFloat()
-                                    )
+                        if (dot != null) {
+                            currentDots.add(
+                                dot
+                            )
 
-                                if (
-                                    dot != null
-                                ) {
+                            latestOnPatternChanged(
+                                currentDots.toList()
+                            )
+                        }
+                    },
 
-                                    currentDots.add(
-                                        dot
-                                    )
+                    onDrag = { change, _ ->
 
-                                    latestOnPatternChanged(
-                                        currentDots.toList()
-                                    )
-                                }
-                            },
+                        change.consume()
 
+                        val dot =
+                            findConfirmDot(
+                                change.position,
+                                size.width.toFloat(),
+                                size.height.toFloat()
+                            )
 
-                        onDrag =
-                            { change, _ ->
+                        if (
+                            dot != null &&
+                            !currentDots
+                                .contains(dot)
+                        ) {
 
-                                change.consume()
+                            currentDots.add(
+                                dot
+                            )
 
-                                val dot =
-                                    findConfirmDot(
-                                        change.position,
-                                        size.width.toFloat(),
-                                        size.height.toFloat()
-                                    )
+                            latestOnPatternChanged(
+                                currentDots.toList()
+                            )
+                        }
+                    },
 
-                                if (
-                                    dot != null &&
-                                    !currentDots.contains(
-                                        dot
-                                    )
-                                ) {
+                    onDragEnd = {
 
-                                    currentDots.add(
-                                        dot
-                                    )
+                        if (!patternFinished) {
 
-                                    latestOnPatternChanged(
-                                        currentDots.toList()
-                                    )
-                                }
-                            },
+                            patternFinished =
+                                true
 
-
-                        onDragEnd = {
+                            val finalPattern =
+                                currentDots.toList()
 
                             if (
-                                !patternFinished
+                                finalPattern
+                                    .isNotEmpty()
                             ) {
-
-                                patternFinished =
-                                    true
-
-                                val finalPattern =
-                                    currentDots.toList()
-
-                                if (
-                                    finalPattern.isNotEmpty()
-                                ) {
-
-                                    latestOnPatternFinished(
-                                        finalPattern
-                                    )
-                                }
-                            }
-                        },
-
-
-                        onDragCancel = {
-
-                            if (
-                                !patternFinished
-                            ) {
-
-                                patternFinished =
-                                    true
-
-                                val finalPattern =
-                                    currentDots.toList()
-
-                                if (
-                                    finalPattern.isNotEmpty()
-                                ) {
-
-                                    latestOnPatternFinished(
-                                        finalPattern
-                                    )
-                                }
+                                latestOnPatternFinished(
+                                    finalPattern
+                                )
                             }
                         }
-                    )
-                }
+                    },
 
+                    onDragCancel = {
+
+                        if (!patternFinished) {
+
+                            patternFinished =
+                                true
+
+                            val finalPattern =
+                                currentDots.toList()
+
+                            if (
+                                finalPattern
+                                    .isNotEmpty()
+                            ) {
+                                latestOnPatternFinished(
+                                    finalPattern
+                                )
+                            }
+                        }
+                    }
+                )
+            }
     ) {
 
         Canvas(
@@ -3462,7 +2352,6 @@ private fun ConfirmPatternGrid(
                     size.height
                 )
 
-
             if (
                 selectedDots.size >= 2
             ) {
@@ -3475,71 +2364,52 @@ private fun ConfirmPatternGrid(
                     drawLine(
                         color =
                             if (isError) {
-
                                 errorColor
-
                             } else {
-
                                 Color.White
                             },
-
                         start =
                             positions[
                                 selectedDots[i]
                             ],
-
                         end =
                             positions[
-                                selectedDots[
-                                    i + 1
-                                ]
+                                selectedDots[i + 1]
                             ],
-
-                        strokeWidth =
-                            8f
+                        strokeWidth = 8f
                     )
                 }
             }
-
 
             positions.forEachIndexed {
                     index,
                     position ->
 
                 val selected =
-                    selectedDots.contains(
-                        index
-                    )
-
+                    selectedDots
+                        .contains(index)
 
                 drawCircle(
                     color =
                         dotColor,
-
                     radius =
                         17.5.dp.toPx(),
-
                     center =
                         position
                 )
-
 
                 drawCircle(
                     color =
                         backgroundColor,
-
                     radius =
                         13.5.dp.toPx(),
-
                     center =
                         position
                 )
 
-
                 drawCircle(
                     color =
                         when {
-
                             selected &&
                                     isError ->
                                 errorColor
@@ -3550,10 +2420,8 @@ private fun ConfirmPatternGrid(
                             else ->
                                 dotColor
                         },
-
                     radius =
                         9.dp.toPx(),
-
                     center =
                         position
                 )
@@ -3561,13 +2429,6 @@ private fun ConfirmPatternGrid(
         }
     }
 }
-
-
-/*
- * =============================================================
- * PATTERN POSITIONS
- * =============================================================
- */
 
 private fun getConfirmPositions(
     width: Float,
@@ -3592,62 +2453,18 @@ private fun getConfirmPositions(
     val y3 =
         height * 0.8333f
 
-
     return listOf(
-
-        Offset(
-            x1,
-            y1
-        ),
-
-        Offset(
-            x2,
-            y1
-        ),
-
-        Offset(
-            x3,
-            y1
-        ),
-
-        Offset(
-            x1,
-            y2
-        ),
-
-        Offset(
-            x2,
-            y2
-        ),
-
-        Offset(
-            x3,
-            y2
-        ),
-
-        Offset(
-            x1,
-            y3
-        ),
-
-        Offset(
-            x2,
-            y3
-        ),
-
-        Offset(
-            x3,
-            y3
-        )
+        Offset(x1, y1),
+        Offset(x2, y1),
+        Offset(x3, y1),
+        Offset(x1, y2),
+        Offset(x2, y2),
+        Offset(x3, y2),
+        Offset(x1, y3),
+        Offset(x2, y3),
+        Offset(x3, y3)
     )
 }
-
-
-/*
- * =============================================================
- * FIND PATTERN DOT
- * =============================================================
- */
 
 private fun findConfirmDot(
     touch: Offset,
@@ -3660,7 +2477,6 @@ private fun findConfirmDot(
             width,
             height
         )
-
 
     positions.forEachIndexed {
             index,
@@ -3678,17 +2494,10 @@ private fun findConfirmDot(
                         dy * dy
             )
 
-
-        if (
-            distance <= 55f
-        ) {
-
+        if (distance <= 55f) {
             return index
         }
     }
 
-
     return null
 }
-
-

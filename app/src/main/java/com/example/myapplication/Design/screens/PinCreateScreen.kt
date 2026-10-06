@@ -1,3 +1,4 @@
+
 package com.example.myapplication.Design.screens
 
 import androidx.compose.foundation.Canvas
@@ -15,6 +16,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -24,24 +26,28 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.Design.components.NumberPad
-import kotlin.math.sqrt
 import com.example.myapplication.R
+import kotlin.math.min
+import kotlin.math.sqrt
+
 
 @Composable
 fun PinCreateScreen(
     onNext: (String, String) -> Unit
 ) {
 
+    // ================================================================
+    // STATE
+    // ================================================================
+
     var pin by remember {
         mutableStateOf("")
     }
 
-    // DEFAULT = 4 DIGIT PIN
     var pinLength by remember {
-        mutableStateOf(4)
+        mutableIntStateOf(4)
     }
 
-    // DEFAULT = 4 DIGIT PIN
     var authType by remember {
         mutableStateOf("4")
     }
@@ -57,32 +63,36 @@ fun PinCreateScreen(
     val isPattern = authType == "pattern"
 
     val backgroundColor = Color(0xFF189FFF)
-
     val patternDotColor = Color(0xFF83CCFF)
 
+
+    // ================================================================
+    // ROOT
+    // ================================================================
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundColor)
+            .statusBarsPadding()
+            .navigationBarsPadding()
     ) {
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
                 .padding(
                     start = 26.dp,
                     end = 26.dp,
-                    top = 24.dp,
-                    bottom = 20.dp
+                    top = 18.dp,
+                    bottom = 6.dp
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // =========================================================
-            // PIN TYPE DROPDOWN
-            // =========================================================
+            // ========================================================
+            // TOP AUTH TYPE
+            // ========================================================
 
             Row(
                 modifier = Modifier
@@ -140,6 +150,10 @@ fun PinCreateScreen(
                     }
 
 
+                    // =================================================
+                    // DROPDOWN
+                    // =================================================
+
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = {
@@ -147,10 +161,7 @@ fun PinCreateScreen(
                         }
                     ) {
 
-                        // =================================================
                         // 4 DIGIT PIN
-                        // =================================================
-
                         DropdownMenuItem(
                             text = {
                                 Text(
@@ -162,11 +173,8 @@ fun PinCreateScreen(
                             onClick = {
 
                                 authType = "4"
-
                                 pinLength = 4
-
                                 pin = ""
-
                                 selectedDots = emptyList()
 
                                 expanded = false
@@ -174,10 +182,7 @@ fun PinCreateScreen(
                         )
 
 
-                        // =================================================
                         // 6 DIGIT PIN
-                        // =================================================
-
                         DropdownMenuItem(
                             text = {
                                 Text(
@@ -189,11 +194,8 @@ fun PinCreateScreen(
                             onClick = {
 
                                 authType = "6"
-
                                 pinLength = 6
-
                                 pin = ""
-
                                 selectedDots = emptyList()
 
                                 expanded = false
@@ -201,10 +203,7 @@ fun PinCreateScreen(
                         )
 
 
-                        // =================================================
                         // PATTERN
-                        // =================================================
-
                         DropdownMenuItem(
                             text = {
                                 Text(
@@ -216,9 +215,7 @@ fun PinCreateScreen(
                             onClick = {
 
                                 authType = "pattern"
-
                                 pin = ""
-
                                 selectedDots = emptyList()
 
                                 expanded = false
@@ -230,13 +227,13 @@ fun PinCreateScreen(
 
 
             Spacer(
-                modifier = Modifier.height(38.dp)
+                modifier = Modifier.height(22.dp)
             )
 
 
-            // =========================================================
+            // ========================================================
             // STEP INDICATOR
-            // =========================================================
+            // ========================================================
 
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -304,351 +301,358 @@ fun PinCreateScreen(
             }
 
 
-            Spacer(
-                modifier = Modifier.height(65.dp)
-            )
+            // ========================================================
+            // MAIN CONTENT
+            //
+            // weight(1f) means this section receives whatever space
+            // is left between the top section and bottom buttons.
+            // ========================================================
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+
+                if (!isPattern) {
+
+                    // =================================================
+                    // PIN CONTENT
+                    // =================================================
+
+                    Column(
+                        horizontalAlignment =
+                            Alignment.CenterHorizontally
+                    ) {
+
+                        Text(
+                            text = stringResource(
+                                R.string.create_pin,
+                                pinLength
+                            ),
+                            color = Color.White,
+                            fontSize = 18.sp
+                        )
 
 
-            // =========================================================
-            // PIN SCREEN
-            // =========================================================
-
-            if (!isPattern) {
-
-                Text(
-                    text = stringResource(
-                        R.string.create_pin,
-                        pinLength
-                    ),
-                    color = Color.White,
-                    fontSize = 18.sp
-                )
+                        Spacer(
+                            modifier = Modifier.height(14.dp)
+                        )
 
 
-                Spacer(
-                    modifier = Modifier.height(18.dp)
-                )
+                        // =================================================
+                        // PIN DOTS
+                        // =================================================
 
+                        Row(
+                            horizontalArrangement =
+                                Arrangement.spacedBy(14.dp)
+                        ) {
 
-                // =====================================================
-                // PIN DOTS
-                // =====================================================
+                            repeat(pinLength) { index ->
 
-                Row(
-                    horizontalArrangement =
-                        Arrangement.spacedBy(14.dp)
-                ) {
-
-                    repeat(pinLength) { index ->
-
-                        Box(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .border(
-                                    1.5.dp,
-                                    Color.White,
-                                    CircleShape
+                                Box(
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .border(
+                                            1.5.dp,
+                                            Color.White,
+                                            CircleShape
+                                        )
+                                        .background(
+                                            color =
+                                                if (
+                                                    index < pin.length
+                                                ) {
+                                                    Color.White
+                                                } else {
+                                                    Color.Transparent
+                                                },
+                                            shape = CircleShape
+                                        )
                                 )
-                                .background(
-                                    if (index < pin.length)
-                                        Color.White
-                                    else
-                                        Color.Transparent,
-                                    CircleShape
-                                )
+                            }
+                        }
+
+
+                        Spacer(
+                            modifier = Modifier.height(32.dp)
+                        )
+
+
+                        // =================================================
+                        // NUMBER PAD
+                        // =================================================
+
+                        NumberPad(
+
+                            onNumberClick = { number ->
+
+                                if (
+                                    pin.length < pinLength
+                                ) {
+                                    pin += number
+                                }
+                            },
+
+                            onDelete = {
+
+                                if (pin.isNotEmpty()) {
+                                    pin = pin.dropLast(1)
+                                }
+                            }
                         )
                     }
-                }
+
+                } else {
+
+                    // =================================================
+                    // PATTERN CONTENT
+                    // =================================================
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment =
+                            Alignment.CenterHorizontally
+                    ) {
+
+                        Text(
+                            text = stringResource(
+                                R.string.create_pattern
+                            ),
+                            color = Color.White,
+                            fontSize = 18.sp
+                        )
 
 
-                Spacer(
-                    modifier = Modifier.height(82.dp)
-                )
+                        Spacer(
+                            modifier = Modifier.height(10.dp)
+                        )
 
 
-                // =====================================================
-                // NUMBER PAD
-                // =====================================================
+                        Text(
+                            text = stringResource(
+                                R.string.connect_four_dots
+                            ),
+                            color = Color.White.copy(
+                                alpha = 0.85f
+                            ),
+                            fontSize = 14.sp
+                        )
 
-                NumberPad(
 
-                    onNumberClick = { number ->
+                        Spacer(
+                            modifier = Modifier.height(20.dp)
+                        )
 
-                        if (pin.length < pinLength) {
-                            pin += number
-                        }
-                    },
 
-                    onDelete = {
+                        // =================================================
+                        // RESPONSIVE PATTERN GRID
+                        // =================================================
 
-                        if (pin.isNotEmpty()) {
-                            pin = pin.dropLast(1)
+                        BoxWithConstraints(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+
+                            val availableWidth =
+                                maxWidth - 20.dp
+
+                            // Never allow grid to become too large.
+                            // On small phones it automatically becomes
+                            // smaller according to available width.
+
+                            val gridSize =
+                                min(
+                                    availableWidth.value,
+                                    330f
+                                ).dp
+
+
+                            PatternGrid(
+                                modifier = Modifier.size(
+                                    gridSize
+                                ),
+
+                                selectedDots = selectedDots,
+
+                                onPatternChanged = { dots: List<Int> ->
+                                    selectedDots = dots
+                                },
+
+                                dotColor = patternDotColor,
+
+                                backgroundColor = backgroundColor
+                            )
                         }
                     }
-                )
-
-
-                Spacer(
-                    modifier = Modifier.height(55.dp)
-                )
-
-
-                // =====================================================
-                // RESET + CONTINUE
-                // =====================================================
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(end = 30.dp),
-
-                    horizontalArrangement =
-                        Arrangement.spacedBy(
-                            30.dp,
-                            Alignment.End
-                        )
-                ) {
-
-                    // =================================================
-                    // RESET
-                    // =================================================
-
-                    Text(
-                        text = stringResource(
-                            R.string.reset
-                        ),
-
-                        color =
-                            if (pin.isEmpty())
-                                Color.White.copy(alpha = 0.35f)
-                            else
-                                Color.White,
-
-                        fontSize = 20.sp,
-
-                        modifier =
-                            Modifier
-                                .clickable(
-                                    enabled =
-                                        pin.isNotEmpty(),
-
-                                    indication = null,
-
-                                    interactionSource =
-                                        remember {
-                                            MutableInteractionSource()
-                                        }
-                                ) {
-
-                                    pin = ""
-                                }
-                                .padding(10.dp)
-                    )
-
-
-                    // =================================================
-                    // CONTINUE
-                    // =================================================
-
-                    Text(
-                        text = stringResource(
-                            R.string.continue_text
-                        ),
-
-                        color =
-                            if (pin.length == pinLength)
-                                Color.White
-                            else
-                                Color.White.copy(alpha = 0.35f),
-
-                        fontSize = 20.sp,
-
-                        modifier =
-                            Modifier
-                                .clickable(
-                                    enabled =
-                                        pin.length == pinLength,
-
-                                    indication = null,
-
-                                    interactionSource =
-                                        remember {
-                                            MutableInteractionSource()
-                                        }
-                                ) {
-
-                                    onNext(
-                                        "pin",
-                                        pin
-                                    )
-                                }
-                                .padding(10.dp)
-                    )
                 }
+            }
 
-            } else {
 
-                // =========================================================
-                // PATTERN SCREEN
-                // =========================================================
+            // ========================================================
+            // BOTTOM RESET + CONTINUE
+            //
+            // This area is outside the weighted content, therefore
+            // it will always remain visible.
+            // ========================================================
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 8.dp,
+                        end = 8.dp,
+                        top = 6.dp,
+                        bottom = 4.dp
+                    ),
+
+                horizontalArrangement =
+                    Arrangement.spacedBy(
+                        30.dp,
+                        Alignment.End
+                    ),
+
+                verticalAlignment =
+                    Alignment.CenterVertically
+            ) {
+
+                // =====================================================
+                // RESET
+                // =====================================================
 
                 Text(
                     text = stringResource(
-                        R.string.create_pattern
+                        R.string.reset
                     ),
-                    color = Color.White,
-                    fontSize = 18.sp
+
+                    color =
+                        if (
+                            if (isPattern) {
+                                selectedDots.isEmpty()
+                            } else {
+                                pin.isEmpty()
+                            }
+                        ) {
+                            Color.White.copy(
+                                alpha = 0.35f
+                            )
+                        } else {
+                            Color.White
+                        },
+
+                    fontSize = 20.sp,
+
+                    modifier = Modifier
+                        .clickable(
+                            enabled =
+                                if (isPattern) {
+                                    selectedDots.isNotEmpty()
+                                } else {
+                                    pin.isNotEmpty()
+                                },
+
+                            indication = null,
+
+                            interactionSource =
+                                remember {
+                                    MutableInteractionSource()
+                                }
+                        ) {
+
+                            if (isPattern) {
+
+                                selectedDots =
+                                    emptyList()
+
+                            } else {
+
+                                pin = ""
+                            }
+                        }
+                        .padding(
+                            horizontal = 10.dp,
+                            vertical = 8.dp
+                        )
                 )
 
 
-                Spacer(
-                    modifier = Modifier.height(18.dp)
-                )
-
+                // =====================================================
+                // CONTINUE
+                // =====================================================
 
                 Text(
                     text = stringResource(
-                        R.string.connect_four_dots
+                        R.string.continue_text
                     ),
-                    color = Color.White.copy(
-                        alpha = 0.85f
-                    ),
-                    fontSize = 14.sp
-                )
 
+                    color =
+                        if (
+                            if (isPattern) {
+                                selectedDots.size >= 4
+                            } else {
+                                pin.length == pinLength
+                            }
+                        ) {
+                            Color.White
+                        } else {
+                            Color.White.copy(
+                                alpha = 0.35f
+                            )
+                        },
 
-                Spacer(
-                    modifier = Modifier.height(82.dp)
-                )
+                    fontSize = 20.sp,
 
-
-                // =====================================================
-                // PATTERN GRID
-                // =====================================================
-
-                PatternGrid(
-                    selectedDots = selectedDots,
-
-                    onPatternChanged = { dots ->
-                        selectedDots = dots
-                    },
-
-                    dotColor = patternDotColor,
-
-                    backgroundColor = backgroundColor
-                )
-
-
-                Spacer(
-                    modifier = Modifier.height(55.dp)
-                )
-
-
-                // =====================================================
-                // RESET + CONTINUE
-                // =====================================================
-
-                Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(end = 30.dp),
+                        .clickable(
+                            enabled =
+                                if (isPattern) {
+                                    selectedDots.size >= 4
+                                } else {
+                                    pin.length == pinLength
+                                },
 
-                    horizontalArrangement =
-                        Arrangement.spacedBy(
-                            30.dp,
-                            Alignment.End
+                            indication = null,
+
+                            interactionSource =
+                                remember {
+                                    MutableInteractionSource()
+                                }
+                        ) {
+
+                            if (isPattern) {
+
+                                onNext(
+                                    "pattern",
+                                    selectedDots.joinToString("-")
+                                )
+
+                            } else {
+
+                                onNext(
+                                    "pin",
+                                    pin
+                                )
+                            }
+                        }
+                        .padding(
+                            horizontal = 10.dp,
+                            vertical = 8.dp
                         )
-                ) {
-
-                    // =================================================
-                    // RESET
-                    // =================================================
-
-                    Text(
-                        text = stringResource(
-                            R.string.reset
-                        ),
-
-                        color =
-                            if (selectedDots.isEmpty())
-                                Color.White.copy(alpha = 0.35f)
-                            else
-                                Color.White,
-
-                        fontSize = 20.sp,
-
-                        modifier =
-                            Modifier
-                                .clickable(
-                                    enabled =
-                                        selectedDots.isNotEmpty(),
-
-                                    indication = null,
-
-                                    interactionSource =
-                                        remember {
-                                            MutableInteractionSource()
-                                        }
-                                ) {
-
-                                    selectedDots =
-                                        emptyList()
-                                }
-                                .padding(10.dp)
-                    )
-
-
-                    // =================================================
-                    // CONTINUE
-                    // =================================================
-
-                    Text(
-                        text = stringResource(
-                            R.string.continue_text
-                        ),
-
-                        color =
-                            if (selectedDots.size >= 4)
-                                Color.White
-                            else
-                                Color.White.copy(alpha = 0.35f),
-
-                        fontSize = 20.sp,
-
-                        modifier =
-                            Modifier
-                                .clickable(
-                                    enabled =
-                                        selectedDots.size >= 4,
-
-                                    indication = null,
-
-                                    interactionSource =
-                                        remember {
-                                            MutableInteractionSource()
-                                        }
-                                ) {
-
-                                    onNext(
-                                        "pattern",
-                                        selectedDots.joinToString("-")
-                                    )
-                                }
-                                .padding(10.dp)
-                    )
-                }
+                )
             }
         }
     }
 }
 
 
-// =====================================================================
+// ====================================================================
 // PATTERN GRID
-// =====================================================================
+// ====================================================================
 
 @Composable
 fun PatternGrid(
+    modifier: Modifier = Modifier,
     selectedDots: List<Int>,
     onPatternChanged: (List<Int>) -> Unit,
     dotColor: Color,
@@ -662,8 +666,7 @@ fun PatternGrid(
 
 
     Box(
-        modifier = Modifier
-            .size(330.dp)
+        modifier = modifier
             .pointerInput(Unit) {
 
                 var currentDots =
@@ -672,6 +675,10 @@ fun PatternGrid(
 
                 detectDragGestures(
 
+                    // =================================================
+                    // TOUCH START
+                    // =================================================
+
                     onDragStart = { offset ->
 
                         currentDots =
@@ -679,9 +686,9 @@ fun PatternGrid(
 
                         val dot =
                             findDot(
-                                offset,
-                                size.width.toFloat(),
-                                size.height.toFloat()
+                                touch = offset,
+                                width = size.width.toFloat(),
+                                height = size.height.toFloat()
                             )
 
                         if (dot != null) {
@@ -695,15 +702,19 @@ fun PatternGrid(
                     },
 
 
+                    // =================================================
+                    // DRAG
+                    // =================================================
+
                     onDrag = { change, _ ->
 
                         change.consume()
 
                         val dot =
                             findDot(
-                                change.position,
-                                size.width.toFloat(),
-                                size.height.toFloat()
+                                touch = change.position,
+                                width = size.width.toFloat(),
+                                height = size.height.toFloat()
                             )
 
                         if (
@@ -733,8 +744,8 @@ fun PatternGrid(
 
             val positions =
                 getGridPositions(
-                    size.width,
-                    size.height
+                    width = size.width,
+                    height = size.height
                 )
 
 
@@ -761,14 +772,15 @@ fun PatternGrid(
                                 selectedDots[i + 1]
                             ],
 
-                        strokeWidth = 8f
+                        strokeWidth =
+                            size.minDimension * 0.024f
                     )
                 }
             }
 
 
             // =========================================================
-            // PATTERN DOTS
+            // DOTS
             // =========================================================
 
             positions.forEachIndexed {
@@ -782,7 +794,10 @@ fun PatternGrid(
                 // Outer circle
                 drawCircle(
                     color = dotColor,
-                    radius = 17.5.dp.toPx(),
+
+                    radius =
+                        size.minDimension * 0.053f,
+
                     center = position
                 )
 
@@ -790,7 +805,10 @@ fun PatternGrid(
                 // Inner background
                 drawCircle(
                     color = backgroundColor,
-                    radius = 13.5.dp.toPx(),
+
+                    radius =
+                        size.minDimension * 0.041f,
+
                     center = position
                 )
 
@@ -798,12 +816,14 @@ fun PatternGrid(
                 // Center dot
                 drawCircle(
                     color =
-                        if (selected)
+                        if (selected) {
                             Color.White
-                        else
-                            dotColor,
+                        } else {
+                            dotColor
+                        },
 
-                    radius = 9.dp.toPx(),
+                    radius =
+                        size.minDimension * 0.027f,
 
                     center = position
                 )
@@ -813,9 +833,9 @@ fun PatternGrid(
 }
 
 
-// =====================================================================
+// ====================================================================
 // GRID POSITIONS
-// =====================================================================
+// ====================================================================
 
 private fun getGridPositions(
     width: Float,
@@ -823,18 +843,12 @@ private fun getGridPositions(
 ): List<Offset> {
 
     val x1 = width * 0.1667f
-
     val x2 = width * 0.5f
-
     val x3 = width * 0.8333f
 
-
     val y1 = height * 0.1667f
-
     val y2 = height * 0.5f
-
     val y3 = height * 0.8333f
-
 
     return listOf(
 
@@ -853,9 +867,9 @@ private fun getGridPositions(
 }
 
 
-// =====================================================================
+// ====================================================================
 // FIND DOT
-// =====================================================================
+// ====================================================================
 
 private fun findDot(
     touch: Offset,
@@ -865,8 +879,8 @@ private fun findDot(
 
     val positions =
         getGridPositions(
-            width,
-            height
+            width = width,
+            height = height
         )
 
 
@@ -887,7 +901,12 @@ private fun findDot(
             )
 
 
-        if (distance <= 55f) {
+        // Touch area also scales with grid size.
+        val touchRadius =
+            min(width, height) * 0.17f
+
+
+        if (distance <= touchRadius) {
             return index
         }
     }
@@ -895,3 +914,4 @@ private fun findDot(
 
     return null
 }
+

@@ -76,17 +76,6 @@ fun SettingsScreen(
     val context = LocalContext.current
     val activity = context as? Activity
 
-    /*
-     * =========================================================
-     * SOFT INPUT ADJUST NOTHING
-     * =========================================================
-     *
-     * Keyboard open hone par Activity ki window resize nahi hogi.
-     *
-     * Previous soft input mode save kiya ja raha hai taake
-     * SettingsScreen se bahar jaane ke baad original behavior
-     * restore ho jaye.
-     */
     DisposableEffect(activity) {
 
         val previousSoftInputMode =
