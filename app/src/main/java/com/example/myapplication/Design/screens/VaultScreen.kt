@@ -1,3 +1,4 @@
+
 package com.example.myapplication.Design.screens
 
 import android.Manifest
@@ -23,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.collection.LruCache
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,12 +41,14 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 
 import androidx.compose.runtime.*
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +62,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -75,6 +80,8 @@ import java.io.File
 import com.example.myapplication.R
 
 
+/* ========================= MEDIA MODEL ========================= */
+
 data class VaultMediaItem(
     val uri: Uri,
     val name: String,
@@ -87,11 +94,16 @@ data class VaultMediaItem(
 
 private const val ALL_ALBUMS_KEY = "ALL"
 
+
+/* ========================= THUMBNAIL CACHE ========================= */
+
 private val vaultThumbnailCache =
     LruCache<String, Bitmap>(80)
 
 
-/* ========================= MAIN VAULT SCREEN ========================= */
+/* ================================================================
+   MAIN VAULT SCREEN
+   ================================================================ */
 
 @Composable
 fun VaultScreen(
@@ -99,8 +111,13 @@ fun VaultScreen(
 ) {
 
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val coroutineScope =
+        rememberCoroutineScope()
+
+    val lifecycleOwner =
+        LocalLifecycleOwner.current
+
 
     var selectedTab by remember {
         mutableStateOf(0)
@@ -125,7 +142,9 @@ fun VaultScreen(
     }
 
     var previewImages by remember {
-        mutableStateOf<List<VaultMediaItem>>(emptyList())
+        mutableStateOf<List<VaultMediaItem>>(
+            emptyList()
+        )
     }
 
     var previewImageIndex by remember {
@@ -133,7 +152,9 @@ fun VaultScreen(
     }
 
     var pendingHideItems by remember {
-        mutableStateOf<List<VaultMediaItem>>(emptyList())
+        mutableStateOf<List<VaultMediaItem>>(
+            emptyList()
+        )
     }
 
     var showPermissionSettingsDialog by remember {
@@ -149,12 +170,20 @@ fun VaultScreen(
     }
 
 
-    LaunchedEffect(previewImages.isNotEmpty()) {
-        onPreviewStateChange(previewImages.isNotEmpty())
+    /* ========================= PREVIEW STATE ========================= */
+
+    LaunchedEffect(
+        previewImages.isNotEmpty()
+    ) {
+
+        onPreviewStateChange(
+            previewImages.isNotEmpty()
+        )
     }
 
 
     DisposableEffect(Unit) {
+
         onDispose {
             onPreviewStateChange(false)
         }
@@ -172,8 +201,11 @@ fun VaultScreen(
 
             val permission =
                 if (selectedTab == 0) {
+
                     Manifest.permission.READ_MEDIA_IMAGES
+
                 } else {
+
                     Manifest.permission.READ_MEDIA_VIDEO
                 }
 
@@ -205,8 +237,11 @@ fun VaultScreen(
 
                     val requiredPermission =
                         if (selectedTab == 0) {
+
                             Manifest.permission.READ_MEDIA_IMAGES
+
                         } else {
+
                             Manifest.permission.READ_MEDIA_VIDEO
                         }
 
@@ -214,7 +249,8 @@ fun VaultScreen(
                             ContextCompat.checkSelfPermission(
                                 context,
                                 requiredPermission
-                            ) == PackageManager.PERMISSION_GRANTED
+                            ) ==
+                            PackageManager.PERMISSION_GRANTED
 
                 } else {
 
@@ -224,7 +260,8 @@ fun VaultScreen(
                             ContextCompat.checkSelfPermission(
                                 context,
                                 Manifest.permission.READ_EXTERNAL_STORAGE
-                            ) == PackageManager.PERMISSION_GRANTED
+                            ) ==
+                            PackageManager.PERMISSION_GRANTED
                 }
 
 
@@ -259,8 +296,11 @@ fun VaultScreen(
 
             val permission =
                 if (selectedTab == 0) {
+
                     Manifest.permission.READ_MEDIA_IMAGES
+
                 } else {
+
                     Manifest.permission.READ_MEDIA_VIDEO
                 }
 
@@ -290,7 +330,8 @@ fun VaultScreen(
             LifecycleEventObserver { _, event ->
 
                 if (
-                    event == Lifecycle.Event.ON_RESUME &&
+                    event ==
+                    Lifecycle.Event.ON_RESUME &&
                     waitingForPermissionSettings
                 ) {
 
@@ -310,6 +351,7 @@ fun VaultScreen(
 
 
         onDispose {
+
             lifecycleOwner.lifecycle.removeObserver(
                 observer
             )
@@ -348,7 +390,9 @@ fun VaultScreen(
                     try {
 
                         val copiedItems =
-                            withContext(Dispatchers.IO) {
+                            withContext(
+                                Dispatchers.IO
+                            ) {
 
                                 itemsToHide.mapNotNull { media ->
 
@@ -365,7 +409,9 @@ fun VaultScreen(
                             itemsToHide.size
                         ) {
 
-                            withContext(Dispatchers.IO) {
+                            withContext(
+                                Dispatchers.IO
+                            ) {
 
                                 copiedItems.forEach { copied ->
 
@@ -384,7 +430,9 @@ fun VaultScreen(
 
 
                         val deleteSuccess =
-                            withContext(Dispatchers.IO) {
+                            withContext(
+                                Dispatchers.IO
+                            ) {
 
                                 itemsToHide.all { media ->
 
@@ -421,13 +469,13 @@ fun VaultScreen(
 
 
                                 if (!alreadyExists) {
+
                                     newHidden.add(copied)
                                 }
                             }
 
 
-                            hiddenMedia =
-                                newHidden
+                            hiddenMedia = newHidden
 
 
                             saveHiddenMediaMetadata(
@@ -436,18 +484,15 @@ fun VaultScreen(
                             )
 
 
-                            selectedMedia =
-                                emptySet()
-
-                            selectionMode =
-                                false
-
-                            galleryOpen =
-                                false
+                            selectedMedia = emptySet()
+                            selectionMode = false
+                            galleryOpen = false
 
                         } else {
 
-                            withContext(Dispatchers.IO) {
+                            withContext(
+                                Dispatchers.IO
+                            ) {
 
                                 copiedItems.forEach { copied ->
 
@@ -468,29 +513,23 @@ fun VaultScreen(
 
                     } finally {
 
-                        pendingHideItems =
-                            emptyList()
-
-                        isVaultProcessing =
-                            false
+                        pendingHideItems = emptyList()
+                        isVaultProcessing = false
                     }
                 }
 
             } else {
 
-                pendingHideItems =
-                    emptyList()
-
-                isVaultProcessing =
-                    false
-
-                galleryOpen =
-                    true
+                pendingHideItems = emptyList()
+                isVaultProcessing = false
+                galleryOpen = true
             }
         }
 
 
-    /* ========================= IMAGE PREVIEW ========================= */
+    /* ================================================================
+       IMAGE PREVIEW
+       ================================================================ */
 
     if (previewImages.isNotEmpty()) {
 
@@ -498,17 +537,15 @@ fun VaultScreen(
 
             if (!isVaultProcessing) {
 
-                previewImages =
-                    emptyList()
-
-                previewImageIndex =
-                    0
+                previewImages = emptyList()
+                previewImageIndex = 0
             }
         }
 
 
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier =
+                Modifier.fillMaxSize()
         ) {
 
             VaultImagePreviewScreen(
@@ -519,11 +556,8 @@ fun VaultScreen(
 
                     if (!isVaultProcessing) {
 
-                        previewImages =
-                            emptyList()
-
-                        previewImageIndex =
-                            0
+                        previewImages = emptyList()
+                        previewImageIndex = 0
                     }
                 },
 
@@ -542,7 +576,9 @@ fun VaultScreen(
                         try {
 
                             val success =
-                                withContext(Dispatchers.IO) {
+                                withContext(
+                                    Dispatchers.IO
+                                ) {
 
                                     restoreMediaToGallery(
                                         context,
@@ -561,8 +597,7 @@ fun VaultScreen(
                                     }
 
 
-                                hiddenMedia =
-                                    updated
+                                hiddenMedia = updated
 
 
                                 saveHiddenMediaMetadata(
@@ -571,11 +606,8 @@ fun VaultScreen(
                                 )
 
 
-                                previewImages =
-                                    emptyList()
-
-                                previewImageIndex =
-                                    0
+                                previewImages = emptyList()
+                                previewImageIndex = 0
                             }
 
                         } catch (e: Exception) {
@@ -584,8 +616,7 @@ fun VaultScreen(
 
                         } finally {
 
-                            isVaultProcessing =
-                                false
+                            isVaultProcessing = false
                         }
                     }
                 }
@@ -602,12 +633,15 @@ fun VaultScreen(
     }
 
 
-    /* ========================= GALLERY ========================= */
+    /* ================================================================
+       GALLERY
+       ================================================================ */
 
     if (galleryOpen) {
 
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier =
+                Modifier.fillMaxSize()
         ) {
 
             VaultGalleryScreen(
@@ -620,9 +654,7 @@ fun VaultScreen(
 
                     if (!isVaultProcessing) {
 
-                        selectedMedia =
-                            newSelection
-
+                        selectedMedia = newSelection
                         selectionMode =
                             newSelection.isNotEmpty()
                     }
@@ -632,14 +664,9 @@ fun VaultScreen(
 
                     if (!isVaultProcessing) {
 
-                        galleryOpen =
-                            false
-
-                        selectedMedia =
-                            emptySet()
-
-                        selectionMode =
-                            false
+                        galleryOpen = false
+                        selectedMedia = emptySet()
+                        selectionMode = false
                     }
                 },
 
@@ -649,6 +676,7 @@ fun VaultScreen(
                         itemsToHide.isEmpty() ||
                         isVaultProcessing
                     ) {
+
                         return@VaultGalleryScreen
                     }
 
@@ -673,11 +701,8 @@ fun VaultScreen(
                                 )
 
 
-                            pendingHideItems =
-                                itemsToHide
-
-                            isVaultProcessing =
-                                false
+                            pendingHideItems = itemsToHide
+                            isVaultProcessing = false
 
 
                             writeLauncher.launch(
@@ -690,17 +715,13 @@ fun VaultScreen(
 
                             e.printStackTrace()
 
-                            pendingHideItems =
-                                emptyList()
-
-                            isVaultProcessing =
-                                false
+                            pendingHideItems = emptyList()
+                            isVaultProcessing = false
                         }
 
                     } else {
 
-                        isVaultProcessing =
-                            true
+                        isVaultProcessing = true
 
 
                         coroutineScope.launch {
@@ -708,7 +729,9 @@ fun VaultScreen(
                             try {
 
                                 val copiedItems =
-                                    withContext(Dispatchers.IO) {
+                                    withContext(
+                                        Dispatchers.IO
+                                    ) {
 
                                         itemsToHide.mapNotNull { media ->
 
@@ -725,7 +748,9 @@ fun VaultScreen(
                                     itemsToHide.size
                                 ) {
 
-                                    withContext(Dispatchers.IO) {
+                                    withContext(
+                                        Dispatchers.IO
+                                    ) {
 
                                         copiedItems.forEach { copied ->
 
@@ -744,7 +769,9 @@ fun VaultScreen(
 
 
                                 val deleteSuccess =
-                                    withContext(Dispatchers.IO) {
+                                    withContext(
+                                        Dispatchers.IO
+                                    ) {
 
                                         itemsToHide.all { media ->
 
@@ -785,8 +812,7 @@ fun VaultScreen(
                                     }
 
 
-                                    hiddenMedia =
-                                        newHidden
+                                    hiddenMedia = newHidden
 
 
                                     saveHiddenMediaMetadata(
@@ -795,18 +821,15 @@ fun VaultScreen(
                                     )
 
 
-                                    selectedMedia =
-                                        emptySet()
-
-                                    selectionMode =
-                                        false
-
-                                    galleryOpen =
-                                        false
+                                    selectedMedia = emptySet()
+                                    selectionMode = false
+                                    galleryOpen = false
 
                                 } else {
 
-                                    withContext(Dispatchers.IO) {
+                                    withContext(
+                                        Dispatchers.IO
+                                    ) {
 
                                         copiedItems.forEach { copied ->
 
@@ -827,8 +850,7 @@ fun VaultScreen(
 
                             } finally {
 
-                                isVaultProcessing =
-                                    false
+                                isVaultProcessing = false
                             }
                         }
                     }
@@ -846,32 +868,32 @@ fun VaultScreen(
     }
 
 
-    /* ========================= MAIN SCREEN ========================= */
+    /* ================================================================
+       MAIN SCREEN
+       ================================================================ */
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color.White)
     ) {
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
         ) {
 
             Text(
                 text =
-                    stringResource(
-                        R.string.vault
-                    ),
+                    stringResource(R.string.vault),
 
-                color =
-                    Color.Black,
+                color = Color.Black,
 
-                fontSize =
-                    20.sp,
+                fontSize = 20.sp,
 
                 modifier =
                     Modifier.padding(
@@ -882,41 +904,28 @@ fun VaultScreen(
 
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        top = 18.dp
-                    )
-                    .height(42.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 18.dp)
+                        .height(42.dp),
 
                 verticalAlignment =
                     Alignment.CenterVertically
             ) {
 
                 VaultTab(
-                    selected =
-                        selectedTab == 0,
-
-                    icon =
-                        R.drawable.imageicon,
-
-                    text =
-                        stringResource(
-                            R.string.photos
-                        ),
+                    selected = selectedTab == 0,
+                    icon = R.drawable.imageicon,
+                    text = stringResource(R.string.photos),
 
                     onClick = {
 
                         if (!isVaultProcessing) {
 
-                            selectedTab =
-                                0
-
-                            selectedMedia =
-                                emptySet()
-
-                            selectionMode =
-                                false
+                            selectedTab = 0
+                            selectedMedia = emptySet()
+                            selectionMode = false
                         }
                     },
 
@@ -926,29 +935,17 @@ fun VaultScreen(
 
 
                 VaultTab(
-                    selected =
-                        selectedTab == 1,
-
-                    icon =
-                        R.drawable.vedioicon,
-
-                    text =
-                        stringResource(
-                            R.string.videos
-                        ),
+                    selected = selectedTab == 1,
+                    icon = R.drawable.vedioicon,
+                    text = stringResource(R.string.videos),
 
                     onClick = {
 
                         if (!isVaultProcessing) {
 
-                            selectedTab =
-                                1
-
-                            selectedMedia =
-                                emptySet()
-
-                            selectionMode =
-                                false
+                            selectedTab = 1
+                            selectedMedia = emptySet()
+                            selectionMode = false
                         }
                     },
 
@@ -985,14 +982,9 @@ fun VaultScreen(
                 } else {
 
                     VaultHiddenMediaGrid(
-                        mediaList =
-                            currentHidden,
-
-                        selectionMode =
-                            selectionMode,
-
-                        selectedMedia =
-                            selectedMedia,
+                        mediaList = currentHidden,
+                        selectionMode = selectionMode,
+                        selectedMedia = selectedMedia,
 
                         onMediaClick = { media ->
 
@@ -1004,35 +996,26 @@ fun VaultScreen(
                             if (selectionMode) {
 
                                 val newSet =
-                                    selectedMedia
-                                        .toMutableSet()
+                                    selectedMedia.toMutableSet()
 
 
                                 if (
-                                    newSet.contains(
-                                        media.uri
-                                    )
+                                    newSet.contains(media.uri)
                                 ) {
 
-                                    newSet.remove(
-                                        media.uri
-                                    )
+                                    newSet.remove(media.uri)
 
                                 } else {
 
-                                    newSet.add(
-                                        media.uri
-                                    )
+                                    newSet.add(media.uri)
                                 }
 
 
-                                selectedMedia =
-                                    newSet
+                                selectedMedia = newSet
 
 
                                 if (newSet.isEmpty()) {
-                                    selectionMode =
-                                        false
+                                    selectionMode = false
                                 }
 
                             } else {
@@ -1060,8 +1043,7 @@ fun VaultScreen(
                                         }
 
 
-                                    previewImages =
-                                        imageList
+                                    previewImages = imageList
 
 
                                     previewImageIndex =
@@ -1081,22 +1063,17 @@ fun VaultScreen(
                             }
 
 
-                            selectionMode =
-                                true
+                            selectionMode = true
 
 
                             val newSet =
-                                selectedMedia
-                                    .toMutableSet()
+                                selectedMedia.toMutableSet()
 
 
-                            newSet.add(
-                                media.uri
-                            )
+                            newSet.add(media.uri)
 
 
-                            selectedMedia =
-                                newSet
+                            selectedMedia = newSet
                         }
                     )
                 }
@@ -1123,70 +1100,54 @@ fun VaultScreen(
                 currentHidden.isNotEmpty() &&
                         currentHidden.all {
 
-                            selectedMedia.contains(
-                                it.uri
-                            )
+                            selectedMedia.contains(it.uri)
                         }
 
 
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(
-                        Alignment.BottomCenter
-                    )
-                    .navigationBarsPadding()
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
             ) {
 
                 VaultSelectionBottomBar(
-                    allSelected =
-                        allHiddenSelected,
-
-                    selectedCount =
-                        selectedMedia.size,
+                    allSelected = allHiddenSelected,
+                    selectedCount = selectedMedia.size,
 
                     onSelectAll = {
 
                         val newSet =
-                            selectedMedia
-                                .toMutableSet()
+                            selectedMedia.toMutableSet()
 
 
                         if (allHiddenSelected) {
 
                             currentHidden.forEach {
-                                newSet.remove(
-                                    it.uri
-                                )
+                                newSet.remove(it.uri)
                             }
 
                         } else {
 
                             currentHidden.forEach {
-                                newSet.add(
-                                    it.uri
-                                )
+                                newSet.add(it.uri)
                             }
                         }
 
 
-                        selectedMedia =
-                            newSet
+                        selectedMedia = newSet
 
 
                         if (newSet.isEmpty()) {
-                            selectionMode =
-                                false
+                            selectionMode = false
                         }
                     },
 
                     onCancel = {
 
-                        selectedMedia =
-                            emptySet()
-
-                        selectionMode =
-                            false
+                        selectedMedia = emptySet()
+                        selectionMode = false
                     },
 
                     onUnhide = {
@@ -1199,16 +1160,13 @@ fun VaultScreen(
                         val media =
                             hiddenMedia.filter {
 
-                                selectedMedia.contains(
-                                    it.uri
-                                )
+                                selectedMedia.contains(it.uri)
                             }
 
 
                         if (media.isNotEmpty()) {
 
-                            isVaultProcessing =
-                                true
+                            isVaultProcessing = true
 
 
                             coroutineScope.launch {
@@ -1233,12 +1191,10 @@ fun VaultScreen(
 
                                     val restoredPaths =
                                         restoredItems
-                                            .filter {
-                                                    (_, success) ->
+                                            .filter { (_, success) ->
                                                 success
                                             }
-                                            .map {
-                                                    (item, _) ->
+                                            .map { (item, _) ->
                                                 item.vaultFilePath
                                             }
                                             .toSet()
@@ -1257,8 +1213,7 @@ fun VaultScreen(
                                             }
 
 
-                                        hiddenMedia =
-                                            updated
+                                        hiddenMedia = updated
 
 
                                         saveHiddenMediaMetadata(
@@ -1268,11 +1223,8 @@ fun VaultScreen(
                                     }
 
 
-                                    selectedMedia =
-                                        emptySet()
-
-                                    selectionMode =
-                                        false
+                                    selectedMedia = emptySet()
+                                    selectionMode = false
 
                                 } catch (e: Exception) {
 
@@ -1280,8 +1232,7 @@ fun VaultScreen(
 
                                 } finally {
 
-                                    isVaultProcessing =
-                                        false
+                                    isVaultProcessing = false
                                 }
                             }
                         }
@@ -1294,26 +1245,27 @@ fun VaultScreen(
             /* ========================= PLUS BUTTON ========================= */
 
             Box(
-                modifier = Modifier
-                    .align(
-                        Alignment.BottomEnd
-                    )
-                    .navigationBarsPadding()
-                    .padding(
-                        end = 15.dp,
-                        bottom = 15.dp
-                    )
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .clickable(
-                        indication = null,
-                        interactionSource =
-                            remember {
-                                MutableInteractionSource()
-                            }
-                    ) {
-                        openGallery()
-                    },
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .navigationBarsPadding()
+                        .padding(
+                            end = 15.dp,
+                            bottom = 15.dp
+                        )
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .clickable(
+                            indication = null,
+
+                            interactionSource =
+                                remember {
+                                    MutableInteractionSource()
+                                }
+                        ) {
+
+                            openGallery()
+                        },
 
                 contentAlignment =
                     Alignment.Center
@@ -1321,14 +1273,10 @@ fun VaultScreen(
 
                 Image(
                     painter =
-                        painterResource(
-                            R.drawable.plus
-                        ),
+                        painterResource(R.drawable.plus),
 
                     contentDescription =
-                        stringResource(
-                            R.string.add
-                        ),
+                        stringResource(R.string.add),
 
                     modifier =
                         Modifier.size(50.dp)
@@ -1354,8 +1302,7 @@ fun VaultScreen(
             AlertDialog(
 
                 onDismissRequest = {
-                    showPermissionSettingsDialog =
-                        false
+                    showPermissionSettingsDialog = false
                 },
 
                 title = {
@@ -1393,11 +1340,8 @@ fun VaultScreen(
 
                         onClick = {
 
-                            showPermissionSettingsDialog =
-                                false
-
-                            waitingForPermissionSettings =
-                                true
+                            showPermissionSettingsDialog = false
+                            waitingForPermissionSettings = true
 
 
                             context.startActivity(
@@ -1413,9 +1357,7 @@ fun VaultScreen(
 
                         Text(
                             text =
-                                stringResource(
-                                    R.string.settings
-                                ),
+                                stringResource(R.string.settings),
 
                             color =
                                 Color(0xFF0396FF)
@@ -1428,17 +1370,13 @@ fun VaultScreen(
                     TextButton(
 
                         onClick = {
-
-                            showPermissionSettingsDialog =
-                                false
+                            showPermissionSettingsDialog = false
                         }
                     ) {
 
                         Text(
                             text =
-                                stringResource(
-                                    R.string.cancel
-                                ),
+                                stringResource(R.string.cancel),
 
                             color =
                                 Color(0xFF818181)
@@ -1451,28 +1389,30 @@ fun VaultScreen(
 }
 
 
-/* ========================= PROCESSING OVERLAY ========================= */
+/* ================================================================
+   PROCESSING OVERLAY
+   ================================================================ */
 
 @Composable
 private fun VaultProcessingOverlay() {
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Color.Black.copy(
-                    alpha = 0.45f
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Color.Black.copy(alpha = 0.45f)
                 )
-            )
-            .clickable(
-                indication = null,
-                interactionSource =
-                    remember {
-                        MutableInteractionSource()
-                    }
-            ) {
-                // Touches intentionally blocked.
-            },
+                .clickable(
+                    indication = null,
+
+                    interactionSource =
+                        remember {
+                            MutableInteractionSource()
+                        }
+                ) {
+                    // Touches intentionally blocked.
+                },
 
         contentAlignment =
             Alignment.Center
@@ -1487,39 +1427,30 @@ private fun VaultProcessingOverlay() {
         ) {
 
             CircularProgressIndicator(
-                color =
-                    Color(0xFF0396FF),
-
-                strokeWidth =
-                    4.dp,
-
-                modifier =
-                    Modifier.size(45.dp)
+                color = Color(0xFF0396FF),
+                strokeWidth = 4.dp,
+                modifier = Modifier.size(45.dp)
             )
 
 
             Spacer(
-                modifier =
-                    Modifier.height(16.dp)
+                modifier = Modifier.height(16.dp)
             )
 
 
             Text(
-                text =
-                    "Processing...",
-
-                color =
-                    Color.White,
-
-                fontSize =
-                    16.sp
+                text = "Processing...",
+                color = Color.White,
+                fontSize = 16.sp
             )
         }
     }
 }
 
 
-/* ========================= SELECTION BAR ========================= */
+/* ================================================================
+   SELECTION BOTTOM BAR
+   ================================================================ */
 
 @Composable
 private fun VaultSelectionBottomBar(
@@ -1531,13 +1462,12 @@ private fun VaultSelectionBottomBar(
 ) {
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(70.dp)
-            .background(Color.White)
-            .padding(
-                horizontal = 35.dp
-            ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(70.dp)
+                .background(Color.White)
+                .padding(horizontal = 35.dp),
 
         horizontalArrangement =
             Arrangement.SpaceBetween,
@@ -1548,14 +1478,10 @@ private fun VaultSelectionBottomBar(
 
         Image(
             painter =
-                painterResource(
-                    R.drawable.allimage
-                ),
+                painterResource(R.drawable.allimage),
 
             contentDescription =
-                stringResource(
-                    R.string.select_all
-                ),
+                stringResource(R.string.select_all),
 
             colorFilter =
                 ColorFilter.tint(
@@ -1571,6 +1497,7 @@ private fun VaultSelectionBottomBar(
                     .size(28.dp)
                     .clickable(
                         indication = null,
+
                         interactionSource =
                             remember {
                                 MutableInteractionSource()
@@ -1583,14 +1510,10 @@ private fun VaultSelectionBottomBar(
 
         Image(
             painter =
-                painterResource(
-                    R.drawable.cross
-                ),
+                painterResource(R.drawable.cross),
 
             contentDescription =
-                stringResource(
-                    R.string.cancel
-                ),
+                stringResource(R.string.cancel),
 
             colorFilter =
                 ColorFilter.tint(
@@ -1602,6 +1525,7 @@ private fun VaultSelectionBottomBar(
                     .size(20.dp)
                     .clickable(
                         indication = null,
+
                         interactionSource =
                             remember {
                                 MutableInteractionSource()
@@ -1614,14 +1538,10 @@ private fun VaultSelectionBottomBar(
 
         Image(
             painter =
-                painterResource(
-                    R.drawable.unlock
-                ),
+                painterResource(R.drawable.unlock),
 
             contentDescription =
-                stringResource(
-                    R.string.unhide
-                ),
+                stringResource(R.string.unhide),
 
             colorFilter =
                 ColorFilter.tint(
@@ -1637,6 +1557,7 @@ private fun VaultSelectionBottomBar(
                     .size(28.dp)
                     .clickable(
                         indication = null,
+
                         interactionSource =
                             remember {
                                 MutableInteractionSource()
@@ -1652,7 +1573,9 @@ private fun VaultSelectionBottomBar(
 }
 
 
-/* ========================= HIDDEN MEDIA GRID ========================= */
+/* ================================================================
+   HIDDEN MEDIA GRID
+   ================================================================ */
 
 @Composable
 private fun VaultHiddenMediaGrid(
@@ -1684,8 +1607,7 @@ private fun VaultHiddenMediaGrid(
         verticalArrangement =
             Arrangement.spacedBy(3.dp),
 
-        userScrollEnabled =
-            true
+        userScrollEnabled = true
     ) {
 
         items(
@@ -1700,16 +1622,14 @@ private fun VaultHiddenMediaGrid(
         ) { media ->
 
             VaultGalleryItem(
-                media =
-                    media,
+                media = media,
 
                 selected =
                     selectedMedia.contains(
                         media.uri
                     ),
 
-                selectionMode =
-                    selectionMode,
+                selectionMode = selectionMode,
 
                 onClick = {
                     onMediaClick(media)
@@ -1724,8 +1644,11 @@ private fun VaultHiddenMediaGrid(
 }
 
 
-/* ========================= GALLERY ITEM ========================= */
+/* ================================================================
+   GALLERY ITEM
+   ================================================================ */
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun VaultGalleryItem(
     media: VaultMediaItem,
@@ -1745,11 +1668,13 @@ private fun VaultGalleryItem(
             media.vaultFilePath,
             media.isVideo
         ) {
+
             buildThumbnailCacheKey(media)
         }
 
 
     var bitmap by remember(cacheKey) {
+
         mutableStateOf(
             vaultThumbnailCache.get(cacheKey)
         )
@@ -1764,8 +1689,7 @@ private fun VaultGalleryItem(
 
         if (cached != null) {
 
-            bitmap =
-                cached
+            bitmap = cached
 
             return@LaunchedEffect
         }
@@ -1773,8 +1697,7 @@ private fun VaultGalleryItem(
 
         val loaded =
             loadVaultThumbnail(
-                context =
-                    context,
+                context = context,
 
                 uri =
                     if (media.isVaultFile) {
@@ -1791,8 +1714,7 @@ private fun VaultGalleryItem(
                         media.uri
                     },
 
-                isVideo =
-                    media.isVideo
+                isVideo = media.isVideo
             )
 
 
@@ -1803,34 +1725,34 @@ private fun VaultGalleryItem(
                 loaded
             )
 
-            bitmap =
-                loaded
+            bitmap = loaded
         }
     }
 
 
     Box(
-        modifier = Modifier
-            .aspectRatio(1f)
-            .clip(
-                RoundedCornerShape(12.dp)
-            )
-            .combinedClickable(
-                indication = null,
+        modifier =
+            Modifier
+                .aspectRatio(1f)
+                .clip(
+                    RoundedCornerShape(12.dp)
+                )
+                .combinedClickable(
+                    indication = null,
 
-                interactionSource =
-                    remember {
-                        MutableInteractionSource()
+                    interactionSource =
+                        remember {
+                            MutableInteractionSource()
+                        },
+
+                    onClick = {
+                        onClick()
                     },
 
-                onClick = {
-                    onClick()
-                },
-
-                onLongClick = {
-                    onLongClick()
-                }
-            )
+                    onLongClick = {
+                        onLongClick()
+                    }
+                )
     ) {
 
         bitmap?.let { loadedBitmap ->
@@ -1839,8 +1761,7 @@ private fun VaultGalleryItem(
                 bitmap =
                     loadedBitmap.asImageBitmap(),
 
-                contentDescription =
-                    null,
+                contentDescription = null,
 
                 contentScale =
                     ContentScale.Crop,
@@ -1857,15 +1778,16 @@ private fun VaultGalleryItem(
         ) {
 
             Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(46.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Color.Black.copy(
-                            alpha = 0.45f
-                        )
-                    ),
+                modifier =
+                    Modifier
+                        .align(Alignment.Center)
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Color.Black.copy(
+                                alpha = 0.45f
+                            )
+                        ),
 
                 contentAlignment =
                     Alignment.Center
@@ -1899,11 +1821,8 @@ private fun VaultGalleryItem(
 
 
                     drawPath(
-                        path =
-                            playPath,
-
-                        color =
-                            Color.White
+                        path = playPath,
+                        color = Color.White
                     )
                 }
             }
@@ -1913,31 +1832,31 @@ private fun VaultGalleryItem(
         if (selectionMode) {
 
             Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(5.dp)
-                    .size(16.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (selected) {
-                            Color(0xFF0396FF)
-                        } else {
-                            Color.Transparent
-                        }
-                    )
-                    .border(
-                        width = 1.dp,
-
-                        color =
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(5.dp)
+                        .size(16.dp)
+                        .clip(CircleShape)
+                        .background(
                             if (selected) {
                                 Color(0xFF0396FF)
                             } else {
-                                Color(0xFF818181)
-                            },
+                                Color.Transparent
+                            }
+                        )
+                        .border(
+                            width = 1.dp,
 
-                        shape =
-                            CircleShape
-                    ),
+                            color =
+                                if (selected) {
+                                    Color(0xFF0396FF)
+                                } else {
+                                    Color(0xFF818181)
+                                },
+
+                            shape = CircleShape
+                        ),
 
                 contentAlignment =
                     Alignment.Center
@@ -1947,12 +1866,8 @@ private fun VaultGalleryItem(
 
                     Text(
                         text = "✓",
-
-                        color =
-                            Color.White,
-
-                        fontSize =
-                            11.sp
+                        color = Color.White,
+                        fontSize = 11.sp
                     )
                 }
             }
@@ -1961,7 +1876,9 @@ private fun VaultGalleryItem(
 }
 
 
-/* ========================= CACHE KEY ========================= */
+/* ================================================================
+   CACHE KEY
+   ================================================================ */
 
 private fun buildThumbnailCacheKey(
     media: VaultMediaItem
@@ -1981,7 +1898,9 @@ private fun buildThumbnailCacheKey(
 }
 
 
-/* ========================= OPEN VIDEO ========================= */
+/* ================================================================
+   OPEN VIDEO
+   ================================================================ */
 
 private fun openVaultVideo(
     context: Context,
@@ -2013,15 +1932,11 @@ private fun openVaultVideo(
 
 
         val mimeType =
-            getVideoMimeType(
-                media.name
-            )
+            getVideoMimeType(media.name)
 
 
         val intent =
-            Intent(
-                Intent.ACTION_VIEW
-            ).apply {
+            Intent(Intent.ACTION_VIEW).apply {
 
                 setDataAndType(
                     contentUri,
@@ -2052,9 +1967,7 @@ private fun openVaultVideo(
             }
 
 
-        context.startActivity(
-            chooser
-        )
+        context.startActivity(chooser)
 
     } catch (e: Exception) {
 
@@ -2063,7 +1976,9 @@ private fun openVaultVideo(
 }
 
 
-/* ========================= IMAGE PREVIEW ========================= */
+/* ================================================================
+   IMAGE PREVIEW
+   ================================================================ */
 
 @Composable
 private fun VaultImagePreviewScreen(
@@ -2096,8 +2011,7 @@ private fun VaultImagePreviewScreen(
 
     val pagerState =
         rememberPagerState(
-            initialPage =
-                safeInitialIndex,
+            initialPage = safeInitialIndex,
 
             pageCount = {
                 mediaList.size
@@ -2121,21 +2035,22 @@ private fun VaultImagePreviewScreen(
 
 
     LaunchedEffect(currentPage) {
+
         filenameScrollState.scrollTo(0)
     }
 
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black)
     ) {
 
         /* ========================= IMAGE ========================= */
 
         HorizontalPager(
-            state =
-                pagerState,
+            state = pagerState,
 
             modifier =
                 Modifier.fillMaxSize(),
@@ -2143,8 +2058,7 @@ private fun VaultImagePreviewScreen(
             contentPadding =
                 PaddingValues(0.dp),
 
-            pageSpacing =
-                0.dp
+            pageSpacing = 0.dp
 
         ) { page ->
 
@@ -2153,12 +2067,11 @@ private fun VaultImagePreviewScreen(
 
 
             val cacheKey =
-                buildThumbnailCacheKey(
-                    media
-                )
+                buildThumbnailCacheKey(media)
 
 
             var bitmap by remember(cacheKey) {
+
                 mutableStateOf(
                     vaultThumbnailCache.get(
                         cacheKey
@@ -2177,8 +2090,7 @@ private fun VaultImagePreviewScreen(
 
                 if (cached != null) {
 
-                    bitmap =
-                        cached
+                    bitmap = cached
 
                     return@LaunchedEffect
                 }
@@ -2186,8 +2098,7 @@ private fun VaultImagePreviewScreen(
 
                 val loaded =
                     loadVaultThumbnail(
-                        context =
-                            context,
+                        context = context,
 
                         uri =
                             if (media.isVaultFile) {
@@ -2204,8 +2115,7 @@ private fun VaultImagePreviewScreen(
                                 media.uri
                             },
 
-                        isVideo =
-                            false
+                        isVideo = false
                     )
 
 
@@ -2216,8 +2126,7 @@ private fun VaultImagePreviewScreen(
                         loaded
                     )
 
-                    bitmap =
-                        loaded
+                    bitmap = loaded
                 }
             }
 
@@ -2253,23 +2162,22 @@ private fun VaultImagePreviewScreen(
         /* ========================= TOP BAR ========================= */
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(
-                    Alignment.TopCenter
-                )
-                .statusBarsPadding()
-                .background(
-                    Color.Black.copy(
-                        alpha = 0.35f
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .background(
+                        Color.Black.copy(
+                            alpha = 0.35f
+                        )
                     )
-                )
-                .padding(
-                    start = 15.dp,
-                    end = 15.dp,
-                    top = 15.dp,
-                    bottom = 15.dp
-                ),
+                    .padding(
+                        start = 15.dp,
+                        end = 15.dp,
+                        top = 15.dp,
+                        bottom = 15.dp
+                    ),
 
             verticalAlignment =
                 Alignment.CenterVertically
@@ -2282,9 +2190,7 @@ private fun VaultImagePreviewScreen(
                     ),
 
                 contentDescription =
-                    stringResource(
-                        R.string.back
-                    ),
+                    stringResource(R.string.back),
 
                 colorFilter =
                     ColorFilter.tint(
@@ -2323,11 +2229,9 @@ private fun VaultImagePreviewScreen(
                 fontSize =
                     16.sp,
 
-                maxLines =
-                    1,
+                maxLines = 1,
 
-                softWrap =
-                    false,
+                softWrap = false,
 
                 modifier =
                     Modifier
@@ -2342,36 +2246,34 @@ private fun VaultImagePreviewScreen(
         /* ========================= UNHIDE BUTTON ========================= */
 
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(
-                    Alignment.BottomCenter
-                )
-                .navigationBarsPadding()
-                .padding(
-                    start = 35.dp,
-                    end = 35.dp,
-                    bottom = 15.dp
-                )
-                .height(60.dp)
-                .clip(
-                    RoundedCornerShape(10.dp)
-                )
-                .background(
-                    Color(0xFF0396FF)
-                )
-                .clickable(
-                    indication = null,
-
-                    interactionSource =
-                        remember {
-                            MutableInteractionSource()
-                        }
-                ) {
-                    onUnhide(
-                        currentMedia
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(
+                        start = 35.dp,
+                        end = 35.dp,
+                        bottom = 15.dp
                     )
-                },
+                    .height(60.dp)
+                    .clip(
+                        RoundedCornerShape(10.dp)
+                    )
+                    .background(
+                        Color(0xFF0396FF)
+                    )
+                    .clickable(
+                        indication = null,
+
+                        interactionSource =
+                            remember {
+                                MutableInteractionSource()
+                            }
+                    ) {
+
+                        onUnhide(currentMedia)
+                    },
 
             contentAlignment =
                 Alignment.Center
@@ -2383,18 +2285,18 @@ private fun VaultImagePreviewScreen(
                         R.string.unhide
                     ),
 
-                color =
-                    Color.White,
+                color = Color.White,
 
-                fontSize =
-                    16.sp
+                fontSize = 16.sp
             )
         }
     }
 }
 
 
-/* ========================= VAULT TAB ========================= */
+/* ================================================================
+   VAULT TAB
+   ================================================================ */
 
 @Composable
 private fun VaultTab(
@@ -2446,9 +2348,7 @@ private fun VaultTab(
 
             Image(
                 painter =
-                    painterResource(
-                        id = icon
-                    ),
+                    painterResource(id = icon),
 
                 contentDescription =
                     text,
@@ -2474,8 +2374,7 @@ private fun VaultTab(
 
 
             Text(
-                text =
-                    text,
+                text = text,
 
                 color =
                     if (selected) {
@@ -2484,8 +2383,7 @@ private fun VaultTab(
                         unselectedColor
                     },
 
-                fontSize =
-                    16.sp
+                fontSize = 16.sp
             )
         }
 
@@ -2507,7 +2405,9 @@ private fun VaultTab(
 }
 
 
-/* ========================= EMPTY PHOTOS ========================= */
+/* ================================================================
+   EMPTY PHOTOS
+   ================================================================ */
 
 @Composable
 private fun PhotosVaultContent() {
@@ -2556,15 +2456,16 @@ private fun PhotosVaultContent() {
                 color =
                     Color(0xFF9E9E9E),
 
-                fontSize =
-                    14.sp
+                fontSize = 14.sp
             )
         }
     }
 }
 
 
-/* ========================= EMPTY VIDEOS ========================= */
+/* ================================================================
+   EMPTY VIDEOS
+   ================================================================ */
 
 @Composable
 private fun VideosVaultContent() {
@@ -2613,15 +2514,16 @@ private fun VideosVaultContent() {
                 color =
                     Color(0xFF9E9E9E),
 
-                fontSize =
-                    14.sp
+                fontSize = 14.sp
             )
         }
     }
 }
 
 
-/* ========================= GALLERY SCREEN ========================= */
+/* ================================================================
+   GALLERY SCREEN
+   ================================================================ */
 
 @Composable
 private fun VaultGalleryScreen(
@@ -2642,9 +2544,7 @@ private fun VaultGalleryScreen(
 
 
     var selectedAlbum by remember {
-        mutableStateOf(
-            ALL_ALBUMS_KEY
-        )
+        mutableStateOf(ALL_ALBUMS_KEY)
     }
 
 
@@ -2657,6 +2557,8 @@ private fun VaultGalleryScreen(
         mutableStateOf(false)
     }
 
+
+    /* ========================= LOAD MEDIA ========================= */
 
     LaunchedEffect(
         isVideo,
@@ -2680,12 +2582,12 @@ private fun VaultGalleryScreen(
     }
 
 
+    /* ========================= ALBUMS ========================= */
+
     val albums =
         remember(mediaList) {
 
-            listOf(
-                ALL_ALBUMS_KEY
-            ) +
+            listOf(ALL_ALBUMS_KEY) +
                     mediaList
                         .map {
                             it.bucketName
@@ -2697,6 +2599,8 @@ private fun VaultGalleryScreen(
                         .sorted()
         }
 
+
+    /* ========================= FILTER ========================= */
 
     val filteredMedia =
         remember(
@@ -2714,6 +2618,7 @@ private fun VaultGalleryScreen(
             } else {
 
                 mediaList.filter {
+
                     it.bucketName ==
                             selectedAlbum
                 }
@@ -2725,11 +2630,17 @@ private fun VaultGalleryScreen(
         filteredMedia.isNotEmpty() &&
                 filteredMedia.all {
 
-                    selectedMedia.contains(
-                        it.uri
-                    )
+                    selectedMedia.contains(it.uri)
                 }
 
+
+    /* ================================================================
+       ROOT BOX
+
+       Dropdown is an overlay.
+       It does NOT take layout space.
+       Therefore images do not move.
+       ================================================================ */
 
     Box(
         modifier =
@@ -2737,6 +2648,10 @@ private fun VaultGalleryScreen(
                 .fillMaxSize()
                 .background(Color.White)
     ) {
+
+        /* ============================================================
+           MAIN CONTENT
+           ============================================================ */
 
         Column(
             modifier =
@@ -2762,6 +2677,8 @@ private fun VaultGalleryScreen(
                     Alignment.CenterVertically
             ) {
 
+                /* ========================= BACK ========================= */
+
                 Image(
                     painter =
                         painterResource(
@@ -2784,7 +2701,15 @@ private fun VaultGalleryScreen(
                                         MutableInteractionSource()
                                     }
                             ) {
-                                onBack()
+
+                                if (albumDropdownOpen) {
+
+                                    albumDropdownOpen = false
+
+                                } else {
+
+                                    onBack()
+                                }
                             }
                 )
 
@@ -2794,6 +2719,8 @@ private fun VaultGalleryScreen(
                         Modifier.width(25.dp)
                 )
 
+
+                /* ========================= ALBUM SELECTOR ========================= */
 
                 Row(
                     modifier =
@@ -2833,8 +2760,7 @@ private fun VaultGalleryScreen(
                         color =
                             Color(0xFF333333),
 
-                        fontSize =
-                            16.sp
+                        fontSize = 16.sp
                     )
 
 
@@ -2868,104 +2794,12 @@ private fun VaultGalleryScreen(
             }
 
 
-            /* ========================= ALBUM DROPDOWN ========================= */
+            /* ============================================================
+               MEDIA GRID
 
-            if (albumDropdownOpen) {
-
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                start = 55.dp,
-                                end = 55.dp
-                            )
-                            .background(
-                                Color.White,
-                                RoundedCornerShape(8.dp)
-                            )
-                            .border(
-                                width = 1.dp,
-
-                                color =
-                                    Color(0xFFE0E0E0),
-
-                                shape =
-                                    RoundedCornerShape(
-                                        8.dp
-                                    )
-                            )
-                ) {
-
-                    albums.forEach { album ->
-
-                        Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .clickable(
-                                        indication = null,
-
-                                        interactionSource =
-                                            remember {
-                                                MutableInteractionSource()
-                                            }
-                                    ) {
-
-                                        selectedAlbum =
-                                            album
-
-                                        albumDropdownOpen =
-                                            false
-                                    }
-                                    .padding(
-                                        horizontal = 14.dp,
-                                        vertical = 11.dp
-                                    ),
-
-                            verticalAlignment =
-                                Alignment.CenterVertically
-                        ) {
-
-                            Text(
-                                text =
-                                    if (
-                                        album ==
-                                        ALL_ALBUMS_KEY
-                                    ) {
-
-                                        stringResource(
-                                            R.string.all
-                                        )
-
-                                    } else {
-
-                                        album
-                                    },
-
-                                color =
-                                    if (
-                                        album ==
-                                        selectedAlbum
-                                    ) {
-
-                                        Color(0xFF0396FF)
-
-                                    } else {
-
-                                        Color(0xFF333333)
-                                    },
-
-                                fontSize =
-                                    14.sp
-                            )
-                        }
-                    }
-                }
-            }
-
-
-            /* ========================= MEDIA GRID ========================= */
+               IMPORTANT:
+               Dropdown is NOT inside this Column.
+               ============================================================ */
 
             LazyVerticalGrid(
                 columns =
@@ -2992,8 +2826,7 @@ private fun VaultGalleryScreen(
             ) {
 
                 items(
-                    items =
-                        filteredMedia,
+                    items = filteredMedia,
 
                     key = { media ->
                         media.uri.toString()
@@ -3002,16 +2835,14 @@ private fun VaultGalleryScreen(
                 ) { media ->
 
                     VaultGalleryItem(
-                        media =
-                            media,
+                        media = media,
 
                         selected =
                             selectedMedia.contains(
                                 media.uri
                             ),
 
-                        selectionMode =
-                            true,
+                        selectionMode = true,
 
                         onClick = {
 
@@ -3043,22 +2874,25 @@ private fun VaultGalleryScreen(
                             )
                         },
 
-                        onLongClick = {}
+                        onLongClick = {
+                            // Long press is not needed
+                            // in the gallery selection screen.
+                        }
                     )
                 }
             }
 
 
-            /* ========================= BOTTOM BAR ========================= */
+            /* ============================================================
+               BOTTOM BAR
+               ============================================================ */
 
             Row(
                 modifier =
                     Modifier
                         .fillMaxWidth()
                         .height(65.dp)
-                        .background(
-                            Color.White
-                        )
+                        .background(Color.White)
                         .padding(
                             horizontal = 45.dp
                         ),
@@ -3069,6 +2903,8 @@ private fun VaultGalleryScreen(
                 verticalAlignment =
                     Alignment.CenterVertically
             ) {
+
+                /* ========================= SELECT ALL ========================= */
 
                 Image(
                     painter =
@@ -3134,6 +2970,8 @@ private fun VaultGalleryScreen(
                 )
 
 
+                /* ========================= HIDE ========================= */
+
                 Image(
                     painter =
                         painterResource(
@@ -3175,8 +3013,7 @@ private fun VaultGalleryScreen(
                                     selectedMedia.isNotEmpty()
                                 ) {
 
-                                    showHideDialog =
-                                        true
+                                    showHideDialog = true
                                 }
                             }
                 )
@@ -3184,15 +3021,128 @@ private fun VaultGalleryScreen(
         }
 
 
-        /* ========================= HIDE DIALOG ========================= */
+        /* ================================================================
+           ALBUM DROPDOWN OVERLAY
+
+           THIS IS THE IMPORTANT FIX.
+
+           Dropdown is a sibling of the main Column.
+           It is drawn ON TOP of the grid.
+
+           It does not consume layout height.
+           Therefore images do NOT move down.
+           ================================================================ */
+
+        if (albumDropdownOpen) {
+
+            Column(
+                modifier =
+                    Modifier
+                        .align(
+                            Alignment.TopStart
+                        )
+                        .statusBarsPadding()
+                        .padding(
+                            start = 55.dp,
+                            end = 55.dp,
+                            top = 70.dp
+                        )
+                        .fillMaxWidth()
+                        .zIndex(20f)
+                        .background(
+                            color = Color.White,
+                            shape =
+                                RoundedCornerShape(
+                                    8.dp
+                                )
+                        )
+                        .border(
+                            width = 1.dp,
+
+                            color =
+                                Color(0xFFE0E0E0),
+
+                            shape =
+                                RoundedCornerShape(
+                                    8.dp
+                                )
+                        )
+            ) {
+
+                albums.forEach { album ->
+
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    indication = null,
+
+                                    interactionSource =
+                                        remember {
+                                            MutableInteractionSource()
+                                        }
+                                ) {
+
+                                    selectedAlbum = album
+                                    albumDropdownOpen = false
+                                }
+                                .padding(
+                                    horizontal = 14.dp,
+                                    vertical = 11.dp
+                                ),
+
+                        verticalAlignment =
+                            Alignment.CenterVertically
+                    ) {
+
+                        Text(
+                            text =
+                                if (
+                                    album ==
+                                    ALL_ALBUMS_KEY
+                                ) {
+
+                                    stringResource(
+                                        R.string.all
+                                    )
+
+                                } else {
+
+                                    album
+                                },
+
+                            color =
+                                if (
+                                    album ==
+                                    selectedAlbum
+                                ) {
+
+                                    Color(0xFF0396FF)
+
+                                } else {
+
+                                    Color(0xFF333333)
+                                },
+
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+        }
+
+
+        /* ================================================================
+           HIDE DIALOG
+           ================================================================ */
 
         if (showHideDialog) {
 
             AlertDialog(
 
                 onDismissRequest = {
-                    showHideDialog =
-                        false
+                    showHideDialog = false
                 },
 
                 title = {
@@ -3239,8 +3189,7 @@ private fun VaultGalleryScreen(
 
                         onClick = {
 
-                            showHideDialog =
-                                false
+                            showHideDialog = false
 
 
                             val itemsToHide =
@@ -3280,9 +3229,7 @@ private fun VaultGalleryScreen(
                     TextButton(
 
                         onClick = {
-
-                            showHideDialog =
-                                false
+                            showHideDialog = false
                         }
                     ) {
 
@@ -3303,7 +3250,9 @@ private fun VaultGalleryScreen(
 }
 
 
-/* ========================= LOAD MEDIA ========================= */
+/* ================================================================
+   LOAD MEDIA
+   ================================================================ */
 
 private suspend fun loadVaultMedia(
     context: Context,
@@ -3351,7 +3300,6 @@ private suspend fun loadVaultMedia(
                 null,
                 null,
                 sortOrder
-
             )?.use { cursor ->
 
                 val idIndex =
@@ -3375,23 +3323,19 @@ private suspend fun loadVaultMedia(
                 while (cursor.moveToNext()) {
 
                     val id =
-                        cursor.getLong(
-                            idIndex
-                        )
+                        cursor.getLong(idIndex)
 
 
                     val name =
-                        cursor.getString(
-                            nameIndex
-                        ) ?: ""
+                        cursor.getString(nameIndex)
+                            ?: ""
 
 
                     val bucket =
                         if (bucketIndex >= 0) {
 
-                            cursor.getString(
-                                bucketIndex
-                            ) ?: "Unknown"
+                            cursor.getString(bucketIndex)
+                                ?: "Unknown"
 
                         } else {
 
@@ -3408,17 +3352,10 @@ private suspend fun loadVaultMedia(
 
                     result.add(
                         VaultMediaItem(
-                            uri =
-                                uri,
-
-                            name =
-                                name,
-
-                            bucketName =
-                                bucket,
-
-                            isVideo =
-                                isVideo
+                            uri = uri,
+                            name = name,
+                            bucketName = bucket,
+                            isVideo = isVideo
                         )
                     )
                 }
@@ -3435,7 +3372,9 @@ private suspend fun loadVaultMedia(
 }
 
 
-/* ========================= COPY TO VAULT ========================= */
+/* ================================================================
+   COPY TO VAULT
+   ================================================================ */
 
 private fun copyMediaToVault(
     context: Context,
@@ -3464,12 +3403,7 @@ private fun copyMediaToVault(
         val extension =
             media.name.substringAfterLast(
                 ".",
-
-                if (media.isVideo) {
-                    "mp4"
-                } else {
-                    "jpg"
-                }
+                if (media.isVideo) "mp4" else "jpg"
             )
 
 
@@ -3487,18 +3421,14 @@ private fun copyMediaToVault(
 
 
         context.contentResolver
-            .openInputStream(
-                media.uri
-            )
+            .openInputStream(media.uri)
             ?.use { input ->
 
                 vaultFile
                     .outputStream()
                     .use { output ->
 
-                        input.copyTo(
-                            output
-                        )
+                        input.copyTo(output)
                     }
 
             } ?: return null
@@ -3510,23 +3440,12 @@ private fun copyMediaToVault(
 
 
         VaultMediaItem(
-            uri =
-                media.uri,
-
-            name =
-                media.name,
-
-            bucketName =
-                media.bucketName,
-
-            isVideo =
-                media.isVideo,
-
-            isVaultFile =
-                true,
-
-            vaultFilePath =
-                vaultFile.absolutePath
+            uri = media.uri,
+            name = media.name,
+            bucketName = media.bucketName,
+            isVideo = media.isVideo,
+            isVaultFile = true,
+            vaultFilePath = vaultFile.absolutePath
         )
 
     } catch (e: Exception) {
@@ -3538,7 +3457,9 @@ private fun copyMediaToVault(
 }
 
 
-/* ========================= SAVE HIDDEN MEDIA ========================= */
+/* ================================================================
+   SAVE HIDDEN MEDIA
+   ================================================================ */
 
 private fun saveHiddenMediaMetadata(
     context: Context,
@@ -3608,7 +3529,9 @@ private fun saveHiddenMediaMetadata(
 }
 
 
-/* ========================= LOAD HIDDEN MEDIA ========================= */
+/* ================================================================
+   LOAD HIDDEN MEDIA
+   ================================================================ */
 
 private fun loadHiddenMediaMetadata(
     context: Context
@@ -3669,17 +3592,15 @@ private fun loadHiddenMediaMetadata(
                 path != null &&
                 !File(path).exists()
             ) {
+
                 continue
             }
 
 
             result.add(
                 VaultMediaItem(
-
                     uri =
-                        Uri.parse(
-                            uriString
-                        ),
+                        Uri.parse(uriString),
 
                     name =
                         prefs.getString(
@@ -3693,14 +3614,11 @@ private fun loadHiddenMediaMetadata(
                             "Pictures"
                         ) ?: "Pictures",
 
-                    isVideo =
-                        isVideo,
+                    isVideo = isVideo,
 
-                    isVaultFile =
-                        isVault,
+                    isVaultFile = isVault,
 
-                    vaultFilePath =
-                        path
+                    vaultFilePath = path
                 )
             )
         }
@@ -3711,7 +3629,9 @@ private fun loadHiddenMediaMetadata(
 }
 
 
-/* ========================= RESTORE MEDIA ========================= */
+/* ================================================================
+   RESTORE MEDIA
+   ================================================================ */
 
 private fun restoreMediaToGallery(
     context: Context,
@@ -3748,15 +3668,11 @@ private fun restoreMediaToGallery(
         val mimeType =
             if (media.isVideo) {
 
-                getVideoMimeType(
-                    media.name
-                )
+                getVideoMimeType(media.name)
 
             } else {
 
-                getImageMimeType(
-                    media.name
-                )
+                getImageMimeType(media.name)
             }
 
 
@@ -3775,14 +3691,8 @@ private fun restoreMediaToGallery(
 
         val safeAlbum =
             originalAlbum
-                .replace(
-                    "/",
-                    "_"
-                )
-                .replace(
-                    "\\",
-                    "_"
-                )
+                .replace("/", "_")
+                .replace("\\", "_")
                 .trim()
                 .ifBlank {
 
@@ -3801,11 +3711,8 @@ private fun restoreMediaToGallery(
             ) {
 
                 if (media.isVideo) {
-
                     "Movies/$safeAlbum"
-
                 } else {
-
                     "Pictures/$safeAlbum"
                 }
 
@@ -3859,17 +3766,13 @@ private fun restoreMediaToGallery(
         try {
 
             context.contentResolver
-                .openOutputStream(
-                    newUri
-                )
+                .openOutputStream(newUri)
                 ?.use { output ->
 
                     file.inputStream()
                         .use { input ->
 
-                            input.copyTo(
-                                output
-                            )
+                            input.copyTo(output)
                         }
                 }
                 ?: throw Exception(
@@ -3944,7 +3847,9 @@ private fun restoreMediaToGallery(
 }
 
 
-/* ========================= IMAGE MIME TYPE ========================= */
+/* ================================================================
+   IMAGE MIME TYPE
+   ================================================================ */
 
 private fun getImageMimeType(
     fileName: String
@@ -3952,10 +3857,7 @@ private fun getImageMimeType(
 
     return when (
         fileName
-            .substringAfterLast(
-                ".",
-                ""
-            )
+            .substringAfterLast(".", "")
             .lowercase()
     ) {
 
@@ -3980,7 +3882,9 @@ private fun getImageMimeType(
 }
 
 
-/* ========================= VIDEO MIME TYPE ========================= */
+/* ================================================================
+   VIDEO MIME TYPE
+   ================================================================ */
 
 private fun getVideoMimeType(
     fileName: String
@@ -3988,10 +3892,7 @@ private fun getVideoMimeType(
 
     return when (
         fileName
-            .substringAfterLast(
-                ".",
-                ""
-            )
+            .substringAfterLast(".", "")
             .lowercase()
     ) {
 
@@ -4019,7 +3920,9 @@ private fun getVideoMimeType(
 }
 
 
-/* ========================= LOAD THUMBNAIL ========================= */
+/* ================================================================
+   LOAD THUMBNAIL
+   ================================================================ */
 
 private suspend fun loadVaultThumbnail(
     context: Context,
@@ -4056,10 +3959,7 @@ private suspend fun loadVaultThumbnail(
                     return@withContext ThumbnailUtils
                         .createVideoThumbnail(
                             file,
-                            Size(
-                                300,
-                                300
-                            ),
+                            Size(300, 300),
                             null
                         )
                 }
@@ -4130,19 +4030,14 @@ private suspend fun loadVaultThumbnail(
                     context.contentResolver
                         .loadThumbnail(
                             uri,
-                            Size(
-                                300,
-                                300
-                            ),
+                            Size(300, 300),
                             null
                         )
 
                 } else {
 
                     context.contentResolver
-                        .openInputStream(
-                            uri
-                        )
+                        .openInputStream(uri)
                         ?.use { inputStream ->
 
                             BitmapFactory
@@ -4161,7 +4056,9 @@ private suspend fun loadVaultThumbnail(
 }
 
 
-/* ========================= ORIGINAL URI ========================= */
+/* ================================================================
+   ORIGINAL URI
+   ================================================================ */
 
 private fun getOriginalUriFromVaultItem(
     media: VaultMediaItem
@@ -4169,3 +4066,4 @@ private fun getOriginalUriFromVaultItem(
 
     return media.uri
 }
+
