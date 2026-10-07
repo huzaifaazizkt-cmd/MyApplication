@@ -334,7 +334,7 @@ fun SettingsScreen(
                             if (enabled) {
                                 hideRecentJob = scope.launch {
 
-                                    delay(10_000L)
+                                    delay(2_000L)
 
                                     (context as? Activity)
                                         ?.finishAndRemoveTask()

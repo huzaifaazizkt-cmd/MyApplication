@@ -1,8 +1,6 @@
-
 package com.example.myapplication.Design.screens
 
 import android.app.Activity
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -24,8 +23,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -90,7 +91,6 @@ fun PremiumScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-
         val screenWidth = maxWidth
         val screenHeight = maxHeight
 
@@ -133,14 +133,11 @@ fun PremiumScreen(
                 .navigationBarsPadding()
         ) {
 
-            // ============================================================
-            // MAIN CONTENT
-            // ============================================================
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
+                    .verticalScroll(rememberScrollState())
                     .padding(
                         start = horizontalPadding,
                         end = horizontalPadding,
@@ -148,33 +145,20 @@ fun PremiumScreen(
                     )
             ) {
 
-                // ========================================================
-                // CLOSE BUTTON
-                // ========================================================
-
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(
-                            if (isVerySmallScreen) {
-                                20.dp
-                            } else {
-                                25.dp
-                            }
-                        )
+                        .heightIn(min = 25.dp)
                 ) {
-
                     Icon(
-                        painter = painterResource(
-                            id = R.drawable.cross
-                        ),
+                        painter = painterResource(id = R.drawable.cross),
                         contentDescription = stringResource(
                             R.string.premium_close
                         ),
                         tint = Color(0xFF777777),
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .size(9.dp)
+                            .size(12.dp)
                             .clickable(
                                 indication = null,
                                 interactionSource = remember {
@@ -190,10 +174,6 @@ fun PremiumScreen(
                     )
                 }
 
-                // ========================================================
-                // PREMIUM IMAGE
-                // ========================================================
-
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -206,11 +186,8 @@ fun PremiumScreen(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-
                     Image(
-                        painter = painterResource(
-                            id = R.drawable.`in`
-                        ),
+                        painter = painterResource(id = R.drawable.`in`),
                         contentDescription = stringResource(
                             R.string.premium_image_description
                         ),
@@ -233,34 +210,25 @@ fun PremiumScreen(
                     )
                 )
 
-                // ========================================================
-                // TITLE
-                // ========================================================
-
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-
                         Text(
                             text = stringResource(
                                 R.string.premium_unlock
                             ),
                             color = darkText,
                             fontSize = titleSize,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1
+                            fontWeight = FontWeight.Bold
                         )
 
-                        Spacer(
-                            modifier = Modifier.width(6.dp)
-                        )
+                        Spacer(modifier = Modifier.width(6.dp))
 
                         Text(
                             text = stringResource(
@@ -268,8 +236,7 @@ fun PremiumScreen(
                             ),
                             color = blueColor,
                             fontSize = titleSize,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
@@ -280,24 +247,15 @@ fun PremiumScreen(
                         color = darkText,
                         fontSize = titleSize,
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1
+                        textAlign = TextAlign.Center
                     )
                 }
 
                 Spacer(
                     modifier = Modifier.height(
-                        if (isVerySmallScreen) {
-                            5.dp
-                        } else {
-                            8.dp
-                        }
+                        if (isVerySmallScreen) 5.dp else 8.dp
                     )
                 )
-
-                // ========================================================
-                // DESCRIPTION
-                // ========================================================
 
                 Text(
                     text = stringResource(
@@ -324,17 +282,9 @@ fun PremiumScreen(
 
                 Spacer(
                     modifier = Modifier.height(
-                        if (isVerySmallScreen) {
-                            10.dp
-                        } else {
-                            18.dp
-                        }
+                        if (isVerySmallScreen) 10.dp else 18.dp
                     )
                 )
-
-                // ========================================================
-                // BENEFITS TITLE
-                // ========================================================
 
                 Text(
                     text = stringResource(
@@ -347,17 +297,9 @@ fun PremiumScreen(
 
                 Spacer(
                     modifier = Modifier.height(
-                        if (isVerySmallScreen) {
-                            8.dp
-                        } else {
-                            12.dp
-                        }
+                        if (isVerySmallScreen) 8.dp else 12.dp
                     )
                 )
-
-                // ========================================================
-                // BENEFIT 1
-                // ========================================================
 
                 PremiumBenefitRow(
                     icon = R.drawable.hideinapp,
@@ -368,17 +310,9 @@ fun PremiumScreen(
 
                 Spacer(
                     modifier = Modifier.height(
-                        if (isVerySmallScreen) {
-                            5.dp
-                        } else {
-                            8.dp
-                        }
+                        if (isVerySmallScreen) 5.dp else 8.dp
                     )
                 )
-
-                // ========================================================
-                // BENEFIT 2
-                // ========================================================
 
                 PremiumBenefitRow(
                     icon = R.drawable.selfie,
@@ -389,17 +323,9 @@ fun PremiumScreen(
 
                 Spacer(
                     modifier = Modifier.height(
-                        if (isVerySmallScreen) {
-                            5.dp
-                        } else {
-                            8.dp
-                        }
+                        if (isVerySmallScreen) 5.dp else 8.dp
                     )
                 )
-
-                // ========================================================
-                // BENEFIT 3
-                // ========================================================
 
                 PremiumBenefitRow(
                     icon = R.drawable.noads,
@@ -410,17 +336,9 @@ fun PremiumScreen(
 
                 Spacer(
                     modifier = Modifier.height(
-                        if (isVerySmallScreen) {
-                            5.dp
-                        } else {
-                            8.dp
-                        }
+                        if (isVerySmallScreen) 5.dp else 8.dp
                     )
                 )
-
-                // ========================================================
-                // BENEFIT 4
-                // ========================================================
 
                 PremiumBenefitRow(
                     icon = R.drawable.priority,
@@ -429,20 +347,13 @@ fun PremiumScreen(
                     )
                 )
 
-                // ========================================================
+                Spacer(modifier = Modifier.height(14.dp))
+
                 // ONE TIME PURCHASE
-                //
-                // ORIGINAL POSITION / SIZE PRESERVED
-                // ========================================================
-
-                Spacer(
-                    modifier = Modifier.height(14.dp)
-                )
-
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(76.dp)
+                        .heightIn(min = 76.dp)
                         .border(
                             width = 1.dp,
                             color = blueColor,
@@ -450,11 +361,7 @@ fun PremiumScreen(
                         )
                 ) {
 
-                    // ====================================================
                     // BEST VALUE
-                    // ORIGINAL POSITION
-                    // ====================================================
-
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
@@ -469,7 +376,6 @@ fun PremiumScreen(
                             .padding(horizontal = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
-
                         Text(
                             text = stringResource(
                                 R.string.premium_best_value
@@ -481,26 +387,20 @@ fun PremiumScreen(
                         )
                     }
 
-                    // ====================================================
                     // PURCHASE ROW
-                    // ====================================================
-
                     Row(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
                             .padding(
                                 start = 12.dp,
                                 end = 12.dp,
-                                top = 14.dp,
-                                bottom = 7.dp
+                                top = 20.dp,
+                                bottom = 10.dp
                             ),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
 
-                        // =================================================
                         // RADIO BUTTON
-                        // =================================================
-
                         Box(
                             modifier = Modifier
                                 .size(15.dp)
@@ -511,9 +411,7 @@ fun PremiumScreen(
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-
                             if (selectedPlan) {
-
                                 Box(
                                     modifier = Modifier
                                         .size(7.dp)
@@ -525,18 +423,12 @@ fun PremiumScreen(
                             }
                         }
 
-                        Spacer(
-                            modifier = Modifier.width(12.dp)
-                        )
+                        Spacer(modifier = Modifier.width(12.dp))
 
-                        // =================================================
                         // PLAN DETAILS
-                        // =================================================
-
                         Column(
                             modifier = Modifier.weight(1f)
                         ) {
-
                             Text(
                                 text = stringResource(
                                     R.string.premium_one_time_purchase
@@ -544,12 +436,10 @@ fun PremiumScreen(
                                 color = darkText,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
-                                maxLines = 1
+                                maxLines = 2
                             )
 
-                            Spacer(
-                                modifier = Modifier.height(2.dp)
-                            )
+                            Spacer(modifier = Modifier.height(2.dp))
 
                             Text(
                                 text = stringResource(
@@ -557,18 +447,16 @@ fun PremiumScreen(
                                 ),
                                 color = Color(0xFF888888),
                                 fontSize = 12.sp,
-                                maxLines = 1
+                                maxLines = 2
                             )
                         }
 
-                        // =================================================
-                        // PRICE
-                        // =================================================
+                        Spacer(modifier = Modifier.width(8.dp))
 
+                        // PRICE
                         Column(
                             horizontalAlignment = Alignment.End
                         ) {
-
                             Text(
                                 text = lifetimePrice,
                                 color = blueColor,
@@ -577,9 +465,7 @@ fun PremiumScreen(
                                 maxLines = 1
                             )
 
-                            Spacer(
-                                modifier = Modifier.height(2.dp)
-                            )
+                            Spacer(modifier = Modifier.height(2.dp))
 
                             Text(
                                 text = stringResource(
@@ -587,47 +473,25 @@ fun PremiumScreen(
                                 ),
                                 color = Color(0xFF888888),
                                 fontSize = 11.sp,
-                                maxLines = 1
+                                maxLines = 2,
+                                textAlign = TextAlign.End
                             )
                         }
                     }
                 }
-            }
-
-            // ============================================================
-            // BOTTOM SECTION
-            // ============================================================
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = horizontalPadding,
-                        end = horizontalPadding
-                    ),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
 
                 Spacer(
                     modifier = Modifier.height(
-                        if (isVerySmallScreen) {
-                            8.dp
-                        } else {
-                            12.dp
-                        }
+                        if (isVerySmallScreen) 8.dp else 12.dp
                     )
                 )
 
-                // ========================================================
                 // NO SUBSCRIPTION
-                // ========================================================
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     Icon(
                         painter = painterResource(
                             id = R.drawable.shield
@@ -638,9 +502,7 @@ fun PremiumScreen(
                         modifier = Modifier.size(16.dp)
                     )
 
-                    Spacer(
-                        modifier = Modifier.width(7.dp)
-                    )
+                    Spacer(modifier = Modifier.width(7.dp))
 
                     Text(
                         text = stringResource(
@@ -654,43 +516,33 @@ fun PremiumScreen(
 
                 Spacer(
                     modifier = Modifier.height(
-                        if (isVerySmallScreen) {
-                            8.dp
-                        } else {
-                            12.dp
-                        }
+                        if (isVerySmallScreen) 8.dp else 12.dp
                     )
                 )
 
-                // ========================================================
                 // UNLOCK BUTTON
-                // ========================================================
-
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(
-                            if (isVerySmallScreen) {
+                        .heightIn(
+                            min = if (isVerySmallScreen) {
                                 46.dp
                             } else {
                                 50.dp
                             }
                         )
-                        .clip(
-                            RoundedCornerShape(13.dp)
-                        )
-                        .background(
-                            blueColor
-                        )
+                        .clip(RoundedCornerShape(13.dp))
+                        .background(blueColor)
                         .clickable {
-
                             activity?.let {
                                 billing.initPurchaselifetime(it)
                             }
-                        },
+                        }
+                        .padding(
+                            vertical = 8.dp
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
-
                     Text(
                         text = stringResource(
                             R.string.premium_unlock_button
@@ -699,30 +551,22 @@ fun PremiumScreen(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-                        maxLines = 1
+                        maxLines = 2
                     )
                 }
 
                 Spacer(
                     modifier = Modifier.height(
-                        if (isVerySmallScreen) {
-                            8.dp
-                        } else {
-                            12.dp
-                        }
+                        if (isVerySmallScreen) 8.dp else 12.dp
                     )
                 )
 
-                // ========================================================
                 // TERMS + PRIVACY
-                // ========================================================
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     Text(
                         text = stringResource(
                             R.string.premium_terms_of_use
@@ -746,11 +590,7 @@ fun PremiumScreen(
 
                 Spacer(
                     modifier = Modifier.height(
-                        if (isVerySmallScreen) {
-                            6.dp
-                        } else {
-                            10.dp
-                        }
+                        if (isVerySmallScreen) 6.dp else 10.dp
                     )
                 )
             }
@@ -758,24 +598,17 @@ fun PremiumScreen(
     }
 }
 
-
-// ========================================================================
-// BENEFIT ROW
-// ========================================================================
-
 @Composable
 private fun PremiumBenefitRow(
     icon: Int,
     text: String
 ) {
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(40.dp),
+            .heightIn(min = 40.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         Box(
             modifier = Modifier
                 .size(34.dp)
@@ -785,26 +618,22 @@ private fun PremiumBenefitRow(
                 ),
             contentAlignment = Alignment.Center
         ) {
-
             Image(
-                painter = painterResource(
-                    id = icon
-                ),
+                painter = painterResource(id = icon),
                 contentDescription = text,
                 modifier = Modifier.size(27.dp)
             )
         }
 
-        Spacer(
-            modifier = Modifier.width(8.dp)
-        )
+        Spacer(modifier = Modifier.width(8.dp))
 
         Text(
             text = text,
             color = Color(0xFF444444),
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            maxLines = 1
+            maxLines = 2,
+            modifier = Modifier.weight(1f)
         )
     }
 }

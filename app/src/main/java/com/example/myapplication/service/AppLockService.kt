@@ -1,4 +1,3 @@
-
 package com.example.myapplication.service
 
 import android.accessibilityservice.AccessibilityService
@@ -16,10 +15,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
-
 import com.example.myapplication.Design.screens.LockScreenActivity
 import com.example.myapplication.data.DataStoreManager
-
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,1733 +29,662 @@ import kotlinx.coroutines.withContext
 class AppLockService : AccessibilityService() {
 
     companion object {
-
-        private const val TAG =
-            "AppLockService"
-
-        private const val RELOCK_AFTER_QUITTING =
-            "relock_after_quitting"
-
-        private const val RELOCK_AFTER_SCREEN_OFF =
-            "relock_after_screen_off"
-
-        private const val NOTIFICATION_CHANNEL_ID =
-            "applock_service_channel"
-
-        private const val NOTIFICATION_ID =
-            1001
+        private const val TAG = "AppLockService"
+        private const val RELOCK_AFTER_QUITTING = "relock_after_quitting"
+        private const val RELOCK_AFTER_SCREEN_OFF = "relock_after_screen_off"
+        private const val NOTIFICATION_CHANNEL_ID = "applock_service_channel"
+        private const val NOTIFICATION_ID = 1001
     }
 
-    // =========================================================
-    // COROUTINE
-    // =========================================================
-
-    private val serviceScope =
-        CoroutineScope(
-            SupervisorJob() +
-                    Dispatchers.IO
-        )
-
-    // =========================================================
-    // HANDLER
-    // =========================================================
-
-    private val handler =
-        Handler(
-            Looper.getMainLooper()
-        )
-
-    // =========================================================
-    // STATE
-    // =========================================================
-
-    private var lastPackageName: String? =
-        null
-
-    private var checkingPackage: String? =
-        null
-
-    /*
-     * This represents the last REAL foreground package.
-     *
-     * IMPORTANT:
-     * We do NOT replace this with System UI.
-     */
-    private var foregroundPackage: String? =
-        null
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val handler = Handler(Looper.getMainLooper())
 
     @Volatile
-    private var appProtectionEnabled =
-        false
+    private var appProtectionEnabled = false
 
     @Volatile
-    private var relockOption =
-        RELOCK_AFTER_QUITTING
+    private var relockOption = RELOCK_AFTER_QUITTING
 
     @Volatile
-    private var relockDelay =
-        "never"
+    private var relockDelay = "never"
 
     @Volatile
-    private var serviceConnected =
-        false
+    private var serviceConnected = false
 
     @Volatile
-    private var lockedAppsCache:
-            Set<String> =
-        emptySet()
+    private var settingsLoaded = false
 
     @Volatile
-    private var lockedAppsCacheReady =
-        false
+    private var lockedAppsCache: Set<String> = emptySet()
 
-    private var homePackageName:
-            String? =
-        null
+    @Volatile
+    private var lockedAppsCacheReady = false
 
-    // =========================================================
-    // RESET UNLOCKED APP
-    // =========================================================
+    private var foregroundPackage: String? = null
+    private var homePackageName: String? = null
+    private var checkingPackage: String? = null
 
-    private val resetUnlockedAppRunnable =
-        Runnable {
+    private val resetUnlockedAppRunnable = Runnable {
+        Log.d(TAG, "========================================")
+        Log.d(TAG, "RELOCK TIMER FIRED")
+        Log.d(TAG, "CURRENT UNLOCKED APP = ${AppLockServiceHolder.currentUnlockedApp}")
 
-            Log.d(
-                TAG,
-                "========================================"
-            )
+        AppLockServiceHolder.currentUnlockedApp = null
+        AppLockServiceHolder.lastUnlockTime = 0L
+        AppLockServiceHolder.clearSuppressedPackage()
+        checkingPackage = null
 
-            Log.d(
-                TAG,
-                "RELOCK TIMER FIRED"
-            )
+        Log.d(TAG, "UNLOCK STATE CLEARED")
+        Log.d(TAG, "========================================")
+    }
 
-            Log.d(
-                TAG,
-                "currentUnlockedApp BEFORE = " +
-                        AppLockServiceHolder
-                            .currentUnlockedApp
-            )
+    private val screenOffReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action != Intent.ACTION_SCREEN_OFF) return
+            if (!appProtectionEnabled) return
 
-            AppLockServiceHolder
-                .currentUnlockedApp =
-                null
+            Log.d(TAG, "SCREEN OFF")
 
-            AppLockServiceHolder
-                .lastUnlockTime =
-                0L
-
-            AppLockServiceHolder
-                .clearSuppressedPackage()
-
-            checkingPackage =
-                null
-
-            Log.d(
-                TAG,
-                "currentUnlockedApp AFTER = " +
-                        AppLockServiceHolder
-                            .currentUnlockedApp
-            )
-
-            Log.d(
-                TAG,
-                "========================================"
-            )
-        }
-
-    // =========================================================
-    // SCREEN OFF RECEIVER
-    // =========================================================
-
-    private val screenOffReceiver =
-        object : BroadcastReceiver() {
-
-            override fun onReceive(
-                context: Context?,
-                intent: Intent?
-            ) {
-
+            if (AppLockServiceHolder.currentUnlockedApp != null) {
                 if (
-                    intent?.action !=
-                    Intent.ACTION_SCREEN_OFF
+                    relockOption == RELOCK_AFTER_SCREEN_OFF ||
+                    relockOption == RELOCK_AFTER_QUITTING
                 ) {
-
-                    return
-                }
-
-                Log.d(
-                    TAG,
-                    "SCREEN OFF"
-                )
-
-                if (
-                    !appProtectionEnabled
-                ) {
-
-                    return
-                }
-
-                if (
-                    relockOption ==
-                    RELOCK_AFTER_SCREEN_OFF
-                ) {
-
-                    if (
-                        AppLockServiceHolder
-                            .currentUnlockedApp != null
-                    ) {
-
-                        scheduleRelock(
-                            "SCREEN_OFF"
-                        )
-                    }
-                }
-
-                else if (
-                    relockOption ==
-                    RELOCK_AFTER_QUITTING
-                ) {
-
-                    if (
-                        AppLockServiceHolder
-                            .currentUnlockedApp != null
-                    ) {
-
-                        scheduleRelock(
-                            "SCREEN_OFF_QUITTING_MODE"
-                        )
-                    }
+                    scheduleRelock("SCREEN_OFF")
                 }
             }
         }
-
-    // =========================================================
-    // FOREGROUND NOTIFICATION
-    // =========================================================
-
-    private fun startForegroundServiceNotification() {
-
-        try {
-
-            if (
-                Build.VERSION.SDK_INT >=
-                Build.VERSION_CODES.O
-            ) {
-
-                val channel =
-                    NotificationChannel(
-                        NOTIFICATION_CHANNEL_ID,
-                        "AppLock Protection",
-                        NotificationManager.IMPORTANCE_LOW
-                    ).apply {
-
-                        description =
-                            "Keeps AppLock protection active"
-
-                        setShowBadge(false)
-                    }
-
-                val manager =
-                    getSystemService(
-                        NotificationManager::class.java
-                    )
-
-                manager.createNotificationChannel(
-                    channel
-                )
-            }
-
-            val notification =
-                if (
-                    Build.VERSION.SDK_INT >=
-                    Build.VERSION_CODES.O
-                ) {
-
-                    Notification.Builder(
-                        this,
-                        NOTIFICATION_CHANNEL_ID
-                    )
-                        .setContentTitle(
-                            "AppLock is active"
-                        )
-                        .setContentText(
-                            "AppLock protection is running"
-                        )
-                        .setSmallIcon(
-                            applicationInfo.icon
-                        )
-                        .setOngoing(true)
-                        .setAutoCancel(false)
-                        .setCategory(
-                            Notification.CATEGORY_SERVICE
-                        )
-                        .build()
-
-                } else {
-
-                    @Suppress(
-                        "DEPRECATION"
-                    )
-
-                    Notification.Builder(this)
-                        .setContentTitle(
-                            "AppLock is active"
-                        )
-                        .setContentText(
-                            "AppLock protection is running"
-                        )
-                        .setSmallIcon(
-                            applicationInfo.icon
-                        )
-                        .setOngoing(true)
-                        .setAutoCancel(false)
-                        .setCategory(
-                            Notification.CATEGORY_SERVICE
-                        )
-                        .build()
-                }
-
-            if (
-                Build.VERSION.SDK_INT >=
-                Build.VERSION_CODES.Q
-            ) {
-
-                startForeground(
-                    NOTIFICATION_ID,
-                    notification,
-                    ServiceInfo
-                        .FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-                )
-
-            } else {
-
-                @Suppress(
-                    "DEPRECATION"
-                )
-
-                startForeground(
-                    NOTIFICATION_ID,
-                    notification
-                )
-            }
-
-            Log.d(
-                TAG,
-                "FOREGROUND NOTIFICATION STARTED"
-            )
-
-        } catch (e: Exception) {
-
-            Log.e(
-                TAG,
-                "FOREGROUND SERVICE ERROR",
-                e
-            )
-        }
     }
-
-    // =========================================================
-    // HOME / LAUNCHER
-    // =========================================================
-
-    private fun resolveHomePackage() {
-
-        try {
-
-            val homeIntent =
-                Intent(
-                    Intent.ACTION_MAIN
-                ).apply {
-
-                    addCategory(
-                        Intent.CATEGORY_HOME
-                    )
-                }
-
-            val resolveInfo =
-                packageManager.resolveActivity(
-                    homeIntent,
-                    0
-                )
-
-            homePackageName =
-                resolveInfo
-                    ?.activityInfo
-                    ?.packageName
-
-            Log.d(
-                TAG,
-                "HOME PACKAGE = $homePackageName"
-            )
-
-        } catch (e: Exception) {
-
-            Log.e(
-                TAG,
-                "HOME PACKAGE ERROR",
-                e
-            )
-        }
-    }
-
-    // =========================================================
-    // CLEAR PROTECTION STATE
-    // =========================================================
-
-    private fun clearProtectionState() {
-
-        handler.removeCallbacks(
-            resetUnlockedAppRunnable
-        )
-
-        AppLockServiceHolder
-            .currentUnlockedApp =
-            null
-
-        AppLockServiceHolder
-            .lastUnlockTime =
-            0L
-
-        AppLockServiceHolder
-            .isLockScreenOpen =
-            false
-
-        AppLockServiceHolder
-            .clearSuppressedPackage()
-
-        checkingPackage =
-            null
-
-        lastPackageName =
-            null
-
-        foregroundPackage =
-            null
-    }
-
-    // =========================================================
-    // CLEAR UNLOCKED APP
-    // =========================================================
-
-    private fun clearUnlockedApp(
-        reason: String
-    ) {
-
-        Log.d(
-            TAG,
-            "========================================"
-        )
-
-        Log.d(
-            TAG,
-            "CLEAR UNLOCKED APP"
-        )
-
-        Log.d(
-            TAG,
-            "REASON = $reason"
-        )
-
-        Log.d(
-            TAG,
-            "currentUnlockedApp BEFORE = " +
-                    AppLockServiceHolder
-                        .currentUnlockedApp
-        )
-
-        handler.removeCallbacks(
-            resetUnlockedAppRunnable
-        )
-
-        AppLockServiceHolder
-            .currentUnlockedApp =
-            null
-
-        AppLockServiceHolder
-            .lastUnlockTime =
-            0L
-
-        AppLockServiceHolder
-            .clearSuppressedPackage()
-
-        checkingPackage =
-            null
-
-        Log.d(
-            TAG,
-            "currentUnlockedApp AFTER = " +
-                    AppLockServiceHolder
-                        .currentUnlockedApp
-        )
-
-        Log.d(
-            TAG,
-            "========================================"
-        )
-    }
-
-    // =========================================================
-    // SERVICE CREATE
-    // =========================================================
 
     override fun onCreate() {
-
         super.onCreate()
 
-        Log.d(
-            TAG,
-            "================================"
-        )
-
-        Log.d(
-            TAG,
-            "APP LOCK SERVICE CREATED"
-        )
-
-        Log.d(
-            TAG,
-            "================================"
-        )
+        Log.d(TAG, "========================================")
+        Log.d(TAG, "APP LOCK SERVICE CREATED")
+        Log.d(TAG, "========================================")
 
         resolveHomePackage()
+        registerScreenOffReceiver()
+        observeDataStore()
+    }
 
-        // -----------------------------------------------------
-        // SCREEN OFF RECEIVER
-        // -----------------------------------------------------
-
+    private fun registerScreenOffReceiver() {
         try {
+            val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
 
-            val filter =
-                IntentFilter(
-                    Intent.ACTION_SCREEN_OFF
-                )
-
-            if (
-                Build.VERSION.SDK_INT >=
-                Build.VERSION_CODES.TIRAMISU
-            ) {
-
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 registerReceiver(
                     screenOffReceiver,
                     filter,
                     RECEIVER_NOT_EXPORTED
                 )
-
             } else {
-
-                @Suppress(
-                    "DEPRECATION"
-                )
-
-                registerReceiver(
-                    screenOffReceiver,
-                    filter
-                )
+                @Suppress("DEPRECATION")
+                registerReceiver(screenOffReceiver, filter)
             }
 
+            Log.d(TAG, "SCREEN OFF RECEIVER REGISTERED")
         } catch (e: Exception) {
-
-            Log.e(
-                TAG,
-                "RECEIVER ERROR",
-                e
-            )
+            Log.e(TAG, "RECEIVER ERROR", e)
         }
+    }
 
-        // -----------------------------------------------------
-        // APP PROTECTION
-        // -----------------------------------------------------
+    private fun observeDataStore() {
+        val dataStore = DataStoreManager(this)
 
         serviceScope.launch {
-
             try {
+                dataStore.getAppProtectionEnabled().collectLatest { enabled ->
+                    appProtectionEnabled = enabled
 
-                DataStoreManager(
-                    this@AppLockService
-                )
-                    .getAppProtectionEnabled()
-                    .collectLatest { enabled ->
+                    Log.d(TAG, "APP PROTECTION = $enabled")
 
-                        appProtectionEnabled =
-                            enabled
-
-                        Log.d(
-                            TAG,
-                            "APP PROTECTION = $enabled"
-                        )
-
-                        if (!enabled) {
-
-                            withContext(
-                                Dispatchers.Main
-                            ) {
-
-                                clearProtectionState()
-                            }
+                    if (!enabled) {
+                        withContext(Dispatchers.Main) {
+                            clearProtectionState()
                         }
                     }
 
+                    updateSettingsLoaded()
+                }
             } catch (e: Exception) {
-
-                Log.e(
-                    TAG,
-                    "APP PROTECTION ERROR",
-                    e
-                )
+                Log.e(TAG, "APP PROTECTION ERROR", e)
             }
         }
 
-        // -----------------------------------------------------
-        // LOCKED APPS
-        // -----------------------------------------------------
-
         serviceScope.launch {
-
             try {
+                dataStore.lockedAppsFlow.collectLatest { apps ->
+                    lockedAppsCache = apps.toSet()
+                    lockedAppsCacheReady = true
 
-                DataStoreManager(
-                    this@AppLockService
-                )
-                    .lockedAppsFlow
-                    .collectLatest { apps ->
+                    Log.d(TAG, "LOCKED APPS = $lockedAppsCache")
 
-                        lockedAppsCache =
-                            apps.toSet()
-
-                        lockedAppsCacheReady =
-                            true
-
-                        Log.d(
-                            TAG,
-                            "LOCKED APPS = $lockedAppsCache"
-                        )
-                    }
-
+                    updateSettingsLoaded()
+                }
             } catch (e: Exception) {
-
-                Log.e(
-                    TAG,
-                    "LOCKED APPS ERROR",
-                    e
-                )
+                Log.e(TAG, "LOCKED APPS ERROR", e)
             }
         }
 
-        // -----------------------------------------------------
-        // RELOCK OPTION
-        // -----------------------------------------------------
-
         serviceScope.launch {
-
             try {
+                dataStore.getRelockOption().collectLatest { option ->
+                    relockOption = option
 
-                DataStoreManager(
-                    this@AppLockService
-                )
-                    .getRelockOption()
-                    .collectLatest { option ->
+                    Log.d(TAG, "RELOCK OPTION = $option")
 
-                        relockOption =
-                            option
-
-                        Log.d(
-                            TAG,
-                            "RELOCK OPTION = $option"
-                        )
-                    }
-
+                    updateSettingsLoaded()
+                }
             } catch (e: Exception) {
-
-                Log.e(
-                    TAG,
-                    "RELOCK OPTION ERROR",
-                    e
-                )
+                Log.e(TAG, "RELOCK OPTION ERROR", e)
             }
         }
 
-        // -----------------------------------------------------
-        // RELOCK DELAY
-        // -----------------------------------------------------
-
         serviceScope.launch {
-
             try {
+                dataStore.getRelockDelay().collectLatest { delay ->
+                    relockDelay = normalizeRelockDelay(delay)
 
-                DataStoreManager(
-                    this@AppLockService
-                )
-                    .getRelockDelay()
-                    .collectLatest { delay ->
+                    Log.d(TAG, "RELOCK DELAY = $relockDelay")
 
-                        relockDelay =
-                            when (delay) {
-
-                                "never" ->
-                                    "never"
-
-                                "five_seconds",
-                                "5_seconds" ->
-                                    "five_seconds"
-
-                                "ten_seconds",
-                                "10_seconds" ->
-                                    "ten_seconds"
-
-                                "thirty_seconds",
-                                "30_seconds" ->
-                                    "thirty_seconds"
-
-                                "one_minute",
-                                "1_minute" ->
-                                    "one_minute"
-
-                                "two_minutes",
-                                "2_minutes" ->
-                                    "two_minutes"
-
-                                "five_minutes",
-                                "5_minutes" ->
-                                    "five_minutes"
-
-                                else ->
-                                    "never"
-                            }
-
-                        Log.d(
-                            TAG,
-                            "RELOCK DELAY = $relockDelay"
-                        )
-                    }
-
+                    updateSettingsLoaded()
+                }
             } catch (e: Exception) {
-
-                Log.e(
-                    TAG,
-                    "RELOCK DELAY ERROR",
-                    e
-                )
+                Log.e(TAG, "RELOCK DELAY ERROR", e)
             }
         }
     }
 
-    // =========================================================
-    // ACCESSIBILITY SERVICE CONNECTED
-    // =========================================================
+    private fun updateSettingsLoaded() {
+        if (lockedAppsCacheReady) {
+            settingsLoaded = true
+            Log.d(TAG, "SETTINGS READY")
+        }
+    }
+
+    private fun normalizeRelockDelay(delay: String): String {
+        return when (delay) {
+            "never" -> "never"
+            "five_seconds", "5_seconds" -> "five_seconds"
+            "ten_seconds", "10_seconds" -> "ten_seconds"
+            "thirty_seconds", "30_seconds" -> "thirty_seconds"
+            "one_minute", "1_minute" -> "one_minute"
+            "two_minutes", "2_minutes" -> "two_minutes"
+            "five_minutes", "5_minutes" -> "five_minutes"
+            else -> "never"
+        }
+    }
 
     override fun onServiceConnected() {
-
         super.onServiceConnected()
 
-        Log.d(
-            TAG,
-            "========================================"
-        )
+        Log.d(TAG, "========================================")
+        Log.d(TAG, "ACCESSIBILITY SERVICE CONNECTED")
+        Log.d(TAG, "========================================")
 
-        Log.d(
-            TAG,
-            "ACCESSIBILITY SERVICE CONNECTED"
-        )
+        val info = AccessibilityServiceInfo().apply {
+            eventTypes =
+                AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or
+                        AccessibilityEvent.TYPE_WINDOWS_CHANGED
 
-        Log.d(
-            TAG,
-            "========================================"
-        )
+            feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
+            notificationTimeout = 50
+            flags = AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS
+        }
 
-        val info =
-            AccessibilityServiceInfo().apply {
+        serviceInfo = info
 
-                eventTypes =
-                    AccessibilityEvent
-                        .TYPE_WINDOW_STATE_CHANGED or
-                            AccessibilityEvent
-                                .TYPE_WINDOWS_CHANGED
+        serviceConnected = true
+        settingsLoaded = false
 
-                feedbackType =
-                    AccessibilityServiceInfo
-                        .FEEDBACK_GENERIC
+        AppLockServiceHolder.isLockScreenOpen = false
 
-                notificationTimeout =
-                    50
-
-                flags =
-                    AccessibilityServiceInfo
-                        .FLAG_REPORT_VIEW_IDS
-            }
-
-        serviceInfo =
-            info
-
-        serviceConnected =
-            true
-
-        startForegroundServiceNotification()
-
-        handler.removeCallbacks(
-            resetUnlockedAppRunnable
-        )
-
-        AppLockServiceHolder
-            .isLockScreenOpen =
-            false
-
-        checkingPackage =
-            null
-
-        lastPackageName =
-            null
-
-        foregroundPackage =
-            null
+        checkingPackage = null
+        foregroundPackage = null
 
         resolveHomePackage()
+        startForegroundServiceNotification()
+        loadCurrentSettings()
 
-        Log.d(
-            TAG,
-            "SERVICE READY"
-        )
+        Log.d(TAG, "SERVICE READY")
     }
 
-    // =========================================================
-    // RELOCK DELAY
-    // =========================================================
+    private fun loadCurrentSettings() {
+        serviceScope.launch {
+            try {
+                val dataStore = DataStoreManager(this@AppLockService)
 
-    private fun getRelockDelayMillis():
-            Long {
+                val protection = dataStore.getAppProtectionEnabled().first()
+                val lockedApps = dataStore.lockedAppsFlow.first()
+                val option = dataStore.getRelockOption().first()
+                val delay = dataStore.getRelockDelay().first()
 
+                appProtectionEnabled = protection
+                lockedAppsCache = lockedApps.toSet()
+                lockedAppsCacheReady = true
+                relockOption = option
+                relockDelay = normalizeRelockDelay(delay)
+                settingsLoaded = true
+
+                Log.d(TAG, "========================================")
+                Log.d(TAG, "CURRENT SETTINGS LOADED")
+                Log.d(TAG, "APP PROTECTION = $appProtectionEnabled")
+                Log.d(TAG, "LOCKED APPS = $lockedAppsCache")
+                Log.d(TAG, "RELOCK OPTION = $relockOption")
+                Log.d(TAG, "RELOCK DELAY = $relockDelay")
+                Log.d(TAG, "========================================")
+            } catch (e: Exception) {
+                Log.e(TAG, "INITIAL SETTINGS ERROR", e)
+            }
+        }
+    }
+
+    private fun startForegroundServiceNotification() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    NOTIFICATION_CHANNEL_ID,
+                    "AppLock Protection",
+                    NotificationManager.IMPORTANCE_LOW
+                ).apply {
+                    description = "Keeps AppLock protection active"
+                    setShowBadge(false)
+                }
+
+                getSystemService(NotificationManager::class.java)
+                    .createNotificationChannel(channel)
+            }
+
+            val notification =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
+                        .setContentTitle("AppLock is active")
+                        .setContentText("AppLock protection is running")
+                        .setSmallIcon(applicationInfo.icon)
+                        .setOngoing(true)
+                        .setAutoCancel(false)
+                        .setCategory(Notification.CATEGORY_SERVICE)
+                        .build()
+                } else {
+                    @Suppress("DEPRECATION")
+                    Notification.Builder(this)
+                        .setContentTitle("AppLock is active")
+                        .setContentText("AppLock protection is running")
+                        .setSmallIcon(applicationInfo.icon)
+                        .setOngoing(true)
+                        .setAutoCancel(false)
+                        .setCategory(Notification.CATEGORY_SERVICE)
+                        .build()
+                }
+
+            if (Build.VERSION.SDK_INT >= 34) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                startForeground(NOTIFICATION_ID, notification)
+            }
+
+            Log.d(TAG, "FOREGROUND NOTIFICATION STARTED")
+        } catch (e: Exception) {
+            Log.e(TAG, "FOREGROUND SERVICE ERROR", e)
+        }
+    }
+
+    private fun resolveHomePackage() {
+        try {
+            val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_HOME)
+            }
+
+            val resolveInfo = packageManager.resolveActivity(homeIntent, 0)
+            homePackageName = resolveInfo?.activityInfo?.packageName
+
+            Log.d(TAG, "HOME PACKAGE = $homePackageName")
+        } catch (e: Exception) {
+            Log.e(TAG, "HOME PACKAGE ERROR", e)
+        }
+    }
+
+    private fun clearProtectionState() {
+        handler.removeCallbacks(resetUnlockedAppRunnable)
+
+        AppLockServiceHolder.currentUnlockedApp = null
+        AppLockServiceHolder.lastUnlockTime = 0L
+        AppLockServiceHolder.isLockScreenOpen = false
+        AppLockServiceHolder.clearSuppressedPackage()
+
+        checkingPackage = null
+        foregroundPackage = null
+    }
+
+    private fun clearUnlockedApp(reason: String) {
+        Log.d(TAG, "========================================")
+        Log.d(TAG, "CLEAR UNLOCKED APP")
+        Log.d(TAG, "REASON = $reason")
+        Log.d(TAG, "APP = ${AppLockServiceHolder.currentUnlockedApp}")
+        Log.d(TAG, "========================================")
+
+        handler.removeCallbacks(resetUnlockedAppRunnable)
+
+        AppLockServiceHolder.currentUnlockedApp = null
+        AppLockServiceHolder.lastUnlockTime = 0L
+        AppLockServiceHolder.clearSuppressedPackage()
+
+        checkingPackage = null
+    }
+
+    private fun getRelockDelayMillis(): Long {
         return when (relockDelay) {
-
-            "never" ->
-                0L
-
-            "five_seconds",
-            "5_seconds" ->
-                5_000L
-
-            "ten_seconds",
-            "10_seconds" ->
-                10_000L
-
-            "thirty_seconds",
-            "30_seconds" ->
-                30_000L
-
-            "one_minute",
-            "1_minute" ->
-                60_000L
-
-            "two_minutes",
-            "2_minutes" ->
-                120_000L
-
-            "five_minutes",
-            "5_minutes" ->
-                300_000L
-
-            else ->
-                0L
+            "five_seconds" -> 5_000L
+            "ten_seconds" -> 10_000L
+            "thirty_seconds" -> 30_000L
+            "one_minute" -> 60_000L
+            "two_minutes" -> 120_000L
+            "five_minutes" -> 300_000L
+            else -> 0L
         }
     }
 
-    // =========================================================
-    // SCHEDULE RELOCK
-    // =========================================================
+    private fun scheduleRelock(reason: String) {
+        if (!appProtectionEnabled) return
 
-    private fun scheduleRelock(
-        reason: String
-    ) {
+        val unlockedApp = AppLockServiceHolder.currentUnlockedApp
 
-        if (
-            !appProtectionEnabled
-        ) {
-
+        if (unlockedApp.isNullOrEmpty()) {
+            Log.d(TAG, "RELOCK IGNORED - NO UNLOCKED APP")
             return
         }
 
-        val unlockedApp =
-            AppLockServiceHolder
-                .currentUnlockedApp
+        Log.d(TAG, "========================================")
+        Log.d(TAG, "SCHEDULE RELOCK")
+        Log.d(TAG, "REASON = $reason")
+        Log.d(TAG, "APP = $unlockedApp")
+        Log.d(TAG, "DELAY = $relockDelay")
+        Log.d(TAG, "========================================")
 
-        /*
-         * Nothing is currently unlocked.
-         */
-        if (
-            unlockedApp.isNullOrEmpty()
-        ) {
+        handler.removeCallbacks(resetUnlockedAppRunnable)
 
-            Log.d(
-                TAG,
-                "RELOCK IGNORED - NO UNLOCKED APP"
-            )
+        val delay = getRelockDelayMillis()
 
+        if (delay <= 0L) {
+            clearUnlockedApp("IMMEDIATE_$reason")
             return
         }
 
-        Log.d(
-            TAG,
-            "========================================"
-        )
-
-        Log.d(
-            TAG,
-            "SCHEDULE RELOCK"
-        )
-
-        Log.d(
-            TAG,
-            "REASON = $reason"
-        )
-
-        Log.d(
-            TAG,
-            "UNLOCKED APP = $unlockedApp"
-        )
-
-        Log.d(
-            TAG,
-            "RELOCK OPTION = $relockOption"
-        )
-
-        Log.d(
-            TAG,
-            "RELOCK DELAY = $relockDelay"
-        )
-
-        handler.removeCallbacks(
-            resetUnlockedAppRunnable
-        )
-
-        val delayMillis =
-            getRelockDelayMillis()
-
-        /*
-         * Never:
-         *
-         * No timer.
-         *
-         * The important part is that SYSTEM_UI does not call
-         * this function anymore.
-         */
-        if (
-            delayMillis <= 0L
-        ) {
-
-            clearUnlockedApp(
-                "IMMEDIATE_$reason"
-            )
-
-            return
-        }
-
-        handler.postDelayed(
-            resetUnlockedAppRunnable,
-            delayMillis
-        )
-
-        Log.d(
-            TAG,
-            "RELOCK TIMER = $delayMillis ms"
-        )
-
-        Log.d(
-            TAG,
-            "========================================"
-        )
+        handler.postDelayed(resetUnlockedAppRunnable, delay)
     }
 
-    // =========================================================
-    // LAUNCHER CHECK
-    // =========================================================
-
-    private fun isLauncherPackage(
-        packageName: String
-    ): Boolean {
-
-        if (
-            homePackageName != null &&
-            packageName ==
-            homePackageName
-        ) {
-
+    private fun isLauncherPackage(packageName: String): Boolean {
+        if (homePackageName != null && packageName == homePackageName) {
             return true
         }
 
-        return packageName.contains(
-            "launcher",
-            ignoreCase = true
-        )
+        return packageName.contains("launcher", ignoreCase = true)
     }
 
-    // =========================================================
-    // SYSTEM UI CHECK
-    // =========================================================
-
-    private fun isSystemUiPackage(
-        packageName: String
-    ): Boolean {
-
-        return packageName ==
-                "com.android.systemui"
+    private fun isSystemUiPackage(packageName: String): Boolean {
+        return packageName == "com.android.systemui"
     }
 
-    // =========================================================
-    // OPEN LOCK SCREEN
-    // =========================================================
+    private fun isOwnPackage(packageName: String): Boolean {
+        return packageName == applicationContext.packageName
+    }
 
-    private fun openLockScreen(
-        packageName: String
-    ) {
-
-        if (
-            !appProtectionEnabled
-        ) {
-
-            checkingPackage =
-                null
-
+    private fun openLockScreen(packageName: String) {
+        if (!appProtectionEnabled || !settingsLoaded) {
+            checkingPackage = null
             return
         }
 
-        if (
-            packageName ==
-            applicationContext.packageName
-        ) {
-
-            checkingPackage =
-                null
-
+        if (isOwnPackage(packageName)) {
+            checkingPackage = null
             return
         }
 
-        if (
-            AppLockServiceHolder
-                .isLockScreenOpen
-        ) {
+        if (!lockedAppsCache.contains(packageName)) {
+            checkingPackage = null
+            return
+        }
 
-            Log.d(
-                TAG,
-                "LOCK SCREEN ALREADY OPEN"
-            )
-
-            checkingPackage =
-                null
-
+        if (AppLockServiceHolder.isLockScreenOpen) {
+            Log.d(TAG, "LOCK SCREEN ALREADY OPEN")
+            checkingPackage = null
             return
         }
 
         handler.post {
-
             try {
-
-                if (
-                    !appProtectionEnabled
-                ) {
-
-                    checkingPackage =
-                        null
-
+                if (!appProtectionEnabled) {
+                    checkingPackage = null
                     return@post
                 }
 
-                if (
-                    AppLockServiceHolder
-                        .isLockScreenOpen
-                ) {
-
-                    checkingPackage =
-                        null
-
+                if (!lockedAppsCache.contains(packageName)) {
+                    checkingPackage = null
                     return@post
                 }
 
-                /*
-                 * IMPORTANT:
-                 *
-                 * Set this BEFORE startActivity().
-                 */
+                if (AppLockServiceHolder.isLockScreenOpen) {
+                    checkingPackage = null
+                    return@post
+                }
 
-                AppLockServiceHolder
-                    .isLockScreenOpen =
-                    true
+                val lockIntent = Intent(
+                    this@AppLockService,
+                    LockScreenActivity::class.java
+                ).apply {
+                    putExtra("packageName", packageName)
 
-                val lockIntent =
-                    Intent(
-                        this@AppLockService,
-                        LockScreenActivity::class.java
-                    ).apply {
+                    addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                                Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or
+                                Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    )
+                }
 
-                        putExtra(
-                            "packageName",
-                            packageName
-                        )
+                Log.d(TAG, "========================================")
+                Log.d(TAG, "OPENING LOCK SCREEN")
+                Log.d(TAG, "PACKAGE = $packageName")
+                Log.d(TAG, "========================================")
 
-                        addFlags(
-                            Intent.FLAG_ACTIVITY_NEW_TASK or
-                                    Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or
-                                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                                    Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        )
-                    }
+                AppLockServiceHolder.isLockScreenOpen = true
 
-                Log.d(
-                    TAG,
-                    "========================================"
-                )
-
-                Log.d(
-                    TAG,
-                    "OPENING LOCK SCREEN"
-                )
-
-                Log.d(
-                    TAG,
-                    "PACKAGE = $packageName"
-                )
-
-                Log.d(
-                    TAG,
-                    "currentUnlockedApp = " +
-                            AppLockServiceHolder
-                                .currentUnlockedApp
-                )
-
-                Log.d(
-                    TAG,
-                    "========================================"
-                )
-
-                startActivity(
-                    lockIntent
-                )
-
+                startActivity(lockIntent)
             } catch (e: Exception) {
-
-                Log.e(
-                    TAG,
-                    "LOCK SCREEN ERROR",
-                    e
-                )
-
-                AppLockServiceHolder
-                    .isLockScreenOpen =
-                    false
-
+                AppLockServiceHolder.isLockScreenOpen = false
+                Log.e(TAG, "LOCK SCREEN ERROR", e)
             } finally {
-
-                checkingPackage =
-                    null
+                checkingPackage = null
             }
         }
     }
 
-    // =========================================================
-    // HANDLE FOREGROUND PACKAGE
-    // =========================================================
+    private fun handleForegroundPackage(packageName: String) {
+        val previousPackage = foregroundPackage
 
-    private fun handleForegroundPackage(
-        packageName: String
-    ) {
-
-        val previousPackage =
-            foregroundPackage
-
-        /*
-         * Same package = no real foreground change.
-         */
-
-        if (
-            previousPackage ==
-            packageName
-        ) {
-
+        if (previousPackage == packageName) {
             return
         }
 
-        Log.d(
-            TAG,
-            "FOREGROUND CHANGED: " +
-                    "$previousPackage -> $packageName"
-        )
+        Log.d(TAG, "FOREGROUND CHANGED: $previousPackage -> $packageName")
 
-        /*
-         * Check whether an unlocked protected app was
-         * actually left.
-         */
-
-        val unlockedApp =
-            AppLockServiceHolder
-                .currentUnlockedApp
+        val unlockedApp = AppLockServiceHolder.currentUnlockedApp
 
         if (
             !unlockedApp.isNullOrEmpty() &&
-            previousPackage ==
-            unlockedApp &&
-            packageName != unlockedApp
+            packageName != unlockedApp &&
+            relockOption == RELOCK_AFTER_QUITTING
         ) {
+            Log.d(TAG, "UNLOCKED APP LEFT = $unlockedApp")
+            Log.d(TAG, "NEW FOREGROUND APP = $packageName")
 
-            if (
-                relockOption ==
-                RELOCK_AFTER_QUITTING
-            ) {
-
-                Log.d(
-                    TAG,
-                    "UNLOCKED APP LEFT"
-                )
-
-                Log.d(
-                    TAG,
-                    "LEFT APP = $unlockedApp"
-                )
-
-                Log.d(
-                    TAG,
-                    "NEW APP = $packageName"
-                )
-
-                scheduleRelock(
-                    "APP_LEFT_$packageName"
-                )
-            }
+            clearUnlockedApp("APP_LEFT_$packageName")
         }
 
-        /*
-         * Now store the REAL foreground package.
-         */
-        foregroundPackage =
-            packageName
+        foregroundPackage = packageName
     }
 
-    // =========================================================
-    // ACCESSIBILITY EVENTS
-    // =========================================================
-
-    override fun onAccessibilityEvent(
-        event: AccessibilityEvent?
-    ) {
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event == null) return
+        if (!serviceConnected) return
+        if (!appProtectionEnabled) return
+        if (!settingsLoaded) return
 
         if (
-            !appProtectionEnabled ||
-            !serviceConnected ||
-            event == null
+            event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+            event.eventType != AccessibilityEvent.TYPE_WINDOWS_CHANGED
         ) {
-
             return
         }
 
-        if (
-            event.eventType !=
-            AccessibilityEvent
-                .TYPE_WINDOW_STATE_CHANGED &&
-            event.eventType !=
-            AccessibilityEvent
-                .TYPE_WINDOWS_CHANGED
-        ) {
+        val packageName = event.packageName?.toString() ?: return
 
+        Log.d(TAG, "----------------------------------------")
+        Log.d(TAG, "ACCESSIBILITY EVENT")
+        Log.d(TAG, "PACKAGE = $packageName")
+        Log.d(
+            TAG,
+            "CURRENT UNLOCKED APP = ${AppLockServiceHolder.currentUnlockedApp}"
+        )
+        Log.d(
+            TAG,
+            "LOCK SCREEN OPEN = ${AppLockServiceHolder.isLockScreenOpen}"
+        )
+        Log.d(TAG, "FOREGROUND PACKAGE = $foregroundPackage")
+
+        if (isSystemUiPackage(packageName)) {
+            Log.d(TAG, "SYSTEM UI EVENT - IGNORED")
             return
         }
 
-        val packageName =
-            event.packageName
-                ?.toString()
-                ?: return
-
-        Log.d(
-            TAG,
-            "----------------------------------------"
-        )
-
-        Log.d(
-            TAG,
-            "ACCESSIBILITY EVENT"
-        )
-
-        Log.d(
-            TAG,
-            "PACKAGE = $packageName"
-        )
-
-        Log.d(
-            TAG,
-            "currentUnlockedApp = " +
-                    AppLockServiceHolder
-                        .currentUnlockedApp
-        )
-
-        Log.d(
-            TAG,
-            "isLockScreenOpen = " +
-                    AppLockServiceHolder
-                        .isLockScreenOpen
-        )
-
-        Log.d(
-            TAG,
-            "foregroundPackage = $foregroundPackage"
-        )
-
-        // =====================================================
-        // SYSTEM UI
-        // =====================================================
-
-        if (
-            isSystemUiPackage(
-                packageName
-            )
-        ) {
-
-            /*
-             * IMPORTANT FIX
-             *
-             * System UI is often emitted while:
-             *
-             * - opening an app
-             * - closing an activity
-             * - opening recent apps
-             * - showing transitions
-             * - displaying system dialogs
-             *
-             * Therefore DO NOT clear currentUnlockedApp here.
-             *
-             * Also DO NOT replace foregroundPackage with
-             * System UI.
-             *
-             * We wait for the next REAL package.
-             */
-
-            Log.d(
-                TAG,
-                "SYSTEM UI EVENT - IGNORED"
-            )
-
-            Log.d(
-                TAG,
-                "KEEPING currentUnlockedApp = " +
-                        AppLockServiceHolder
-                            .currentUnlockedApp
-            )
-
-            Log.d(
-                TAG,
-                "KEEPING foregroundPackage = " +
-                        foregroundPackage
-            )
-
-            checkingPackage =
-                null
-
+        if (isOwnPackage(packageName)) {
+            foregroundPackage = packageName
+            checkingPackage = null
             return
         }
 
-        // =====================================================
-        // LAUNCHER / HOME
-        // =====================================================
+        if (isLauncherPackage(packageName)) {
+            Log.d(TAG, "LAUNCHER DETECTED = $packageName")
 
-        if (
-            isLauncherPackage(
-                packageName
-            )
-        ) {
-
-            Log.d(
-                TAG,
-                "LAUNCHER DETECTED = $packageName"
-            )
-
-            val unlockedApp =
-                AppLockServiceHolder
-                    .currentUnlockedApp
-
-            /*
-             * Launcher is a REAL foreground destination.
-             *
-             * If user left unlocked app and went Home,
-             * relock according to quitting mode.
-             */
+            val unlockedApp = AppLockServiceHolder.currentUnlockedApp
 
             if (
                 !unlockedApp.isNullOrEmpty() &&
-                foregroundPackage ==
-                unlockedApp &&
-                relockOption ==
-                RELOCK_AFTER_QUITTING
+                relockOption == RELOCK_AFTER_QUITTING
             ) {
+                Log.d(TAG, "LOCKED APP CLOSED")
+                Log.d(TAG, "CLEARING UNLOCK STATE = $unlockedApp")
 
-                Log.d(
-                    TAG,
-                    "UNLOCKED APP LEFT -> LAUNCHER"
-                )
-
-                scheduleRelock(
-                    "LAUNCHER"
-                )
+                clearUnlockedApp("LAUNCHER_EXIT")
             }
 
-            foregroundPackage =
-                packageName
-
-            lastPackageName =
-                packageName
-
-            checkingPackage =
-                null
-
+            foregroundPackage = packageName
+            checkingPackage = null
             return
         }
 
-        // =====================================================
-        // OUR APP
-        // =====================================================
+        handleForegroundPackage(packageName)
 
-        if (
-            packageName ==
-            applicationContext.packageName
-        ) {
-
-            /*
-             * Our own app can generate accessibility events
-             * while LockScreenActivity is visible.
-             *
-             * Do not clear currentUnlockedApp here.
-             */
-
-            foregroundPackage =
-                packageName
-
-            lastPackageName =
-                packageName
-
-            checkingPackage =
-                null
-
+        if (AppLockServiceHolder.isLockScreenOpen) {
+            checkingPackage = null
             return
         }
 
-        // =====================================================
-        // REAL FOREGROUND PACKAGE
-        // =====================================================
-
-        handleForegroundPackage(
-            packageName
-        )
-
-        // =====================================================
-        // LOCK SCREEN ALREADY OPEN
-        // =====================================================
-
-        if (
-            AppLockServiceHolder
-                .isLockScreenOpen
-        ) {
-
-            checkingPackage =
-                null
-
+        if (AppLockServiceHolder.currentUnlockedApp == packageName) {
+            Log.d(TAG, "APP ALREADY UNLOCKED = $packageName")
+            checkingPackage = null
             return
         }
 
-        // =====================================================
-        // ALREADY UNLOCKED
-        // =====================================================
-
-        if (
-            AppLockServiceHolder
-                .currentUnlockedApp ==
-            packageName
-        ) {
-
-            /*
-             * IMPORTANT:
-             *
-             * The app that was just unlocked is still allowed.
-             *
-             * Never open LockScreenActivity again for it.
-             */
-
-            Log.d(
-                TAG,
-                "APP ALREADY UNLOCKED = $packageName"
-            )
-
-            lastPackageName =
-                packageName
-
-            checkingPackage =
-                null
-
+        if (checkingPackage == packageName) {
+            Log.d(TAG, "ALREADY CHECKING = $packageName")
             return
         }
 
-        // =====================================================
-        // ALREADY CHECKING
-        // =====================================================
+        checkingPackage = packageName
 
-        if (
-            checkingPackage ==
-            packageName
-        ) {
+        if (lockedAppsCache.contains(packageName)) {
+            Log.d(TAG, "========================================")
+            Log.d(TAG, "LOCKED APP DETECTED")
+            Log.d(TAG, "PACKAGE = $packageName")
+            Log.d(TAG, "========================================")
 
-            Log.d(
-                TAG,
-                "ALREADY CHECKING = $packageName"
-            )
-
-            return
-        }
-
-        checkingPackage =
-            packageName
-
-        lastPackageName =
-            packageName
-
-        // =====================================================
-        // LOCKED APPS CACHE
-        // =====================================================
-
-        if (
-            lockedAppsCacheReady
-        ) {
-
-            if (
-                lockedAppsCache.contains(
-                    packageName
-                )
-            ) {
-
-                Log.d(
-                    TAG,
-                    "LOCKED APP FOUND = $packageName"
-                )
-
-                openLockScreen(
-                    packageName
-                )
-
-            } else {
-
-                Log.d(
-                    TAG,
-                    "APP NOT LOCKED = $packageName"
-                )
-
-                checkingPackage =
-                    null
-            }
-
-            return
-        }
-
-        // =====================================================
-        // FIRST LOAD
-        // =====================================================
-
-        serviceScope.launch {
-
-            try {
-
-                val lockedApps =
-                    DataStoreManager(
-                        this@AppLockService
-                    )
-                        .lockedAppsFlow
-                        .first()
-
-                lockedAppsCache =
-                    lockedApps.toSet()
-
-                lockedAppsCacheReady =
-                    true
-
-                Log.d(
-                    TAG,
-                    "LOADED LOCKED APPS = $lockedAppsCache"
-                )
-
-                if (
-                    lockedApps.contains(
-                        packageName
-                    )
-                ) {
-
-                    withContext(
-                        Dispatchers.Main
-                    ) {
-
-                        openLockScreen(
-                            packageName
-                        )
-                    }
-
-                } else {
-
-                    checkingPackage =
-                        null
-                }
-
-            } catch (e: Exception) {
-
-                Log.e(
-                    TAG,
-                    "CHECK LOCKED APP ERROR",
-                    e
-                )
-
-                checkingPackage =
-                    null
-            }
+            openLockScreen(packageName)
+        } else {
+            Log.d(TAG, "APP NOT LOCKED = $packageName")
+            checkingPackage = null
         }
     }
-
-    // =========================================================
-    // INTERRUPT
-    // =========================================================
 
     override fun onInterrupt() {
-
-        Log.d(
-            TAG,
-            "ACCESSIBILITY SERVICE INTERRUPTED"
-        )
+        Log.d(TAG, "ACCESSIBILITY SERVICE INTERRUPTED")
     }
 
-    // =========================================================
-    // UNBIND
-    // =========================================================
+    override fun onUnbind(intent: Intent?): Boolean {
+        Log.d(TAG, "ACCESSIBILITY SERVICE UNBOUND")
 
-    override fun onUnbind(
-        intent: Intent?
-    ): Boolean {
-
-        Log.d(
-            TAG,
-            "ACCESSIBILITY SERVICE UNBOUND"
-        )
-
-        serviceConnected =
-            false
-
-        checkingPackage =
-            null
+        serviceConnected = false
+        settingsLoaded = false
+        checkingPackage = null
 
         return true
     }
 
-    // =========================================================
-    // REBIND
-    // =========================================================
+    override fun onRebind(intent: Intent?) {
+        super.onRebind(intent)
 
-    override fun onRebind(
-        intent: Intent?
-    ) {
+        Log.d(TAG, "ACCESSIBILITY SERVICE REBOUND")
 
-        super.onRebind(
-            intent
-        )
+        serviceConnected = true
+        settingsLoaded = false
+        checkingPackage = null
+        foregroundPackage = null
+        lockedAppsCacheReady = false
 
-        Log.d(
-            TAG,
-            "ACCESSIBILITY SERVICE REBOUND"
-        )
-
-        serviceConnected =
-            true
-
-        checkingPackage =
-            null
-
-        lastPackageName =
-            null
-
-        foregroundPackage =
-            null
-
-        lockedAppsCacheReady =
-            false
-
-        AppLockServiceHolder
-            .isLockScreenOpen =
-            false
+        AppLockServiceHolder.isLockScreenOpen = false
 
         resolveHomePackage()
-
         startForegroundServiceNotification()
+        loadCurrentSettings()
     }
 
-    // =========================================================
-    // DESTROY
-    // =========================================================
-
     override fun onDestroy() {
+        Log.d(TAG, "ACCESSIBILITY SERVICE DESTROYED")
 
-        Log.d(
-            TAG,
-            "ACCESSIBILITY SERVICE DESTROYED"
-        )
+        serviceConnected = false
+        settingsLoaded = false
 
-        serviceConnected =
-            false
+        handler.removeCallbacks(resetUnlockedAppRunnable)
 
-        handler.removeCallbacks(
-            resetUnlockedAppRunnable
-        )
+        checkingPackage = null
+        foregroundPackage = null
 
-        checkingPackage =
-            null
+        lockedAppsCache = emptySet()
+        lockedAppsCacheReady = false
 
-        lastPackageName =
-            null
-
-        foregroundPackage =
-            null
-
-        lockedAppsCache =
-            emptySet()
-
-        lockedAppsCacheReady =
-            false
-
-        AppLockServiceHolder
-            .isLockScreenOpen =
-            false
+        AppLockServiceHolder.isLockScreenOpen = false
 
         try {
-
-            unregisterReceiver(
-                screenOffReceiver
-            )
-
+            unregisterReceiver(screenOffReceiver)
+            Log.d(TAG, "SCREEN OFF RECEIVER UNREGISTERED")
         } catch (e: Exception) {
-
-            Log.e(
-                TAG,
-                "RECEIVER UNREGISTER ERROR",
-                e
-            )
+            Log.e(TAG, "RECEIVER UNREGISTER ERROR", e)
         }
 
         serviceScope.cancel()
 
-        if (
-            Build.VERSION.SDK_INT >=
-            Build.VERSION_CODES.N
-        ) {
-
-            stopForeground(
-                STOP_FOREGROUND_REMOVE
-            )
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
         } else {
-
-            @Suppress(
-                "DEPRECATION"
-            )
-
+            @Suppress("DEPRECATION")
             stopForeground(true)
         }
 
         super.onDestroy()
     }
 }
-

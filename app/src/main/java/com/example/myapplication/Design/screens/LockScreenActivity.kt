@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.view.WindowManager
-
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.biometric.BiometricManager
@@ -21,98 +20,43 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-
 import com.example.myapplication.MainActivity
 import com.example.myapplication.data.DataStoreManager
 import com.example.myapplication.service.AppLockServiceHolder
-
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class LockScreenActivity : FragmentActivity() {
 
     companion object {
-
-        private const val TAG =
-            "APPLOCK_DEBUG"
-
-        private const val CAMERA_PERMISSION =
-            Manifest.permission.CAMERA
-
-        private const val CAMERA_REQUEST_CODE =
-            501
+        private const val TAG = "APPLOCK_DEBUG"
+        private const val CAMERA_PERMISSION = Manifest.permission.CAMERA
+        private const val CAMERA_REQUEST_CODE = 501
     }
 
-    private var targetPackage: String? =
-        null
-
+    private var targetPackage: String? = null
     private lateinit var dataStore: DataStoreManager
+    private var imageCapture: ImageCapture? = null
+    private var cameraProvider: ProcessCameraProvider? = null
+    private var biometricPrompt: BiometricPrompt? = null
+    private var biometricStarted = false
+    private var unlockHandled = false
+    private var leavingLockScreen = false
 
-    private var imageCapture: ImageCapture? =
-        null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-    private var cameraProvider: ProcessCameraProvider? =
-        null
+        Log.d(TAG, "================================")
+        Log.d(TAG, "LOCK SCREEN CREATED")
+        Log.d(TAG, "================================")
 
-    private var biometricPrompt:
-            BiometricPrompt? =
-        null
+        dataStore = DataStoreManager(this)
 
-    private var biometricStarted =
-        false
-
-    /*
-     * Prevents multiple unlock callbacks from
-     * PIN + fingerprint or repeated UI events.
-     */
-    private var unlockHandled =
-        false
-
-    // =========================================================
-    // ON CREATE
-    // =========================================================
-
-    override fun onCreate(
-        savedInstanceState: Bundle?
-    ) {
-
-        super.onCreate(
-            savedInstanceState
-        )
-
-        Log.d(
-            TAG,
-            "================================"
-        )
-
-        Log.d(
-            TAG,
-            "LOCK SCREEN CREATED"
-        )
-
-        Log.d(
-            TAG,
-            "================================"
-        )
-
-        dataStore =
-            DataStoreManager(this)
-
-        // -----------------------------------------------------
-        // SHOW ABOVE LOCK SCREEN
-        // -----------------------------------------------------
-
-        if (
-            Build.VERSION.SDK_INT >=
-            Build.VERSION_CODES.O_MR1
-        ) {
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
-
             setTurnScreenOn(true)
         }
 
@@ -123,447 +67,201 @@ class LockScreenActivity : FragmentActivity() {
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
         )
 
-        // -----------------------------------------------------
-        // TARGET PACKAGE
-        // -----------------------------------------------------
+        targetPackage = intent.getStringExtra("packageName")
 
-        targetPackage =
-            intent.getStringExtra(
-                "packageName"
-            )
+        Log.d(TAG, "TARGET PACKAGE = $targetPackage")
 
-        Log.d(
-            TAG,
-            "TARGET PACKAGE = $targetPackage"
-        )
-
-        if (
-            targetPackage.isNullOrEmpty()
-        ) {
-
-            Log.e(
-                TAG,
-                "TARGET PACKAGE IS NULL"
-            )
-
+        if (targetPackage.isNullOrEmpty()) {
+            Log.e(TAG, "TARGET PACKAGE IS NULL")
             goHome()
-
             return
         }
 
-        /*
-         * Lock screen is definitely visible now.
-         *
-         * IMPORTANT:
-         * Do not set this false from onDestroy().
-         * Service controls this state when another lock
-         * screen is actually requested.
-         */
-        AppLockServiceHolder
-            .isLockScreenOpen = true
-
-        // -----------------------------------------------------
-        // BACK BUTTON
-        // -----------------------------------------------------
+        AppLockServiceHolder.isLockScreenOpen = true
 
         onBackPressedDispatcher.addCallback(
             this,
             object : OnBackPressedCallback(true) {
-
                 override fun handleOnBackPressed() {
-
                     goHome()
                 }
             }
         )
 
-        // -----------------------------------------------------
-        // UI
-        // -----------------------------------------------------
-
         setContent {
-
             UnlockScreen(
-
-                onUnlockSuccess = {
-
-                    unlockAndOpenApp()
-                },
-
-                onFingerprintRequest = {
-
-                    showBiometricPrompt()
-                },
-
-                onIntruderCapture = {
-
-                    captureIntruderPhoto()
-                },
-
-                onForgotPasswordSuccess = {
-
-                    openResetPassword()
-                }
+                onUnlockSuccess = { unlockAndOpenApp() },
+                onFingerprintRequest = { showBiometricPrompt() },
+                onIntruderCapture = { captureIntruderPhoto() },
+                onForgotPasswordSuccess = { openResetPassword() }
             )
         }
     }
-
-    // =========================================================
-    // RESET PASSWORD
-    // =========================================================
 
     private fun openResetPassword() {
+        if (leavingLockScreen) return
 
+        leavingLockScreen = true
         unlockHandled = true
+        clearUnlockState()
 
-        AppLockServiceHolder
-            .isLockScreenOpen = false
-
-        AppLockServiceHolder
-            .currentUnlockedApp = null
-
-        AppLockServiceHolder
-            .lastUnlockTime = 0L
-
-        AppLockServiceHolder
-            .clearSuppressedPackage()
-
-        val resetIntent =
-            Intent(
-                this,
-                MainActivity::class.java
-            ).apply {
-
-                putExtra(
-                    "openResetPassword",
-                    true
-                )
-
-                addFlags(
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                            Intent.FLAG_ACTIVITY_SINGLE_TOP
-                )
-            }
+        val resetIntent = Intent(this, MainActivity::class.java).apply {
+            putExtra("openResetPassword", true)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
 
         try {
-
-            startActivity(
-                resetIntent
-            )
-
+            startActivity(resetIntent)
         } catch (e: Exception) {
-
-            Log.e(
-                TAG,
-                "RESET PASSWORD OPEN ERROR",
-                e
-            )
+            Log.e(TAG, "RESET PASSWORD OPEN ERROR", e)
         }
 
-        finish()
+        finishAndRemoveTask()
     }
 
-    // =========================================================
-    // UNLOCK APP
-    // =========================================================
-
     private fun unlockAndOpenApp() {
-
-        /*
-         * VERY IMPORTANT:
-         *
-         * UnlockScreen can theoretically call this more than
-         * once because of rapid taps / biometric callback.
-         *
-         * Only first callback is accepted.
-         */
-        if (unlockHandled) {
-
-            Log.d(
-                TAG,
-                "UNLOCK IGNORED - ALREADY HANDLED"
-            )
-
+        if (unlockHandled || leavingLockScreen) {
+            Log.d(TAG, "UNLOCK IGNORED - ALREADY HANDLED")
             return
         }
 
         unlockHandled = true
 
-        val packageName =
-            targetPackage
+        val packageName = targetPackage
 
-        if (
-            packageName.isNullOrEmpty()
-        ) {
-
-            Log.e(
-                TAG,
-                "UNLOCK FAILED - PACKAGE NULL"
-            )
-
-            AppLockServiceHolder
-                .isLockScreenOpen = false
-
+        if (packageName.isNullOrEmpty()) {
+            Log.e(TAG, "UNLOCK FAILED - PACKAGE NULL")
+            clearUnlockState()
             goHome()
-
             return
         }
 
-        Log.d(
-            TAG,
-            "================================"
-        )
+        Log.d(TAG, "================================")
+        Log.d(TAG, "UNLOCK SUCCESS")
+        Log.d(TAG, "UNLOCKED PACKAGE = $packageName")
+        Log.d(TAG, "================================")
 
-        Log.d(
-            TAG,
-            "UNLOCK SUCCESS"
-        )
-
-        Log.d(
-            TAG,
-            "UNLOCKED PACKAGE = $packageName"
-        )
-
-        Log.d(
-            TAG,
-            "================================"
-        )
-
-        /*
-         * This is the MAIN FIX.
-         *
-         * Tell AccessibilityService:
-         *
-         * "This package has just been unlocked.
-         * Do not immediately open LockScreenActivity again."
-         */
-        AppLockServiceHolder
-            .suppressPackage(packageName)
-
-        AppLockServiceHolder
-            .currentUnlockedApp =
-            packageName
-
-        AppLockServiceHolder
-            .lastUnlockTime =
-            System.currentTimeMillis()
-
-        /*
-         * Lock screen is no longer logically active.
-         */
-        AppLockServiceHolder
-            .isLockScreenOpen = false
+        AppLockServiceHolder.suppressPackage(packageName)
+        AppLockServiceHolder.currentUnlockedApp = packageName
+        AppLockServiceHolder.lastUnlockTime = System.currentTimeMillis()
+        AppLockServiceHolder.isLockScreenOpen = false
 
         openApp()
     }
 
-    // =========================================================
-    // BIOMETRIC
-    // =========================================================
-
     private fun showBiometricPrompt() {
+        if (biometricStarted || unlockHandled || leavingLockScreen) return
 
-        if (biometricStarted) {
-
-            return
-        }
-
-        if (unlockHandled) {
-
-            return
-        }
-
-        val biometricManager =
-            BiometricManager.from(this)
+        val biometricManager = BiometricManager.from(this)
 
         val authenticators =
             BiometricManager.Authenticators.BIOMETRIC_STRONG or
                     BiometricManager.Authenticators.BIOMETRIC_WEAK
 
-        val canAuthenticate =
-            biometricManager.canAuthenticate(
-                authenticators
-            )
+        val canAuthenticate = biometricManager.canAuthenticate(authenticators)
 
-        if (
-            canAuthenticate !=
-            BiometricManager.BIOMETRIC_SUCCESS
-        ) {
-
-            Log.d(
-                TAG,
-                "BIOMETRIC NOT AVAILABLE"
-            )
-
+        if (canAuthenticate != BiometricManager.BIOMETRIC_SUCCESS) {
+            Log.d(TAG, "BIOMETRIC NOT AVAILABLE")
             return
         }
 
-        val promptInfo =
-            BiometricPrompt.PromptInfo.Builder()
-                .setTitle(
-                    "Fingerprint Lock"
-                )
-                .setSubtitle(
-                    "Use your fingerprint to unlock"
-                )
-                .setNegativeButtonText(
-                    "Use PIN / Pattern"
-                )
-                .build()
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Fingerprint Lock")
+            .setSubtitle("Use your fingerprint to unlock")
+            .setNegativeButtonText("Use PIN / Pattern")
+            .build()
 
-        val executor =
-            ContextCompat.getMainExecutor(
-                this
-            )
+        val executor = ContextCompat.getMainExecutor(this)
 
-        biometricPrompt =
-            BiometricPrompt(
-                this,
-                executor,
-                object :
-                    BiometricPrompt.AuthenticationCallback() {
+        biometricPrompt = BiometricPrompt(
+            this,
+            executor,
+            object : BiometricPrompt.AuthenticationCallback() {
 
-                    override fun onAuthenticationSucceeded(
-                        result:
-                        BiometricPrompt.AuthenticationResult
-                    ) {
+                override fun onAuthenticationSucceeded(
+                    result: BiometricPrompt.AuthenticationResult
+                ) {
+                    super.onAuthenticationSucceeded(result)
 
-                        super.onAuthenticationSucceeded(
-                            result
-                        )
+                    biometricStarted = false
 
-                        biometricStarted =
-                            false
+                    Log.d(TAG, "BIOMETRIC SUCCESS")
 
-                        Log.d(
-                            TAG,
-                            "BIOMETRIC SUCCESS"
-                        )
-
-                        unlockAndOpenApp()
-                    }
-
-                    override fun onAuthenticationError(
-                        errorCode: Int,
-                        errString: CharSequence
-                    ) {
-
-                        super.onAuthenticationError(
-                            errorCode,
-                            errString
-                        )
-
-                        biometricStarted =
-                            false
-
-                        Log.d(
-                            TAG,
-                            "BIOMETRIC ERROR = $errString"
-                        )
-                    }
-
-                    override fun onAuthenticationFailed() {
-
-                        super.onAuthenticationFailed()
-
-                        Log.d(
-                            TAG,
-                            "BIOMETRIC FAILED"
-                        )
-                    }
+                    unlockAndOpenApp()
                 }
-            )
 
-        biometricStarted =
-            true
+                override fun onAuthenticationError(
+                    errorCode: Int,
+                    errString: CharSequence
+                ) {
+                    super.onAuthenticationError(errorCode, errString)
 
-        biometricPrompt?.authenticate(
-            promptInfo
+                    biometricStarted = false
+
+                    Log.d(TAG, "BIOMETRIC ERROR = $errString")
+                }
+
+                override fun onAuthenticationFailed() {
+                    super.onAuthenticationFailed()
+
+                    Log.d(TAG, "BIOMETRIC FAILED")
+                }
+            }
         )
+
+        biometricStarted = true
+        biometricPrompt?.authenticate(promptInfo)
     }
 
-    // =========================================================
-    // INTRUDER PHOTO
-    // =========================================================
-
     private fun captureIntruderPhoto() {
-
         if (
             ContextCompat.checkSelfPermission(
                 this,
                 CAMERA_PERMISSION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(
-                    CAMERA_PERMISSION
-                ),
+                arrayOf(CAMERA_PERMISSION),
                 CAMERA_REQUEST_CODE
             )
-
             return
         }
 
         startCameraAndCapture()
     }
 
-    // =========================================================
-    // CAMERA PERMISSION RESULT
-    // =========================================================
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-
         super.onRequestPermissionsResult(
             requestCode,
             permissions,
             grantResults
         )
 
-        if (
-            requestCode !=
-            CAMERA_REQUEST_CODE
-        ) {
-
-            return
-        }
+        if (requestCode != CAMERA_REQUEST_CODE) return
 
         if (
             grantResults.isNotEmpty() &&
-            grantResults[0] ==
-            PackageManager.PERMISSION_GRANTED
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
         ) {
-
             startCameraAndCapture()
         }
     }
 
-    // =========================================================
-    // START CAMERA
-    // =========================================================
-
     private fun startCameraAndCapture() {
-
         val cameraProviderFuture =
-            ProcessCameraProvider.getInstance(
-                this
-            )
+            ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener(
             {
-
                 try {
+                    val provider = cameraProviderFuture.get()
 
-                    val provider =
-                        cameraProviderFuture.get()
-
-                    cameraProvider =
-                        provider
+                    cameraProvider = provider
 
                     provider.unbindAll()
 
@@ -580,14 +278,11 @@ class LockScreenActivity : FragmentActivity() {
                                 ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
                             )
                             .setTargetRotation(
-                                windowManager
-                                    .defaultDisplay
-                                    .rotation
+                                windowManager.defaultDisplay.rotation
                             )
                             .build()
 
-                    imageCapture =
-                        capture
+                    imageCapture = capture
 
                     provider.bindToLifecycle(
                         this,
@@ -595,73 +290,47 @@ class LockScreenActivity : FragmentActivity() {
                         capture
                     )
 
-                    takeIntruderPhoto(
-                        capture
-                    )
-
+                    takeIntruderPhoto(capture)
                 } catch (e: Exception) {
-
-                    Log.e(
-                        TAG,
-                        "CAMERA START ERROR",
-                        e
-                    )
+                    Log.e(TAG, "CAMERA START ERROR", e)
                 }
-
             },
-            ContextCompat.getMainExecutor(
-                this
-            )
+            ContextCompat.getMainExecutor(this)
         )
     }
 
-    // =========================================================
-    // TAKE PHOTO
-    // =========================================================
-
-    private fun takeIntruderPhoto(
-        capture: ImageCapture
-    ) {
-
+    private fun takeIntruderPhoto(capture: ImageCapture) {
         val fileName =
             "Intruder_" +
                     SimpleDateFormat(
                         "yyyyMMdd_HHmmss",
                         Locale.US
-                    ).format(
-                        System.currentTimeMillis()
-                    ) +
+                    ).format(System.currentTimeMillis()) +
                     ".jpg"
 
-        val contentValues =
-            ContentValues().apply {
+        val contentValues = ContentValues().apply {
+            put(
+                MediaStore.Images.Media.DISPLAY_NAME,
+                fileName
+            )
 
+            put(
+                MediaStore.Images.Media.MIME_TYPE,
+                "image/jpeg"
+            )
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 put(
-                    MediaStore.Images.Media.DISPLAY_NAME,
-                    fileName
+                    MediaStore.Images.Media.RELATIVE_PATH,
+                    "Pictures/AppLock/Intruder"
                 )
 
                 put(
-                    MediaStore.Images.Media.MIME_TYPE,
-                    "image/jpeg"
+                    MediaStore.Images.Media.IS_PENDING,
+                    1
                 )
-
-                if (
-                    Build.VERSION.SDK_INT >=
-                    Build.VERSION_CODES.Q
-                ) {
-
-                    put(
-                        MediaStore.Images.Media.RELATIVE_PATH,
-                        "Pictures/AppLock/Intruder"
-                    )
-
-                    put(
-                        MediaStore.Images.Media.IS_PENDING,
-                        1
-                    )
-                }
             }
+        }
 
         val outputOptions =
             ImageCapture.OutputFileOptions.Builder(
@@ -671,39 +340,24 @@ class LockScreenActivity : FragmentActivity() {
             ).build()
 
         capture.takePicture(
-
             outputOptions,
-
-            ContextCompat.getMainExecutor(
-                this
-            ),
-
-            object :
-                ImageCapture.OnImageSavedCallback {
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageSavedCallback {
 
                 override fun onImageSaved(
-                    outputFileResults:
-                    ImageCapture.OutputFileResults
+                    outputFileResults: ImageCapture.OutputFileResults
                 ) {
-
                     val savedUri =
                         outputFileResults.savedUri
 
-                    if (
-                        Build.VERSION.SDK_INT >=
-                        Build.VERSION_CODES.Q
-                    ) {
-
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         savedUri?.let { uri ->
-
-                            val values =
-                                ContentValues().apply {
-
-                                    put(
-                                        MediaStore.Images.Media.IS_PENDING,
-                                        0
-                                    )
-                                }
+                            val values = ContentValues().apply {
+                                put(
+                                    MediaStore.Images.Media.IS_PENDING,
+                                    0
+                                )
+                            }
 
                             contentResolver.update(
                                 uri,
@@ -714,22 +368,13 @@ class LockScreenActivity : FragmentActivity() {
                         }
                     }
 
-                    if (
-                        savedUri != null
-                    ) {
-
-                        CoroutineScope(
-                            Dispatchers.IO
-                        ).launch {
-
+                    if (savedUri != null) {
+                        CoroutineScope(Dispatchers.IO).launch {
                             try {
-
                                 dataStore.saveIntruderPhoto(
                                     savedUri.toString()
                                 )
-
                             } catch (e: Exception) {
-
                                 Log.e(
                                     TAG,
                                     "INTRUDER URI ERROR",
@@ -743,10 +388,8 @@ class LockScreenActivity : FragmentActivity() {
                 }
 
                 override fun onError(
-                    exception:
-                    ImageCaptureException
+                    exception: ImageCaptureException
                 ) {
-
                     Log.e(
                         TAG,
                         "INTRUDER PHOTO ERROR",
@@ -759,65 +402,30 @@ class LockScreenActivity : FragmentActivity() {
         )
     }
 
-    // =========================================================
-    // RELEASE CAMERA
-    // =========================================================
-
     private fun releaseCamera() {
-
         try {
-
             cameraProvider?.unbindAll()
-
         } catch (e: Exception) {
-
-            Log.e(
-                TAG,
-                "CAMERA RELEASE ERROR",
-                e
-            )
+            Log.e(TAG, "CAMERA RELEASE ERROR", e)
         }
 
-        imageCapture =
-            null
-
-        cameraProvider =
-            null
+        imageCapture = null
+        cameraProvider = null
     }
 
-    // =========================================================
-    // NEW INTENT
-    // =========================================================
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
 
-    override fun onNewIntent(
-        intent: Intent
-    ) {
-
-        super.onNewIntent(
-            intent
-        )
-
-        setIntent(
-            intent
-        )
+        setIntent(intent)
 
         val newPackage =
-            intent.getStringExtra(
-                "packageName"
-            )
+            intent.getStringExtra("packageName")
 
-        if (
-            !newPackage.isNullOrEmpty()
-        ) {
-
-            targetPackage =
-                newPackage
-
-            unlockHandled =
-                false
-
-            AppLockServiceHolder
-                .isLockScreenOpen = true
+        if (!newPackage.isNullOrEmpty()) {
+            targetPackage = newPackage
+            unlockHandled = false
+            leavingLockScreen = false
+            AppLockServiceHolder.isLockScreenOpen = true
 
             Log.d(
                 TAG,
@@ -826,126 +434,76 @@ class LockScreenActivity : FragmentActivity() {
         }
     }
 
-    // =========================================================
-    // GO HOME
-    // =========================================================
+    private fun clearUnlockState() {
+        AppLockServiceHolder.currentUnlockedApp = null
+        AppLockServiceHolder.lastUnlockTime = 0L
+        AppLockServiceHolder.clearSuppressedPackage()
+        AppLockServiceHolder.isLockScreenOpen = false
+    }
 
     private fun goHome() {
+        if (leavingLockScreen) return
 
-        Log.d(
-            TAG,
-            "GO HOME"
-        )
+        leavingLockScreen = true
+        unlockHandled = true
 
-        AppLockServiceHolder
-            .currentUnlockedApp =
-            null
+        Log.d(TAG, "================================")
+        Log.d(TAG, "LEAVING LOCK SCREEN -> HOME")
+        Log.d(TAG, "================================")
 
-        AppLockServiceHolder
-            .lastUnlockTime =
-            0L
-
-        AppLockServiceHolder
-            .clearSuppressedPackage()
-
-        AppLockServiceHolder
-            .isLockScreenOpen =
-            false
+        clearUnlockState()
 
         try {
-
             val homeIntent =
-                Intent(
-                    Intent.ACTION_MAIN
-                ).apply {
-
-                    addCategory(
-                        Intent.CATEGORY_HOME
-                    )
-
+                Intent(Intent.ACTION_MAIN).apply {
+                    addCategory(Intent.CATEGORY_HOME)
                     addFlags(
                         Intent.FLAG_ACTIVITY_NEW_TASK or
                                 Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
                     )
                 }
 
-            startActivity(
-                homeIntent
-            )
-
+            startActivity(homeIntent)
         } catch (e: Exception) {
-
-            Log.e(
-                TAG,
-                "HOME OPEN ERROR",
-                e
-            )
+            Log.e(TAG, "HOME OPEN ERROR", e)
         }
 
         try {
-
-            finishAffinity()
-
+            finishAndRemoveTask()
         } catch (e: Exception) {
-
-            Log.e(
-                TAG,
-                "FINISH AFFINITY ERROR",
-                e
-            )
+            Log.e(TAG, "FINISH REMOVE TASK ERROR", e)
+            finish()
         }
-
-        finishAndRemoveTask()
     }
 
-    // =========================================================
-    // OPEN APP
-    // =========================================================
-
     private fun openApp() {
+        val packageName = targetPackage
 
-        val packageName =
-            targetPackage
-
-        if (
-            packageName.isNullOrEmpty()
-        ) {
-
+        if (packageName.isNullOrEmpty()) {
             goHome()
-
             return
         }
 
         try {
-
             val appIntent =
-                packageManager
-                    .getLaunchIntentForPackage(
-                        packageName
-                    )
+                packageManager.getLaunchIntentForPackage(
+                    packageName
+                )
 
-            if (
-                appIntent == null
-            ) {
-
+            if (appIntent == null) {
                 Log.e(
                     TAG,
                     "LAUNCH INTENT NULL = $packageName"
                 )
 
+                clearUnlockState()
                 goHome()
-
                 return
             }
 
-            /*
-             * Do NOT clear the app's existing task.
-             *
-             * We want the actual app to come to foreground
-             * after unlocking.
-             */
             appIntent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
             )
 
             Log.d(
@@ -953,69 +511,26 @@ class LockScreenActivity : FragmentActivity() {
                 "OPENING UNLOCKED APP = $packageName"
             )
 
-            startActivity(
-                appIntent
-            )
+            startActivity(appIntent)
 
+            AppLockServiceHolder.isLockScreenOpen = false
+
+            finishAndRemoveTask()
         } catch (e: Exception) {
+            Log.e(TAG, "OPEN APP ERROR", e)
 
-            Log.e(
-                TAG,
-                "OPEN APP ERROR",
-                e
-            )
-
+            clearUnlockState()
             goHome()
-
-            return
         }
-
-        /*
-         * IMPORTANT:
-         *
-         * Do not clear currentUnlockedApp here.
-         * Service needs it to know that this package was
-         * already unlocked.
-         */
-        AppLockServiceHolder
-            .isLockScreenOpen = false
-
-        finish()
     }
 
-    // =========================================================
-    // DESTROY
-    // =========================================================
-
     override fun onDestroy() {
-
-        Log.d(
-            TAG,
-            "LOCK SCREEN DESTROYED"
-        )
-
-        /*
-         * IMPORTANT:
-         *
-         * DO NOT DO:
-         *
-         * AppLockServiceHolder.isLockScreenOpen = false
-         *
-         * here.
-         *
-         * unlockAndOpenApp() already controls the state.
-         * Setting it blindly here can create another lock
-         * screen while AccessibilityService is processing
-         * the foreground change.
-         */
+        Log.d(TAG, "LOCK SCREEN DESTROYED")
 
         releaseCamera()
 
-        biometricPrompt =
-            null
-
-        biometricStarted =
-            false
+        biometricPrompt = null
+        biometricStarted = false
 
         super.onDestroy()
     }
