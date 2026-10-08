@@ -245,8 +245,9 @@
 
 
     <string name="open_with">Open with</string>
-
-
+    <string name="status_enabled">Enabled</string>
+    <string name="status_disabled">Disabled</string>
+    <string name="processing">Disabled</string>
 
 
 </resources>

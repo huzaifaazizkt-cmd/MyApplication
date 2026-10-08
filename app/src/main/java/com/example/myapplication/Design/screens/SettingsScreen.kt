@@ -46,6 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -266,10 +267,13 @@ fun SettingsScreen(
                 text = stringResource(R.string.settings),
                 modifier = Modifier.padding(
                     start = 20.dp,
+                    end = 20.dp,
                     top = 15.dp
                 ),
                 color = Color(0xFF333333),
-                fontSize = 22.sp
+                fontSize = 22.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
             Spacer(
@@ -604,10 +608,13 @@ private fun AppProtectionCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                // FIX: fixed height hata kar min height; lamba text ho to card barh jaye
+                .heightIn(min = 52.dp)
                 .padding(
                     start = 8.dp,
-                    end = 10.dp
+                    end = 10.dp,
+                    top = 6.dp,
+                    bottom = 6.dp
                 ),
 
             verticalAlignment =
@@ -646,18 +653,23 @@ private fun AppProtectionCard(
                     color =
                         Color(0xFF333333),
 
-                    fontSize = 15.sp
+                    fontSize = 15.sp,
+
+                    maxLines = 2,
+
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Spacer(
                     modifier = Modifier.height(1.dp)
                 )
 
+
                 Text(
                     text = if (enabled) {
-                        "Enable"
+                        stringResource(R.string.status_enabled)
                     } else {
-                        "Disable"
+                        stringResource(R.string.status_disabled)
                     },
 
                     color = if (enabled) {
@@ -666,7 +678,11 @@ private fun AppProtectionCard(
                         Color(0xFF999999)
                     },
 
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
+
+                    maxLines = 1,
+
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
@@ -778,10 +794,13 @@ private fun SettingsItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    // FIX: fixed height hata kar min height
+                    .heightIn(min = 52.dp)
                     .padding(
                         start = 8.dp,
-                        end = 10.dp
+                        end = 10.dp,
+                        top = 6.dp,
+                        bottom = 6.dp
                     ),
 
                 verticalAlignment =
@@ -815,7 +834,15 @@ private fun SettingsItem(
                     color =
                         Color(0xFF333333),
 
-                    fontSize = 15.sp
+                    fontSize = 15.sp,
+
+                    maxLines = 2,
+
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(
+                    modifier = Modifier.width(8.dp)
                 )
 
                 Image(
@@ -951,6 +978,10 @@ private fun HideSettingsExpandedContent(
 
             fontSize = 14.sp,
 
+            maxLines = 3,
+
+            overflow = TextOverflow.Ellipsis,
+
             modifier =
                 Modifier.weight(1f)
         )
@@ -1060,9 +1091,14 @@ private fun LockSettingExpandedContent(
 
             fontSize = 16.sp,
 
+            maxLines = 1,
+
+            overflow = TextOverflow.Ellipsis,
+
             modifier =
                 Modifier.padding(
                     start = 10.dp,
+                    end = 10.dp,
                     top = 6.dp,
                     bottom = 6.dp
                 )
@@ -1147,9 +1183,14 @@ private fun LockSettingExpandedContent(
 
             fontSize = 16.sp,
 
+            maxLines = 1,
+
+            overflow = TextOverflow.Ellipsis,
+
             modifier =
                 Modifier.padding(
                     start = 10.dp,
+                    end = 10.dp,
                     top = 8.dp,
                     bottom = 6.dp
                 )
@@ -1325,7 +1366,11 @@ private fun LockSettingRow(
                 color =
                     Color(0xFF333333),
 
-                fontSize = 14.sp
+                fontSize = 14.sp,
+
+                maxLines = 2,
+
+                overflow = TextOverflow.Ellipsis
             )
 
             if (!subtitle.isNullOrEmpty()) {
@@ -1341,7 +1386,11 @@ private fun LockSettingRow(
                     color =
                         Color(0xFF666666),
 
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
+
+                    maxLines = 2,
+
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -1414,7 +1463,11 @@ private fun LockSettingSwitchRow(
                 color =
                     Color(0xFF333333),
 
-                fontSize = 14.sp
+                fontSize = 14.sp,
+
+                maxLines = 2,
+
+                overflow = TextOverflow.Ellipsis
             )
 
             if (!subtitle.isNullOrEmpty()) {
@@ -1430,7 +1483,11 @@ private fun LockSettingSwitchRow(
                     color =
                         Color(0xFF666666),
 
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
+
+                    maxLines = 2,
+
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -1558,7 +1615,11 @@ private fun SecurityQuestionSettingsDialog(
                         Modifier.fillMaxWidth(),
 
                     textAlign =
-                        TextAlign.Center
+                        TextAlign.Center,
+
+                    maxLines = 2,
+
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Spacer(
@@ -1673,6 +1734,8 @@ private fun SecurityQuestionSettingsDialog(
 
                             maxLines = 1,
 
+                            overflow = TextOverflow.Ellipsis,
+
                             modifier =
                                 Modifier.weight(1f)
                         )
@@ -1739,7 +1802,11 @@ private fun SecurityQuestionSettingsDialog(
 
                                             fontSize = 13.sp,
 
-                                            maxLines = 1,
+                                            // FIX: lamba sawal 2 lines tak
+                                            maxLines = 2,
+
+                                            overflow =
+                                                TextOverflow.Ellipsis,
 
                                             modifier =
                                                 Modifier
@@ -1870,7 +1937,10 @@ private fun SecurityQuestionSettingsDialog(
 
                                         fontSize = 12.sp,
 
-                                        maxLines = 1
+                                        maxLines = 1,
+
+                                        overflow =
+                                            TextOverflow.Ellipsis
                                     )
                                 }
 
@@ -1906,8 +1976,14 @@ private fun SecurityQuestionSettingsDialog(
 
                         fontSize = 16.sp,
 
+                        maxLines = 1,
+
+                        overflow =
+                            TextOverflow.Ellipsis,
+
                         modifier =
                             Modifier
+                                .weight(1f, fill = false)
                                 .clickable(
                                     indication =
                                         ripple(
@@ -1922,14 +1998,14 @@ private fun SecurityQuestionSettingsDialog(
                                     onCancel()
                                 }
                                 .padding(
-                                    horizontal = 20.dp,
+                                    horizontal = 16.dp,
                                     vertical = 10.dp
                                 )
                     )
 
                     Spacer(
                         modifier =
-                            Modifier.width(20.dp)
+                            Modifier.width(8.dp)
                     )
 
                     val saveEnabled =
@@ -1951,8 +2027,14 @@ private fun SecurityQuestionSettingsDialog(
 
                         fontSize = 16.sp,
 
+                        maxLines = 1,
+
+                        overflow =
+                            TextOverflow.Ellipsis,
+
                         modifier =
                             Modifier
+                                .weight(1f, fill = false)
                                 .clickable(
                                     enabled =
                                         saveEnabled,
@@ -1970,7 +2052,7 @@ private fun SecurityQuestionSettingsDialog(
                                     onSave()
                                 }
                                 .padding(
-                                    horizontal = 20.dp,
+                                    horizontal = 16.dp,
                                     vertical = 10.dp
                                 )
                     )
@@ -2083,10 +2165,11 @@ private fun RelockOptionDialog(
             )
     ) {
 
+        // FIX: fixed height (178.dp) hata di, lamba text ho to dialog khud barhe
         Box(
             modifier = Modifier
                 .width(291.dp)
-                .height(178.dp)
+                .wrapContentHeight()
                 .background(
                     Color.White,
                     RoundedCornerShape(12.dp)
@@ -2095,7 +2178,7 @@ private fun RelockOptionDialog(
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(
                         start = 16.dp,
                         end = 16.dp,
@@ -2107,7 +2190,7 @@ private fun RelockOptionDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(22.dp),
+                        .heightIn(min = 22.dp),
 
                     contentAlignment =
                         Alignment.Center
@@ -2122,7 +2205,15 @@ private fun RelockOptionDialog(
                         color =
                             Color(0xFF333333),
 
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+
+                        textAlign =
+                            TextAlign.Center,
+
+                        maxLines = 2,
+
+                        overflow =
+                            TextOverflow.Ellipsis
                     )
                 }
 
@@ -2171,7 +2262,7 @@ private fun RelockOptionDialog(
 
                 Spacer(
                     modifier =
-                        Modifier.weight(1f)
+                        Modifier.height(16.dp)
                 )
 
                 DialogButtons(
@@ -2200,7 +2291,7 @@ private fun RelockOptionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(38.dp)
+            .heightIn(min = 38.dp)
             .clickable {
                 onClick()
             },
@@ -2241,7 +2332,17 @@ private fun RelockOptionRow(
             color =
                 Color(0xFF444444),
 
-            fontSize = 13.sp
+            fontSize = 13.sp,
+
+            maxLines = 2,
+
+            overflow =
+                TextOverflow.Ellipsis,
+
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .padding(vertical = 4.dp)
         )
     }
 }
@@ -2279,10 +2380,11 @@ private fun DelayToRelockDialog(
             )
     ) {
 
+        // FIX: fixed height (360.dp) hata di
         Box(
             modifier = Modifier
                 .width(291.dp)
-                .height(360.dp)
+                .wrapContentHeight()
                 .background(
                     Color.White,
                     RoundedCornerShape(12.dp)
@@ -2291,7 +2393,7 @@ private fun DelayToRelockDialog(
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(
                         start = 16.dp,
                         end = 16.dp,
@@ -2303,7 +2405,7 @@ private fun DelayToRelockDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(22.dp),
+                        .heightIn(min = 22.dp),
 
                     contentAlignment =
                         Alignment.Center
@@ -2318,7 +2420,15 @@ private fun DelayToRelockDialog(
                         color =
                             Color(0xFF333333),
 
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+
+                        textAlign =
+                            TextAlign.Center,
+
+                        maxLines = 2,
+
+                        overflow =
+                            TextOverflow.Ellipsis
                     )
                 }
 
@@ -2349,7 +2459,7 @@ private fun DelayToRelockDialog(
 
                 Spacer(
                     modifier =
-                        Modifier.weight(1f)
+                        Modifier.height(16.dp)
                 )
 
                 DialogButtons(
@@ -2378,7 +2488,7 @@ private fun DelayOptionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(38.dp)
+            .heightIn(min = 38.dp)
             .clickable {
                 onClick()
             },
@@ -2419,7 +2529,17 @@ private fun DelayOptionRow(
             color =
                 Color(0xFF444444),
 
-            fontSize = 13.sp
+            fontSize = 13.sp,
+
+            maxLines = 2,
+
+            overflow =
+                TextOverflow.Ellipsis,
+
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .padding(vertical = 4.dp)
         )
     }
 }
@@ -2456,8 +2576,14 @@ private fun DialogButtons(
 
             fontSize = 14.sp,
 
+            maxLines = 1,
+
+            overflow =
+                TextOverflow.Ellipsis,
+
             modifier =
                 Modifier
+                    .weight(1f, fill = false)
                     .clickable {
                         onCancel()
                     }
@@ -2483,8 +2609,14 @@ private fun DialogButtons(
 
             fontSize = 14.sp,
 
+            maxLines = 1,
+
+            overflow =
+                TextOverflow.Ellipsis,
+
             modifier =
                 Modifier
+                    .weight(1f, fill = false)
                     .clickable {
                         onConfirm()
                     }

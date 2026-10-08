@@ -1,4 +1,3 @@
-
 package com.example.myapplication.Design.screens
 
 import android.content.Context
@@ -84,28 +83,47 @@ fun LanguagesScreen(
         LanguageItem(name = "Arabic", flagRes = R.drawable.sudia, code = "ar")
     )
 
-    val savedLanguageCode by dataStoreManager.getLanguage().collectAsState(initial = null)
-    var selectedLanguageCode by remember { mutableStateOf<String?>(null) }
+    val savedLanguageCode by dataStoreManager
+        .getLanguage()
+        .collectAsState(initial = null)
+
+    var selectedLanguageCode by remember {
+        mutableStateOf<String?>(null)
+    }
 
     LaunchedEffect(savedLanguageCode, setupMode) {
         Log.d(TAG, "Saved language changed = $savedLanguageCode")
 
         if (savedLanguageCode != null && !setupMode) {
             selectedLanguageCode = savedLanguageCode
-            Log.d(TAG, "Existing language selected = $savedLanguageCode")
+            Log.d(
+                TAG,
+                "Existing language selected = $savedLanguageCode"
+            )
         } else if (setupMode) {
-            Log.d(TAG, "Setup mode active - no language preselected")
+            Log.d(
+                TAG,
+                "Setup mode active - no language preselected"
+            )
         }
     }
 
     val scrollState = rememberScrollState()
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFFF7F7F7))
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF7F7F7))
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+
             Box(
-                modifier = Modifier.fillMaxWidth().statusBarsPadding().height(90.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .height(90.dp)
             ) {
                 if (onBackClick != null) {
                     Icon(
@@ -113,13 +131,21 @@ fun LanguagesScreen(
                         contentDescription = stringResource(R.string.back),
                         tint = Color(0xFF444444),
                         modifier = Modifier
-                            .padding(start = 18.dp, top = 34.5.dp)
+                            .padding(
+                                start = 18.dp,
+                                top = 34.5.dp
+                            )
                             .size(25.dp)
                             .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
+                                interactionSource = remember {
+                                    MutableInteractionSource()
+                                },
                                 indication = ripple(bounded = true)
                             ) {
-                                Log.d(TAG, "Back button clicked")
+                                Log.d(
+                                    TAG,
+                                    "Back button clicked"
+                                )
                                 onBackClick()
                             }
                     )
@@ -139,16 +165,25 @@ fun LanguagesScreen(
                     .fillMaxWidth()
                     .weight(1f)
                     .verticalScroll(scrollState)
-                    .padding(start = 14.dp, end = 14.dp, bottom = 20.dp),
+                    .padding(
+                        start = 14.dp,
+                        end = 14.dp,
+                        bottom = 20.dp
+                    ),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 languages.forEach { language ->
+
                     LanguageCard(
                         language = language,
                         selected = selectedLanguageCode == language.code,
                         onClick = {
                             selectedLanguageCode = language.code
-                            Log.d(TAG, "Language selected: ${language.name} (${language.code})")
+
+                            Log.d(
+                                TAG,
+                                "Language selected: ${language.name} (${language.code})"
+                            )
                         }
                     )
                 }
@@ -156,46 +191,134 @@ fun LanguagesScreen(
 
             Button(
                 onClick = {
-                    Log.d(TAG, "SELECT button clicked")
-                    Log.d(TAG, "Current selectedLanguageCode = $selectedLanguageCode")
+                    Log.d(
+                        TAG,
+                        "SELECT button clicked"
+                    )
 
-                    val selectedItem = languages.firstOrNull { it.code == selectedLanguageCode }
+                    Log.d(
+                        TAG,
+                        "Current selectedLanguageCode = $selectedLanguageCode"
+                    )
+
+                    val selectedItem =
+                        languages.firstOrNull {
+                            it.code == selectedLanguageCode
+                        }
 
                     if (selectedItem == null) {
-                        Log.d(TAG, "No language selected - showing toast")
+                        Log.d(
+                            TAG,
+                            "No language selected - showing toast"
+                        )
+
                         showLanguageSelectionToast(context)
+
                         return@Button
                     }
 
-                    Log.d(TAG, "Selected item = ${selectedItem.name}")
-                    Log.d(TAG, "Selected language code = ${selectedItem.code}")
+                    Log.d(
+                        TAG,
+                        "Selected item = ${selectedItem.name}"
+                    )
+
+                    Log.d(
+                        TAG,
+                        "Selected language code = ${selectedItem.code}"
+                    )
 
                     scope.launch {
                         try {
-                            Log.d(TAG, "Saving language to DataStore...")
-                            dataStoreManager.saveLanguage(selectedItem.code)
-                            Log.d(TAG, "Language saved successfully: ${selectedItem.code}")
 
+                            Log.d(
+                                TAG,
+                                "Saving language to DataStore..."
+                            )
+
+                            dataStoreManager.saveLanguage(
+                                selectedItem.code
+                            )
+
+                            Log.d(
+                                TAG,
+                                "Language saved successfully: ${selectedItem.code}"
+                            )
+
+                            /*
+                             * IMPORTANT:
+                             *
+                             * Language ko Settings mode mein bhi
+                             * pehle apply karna zaroori hai.
+                             *
+                             * Pehle code mein Settings mode ke andar
+                             * yahan se return ho raha tha aur
+                             * AppLanguageManager.setLanguage()
+                             * call nahi hota tha.
+                             */
+                            Log.d(
+                                TAG,
+                                "Calling AppLanguageManager.setLanguage()..."
+                            )
+
+                            AppLanguageManager.setLanguage(
+                                selectedItem.code
+                            )
+
+                            Log.d(
+                                TAG,
+                                "AppLanguageManager.setLanguage() completed"
+                            )
+
+                            /*
+                             * Settings se language change hui hai.
+                             * Language apply hone ke baad direct
+                             * Settings screen par wapas jayenge.
+                             */
                             if (!setupMode) {
-                                Log.d(TAG, "SETTINGS MODE")
-                                Log.d(TAG, "Returning immediately to Settings screen")
+
+                                Log.d(
+                                    TAG,
+                                    "SETTINGS MODE"
+                                )
+
+                                Log.d(
+                                    TAG,
+                                    "Language changed, returning to Settings screen"
+                                )
+
                                 onBackClick?.invoke()
+
                                 return@launch
                             }
 
-                            Log.d(TAG, "SETUP MODE")
-                            Log.d(TAG, "Calling AppLanguageManager.setLanguage()...")
+                            /*
+                             * Setup mode ka existing flow
+                             * bilkul same rakha gaya hai.
+                             */
+                            Log.d(
+                                TAG,
+                                "SETUP MODE"
+                            )
 
-                            AppLanguageManager.setLanguage(selectedItem.code)
-
-                            Log.d(TAG, "AppLanguageManager.setLanguage() completed")
-                            Log.d(TAG, "Calling onLanguageSelected()...")
+                            Log.d(
+                                TAG,
+                                "Calling onLanguageSelected()..."
+                            )
 
                             onLanguageSelected?.invoke()
 
-                            Log.d(TAG, "Setup flow continued")
+                            Log.d(
+                                TAG,
+                                "Setup flow continued"
+                            )
+
                         } catch (e: Exception) {
-                            Log.e(TAG, "LANGUAGE SAVE/CHANGE ERROR", e)
+
+                            Log.e(
+                                TAG,
+                                "LANGUAGE SAVE/CHANGE ERROR",
+                                e
+                            )
                         }
                     }
                 },
@@ -203,7 +326,11 @@ fun LanguagesScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(start = 14.dp, end = 14.dp, bottom = 10.dp)
+                    .padding(
+                        start = 14.dp,
+                        end = 14.dp,
+                        bottom = 10.dp
+                    )
                     .height(51.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -254,15 +381,25 @@ private fun LanguageCard(
                 }
             )
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = remember {
+                    MutableInteractionSource()
+                },
                 indication = ripple(bounded = true)
             ) {
-                Log.d(TAG, "Language card clicked: ${language.name} (${language.code})")
+                Log.d(
+                    TAG,
+                    "Language card clicked: ${language.name} (${language.code})"
+                )
+
                 onClick()
             },
         shape = cardShape,
         colors = CardDefaults.cardColors(
-            containerColor = if (selected) Color(0xFFF8FCFF) else Color.White
+            containerColor = if (selected) {
+                Color(0xFFF8FCFF)
+            } else {
+                Color.White
+            }
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp,
@@ -273,30 +410,53 @@ private fun LanguageCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(58.dp)
-                .padding(start = 12.dp, end = 10.dp),
+                .padding(
+                    start = 12.dp,
+                    end = 10.dp
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
+
             Image(
-                painter = painterResource(id = language.flagRes),
+                painter = painterResource(
+                    id = language.flagRes
+                ),
                 contentDescription = language.name,
-                modifier = Modifier.size(width = 32.dp, height = 32.dp),
+                modifier = Modifier.size(
+                    width = 32.dp,
+                    height = 32.dp
+                ),
                 contentScale = ContentScale.Fit
             )
 
-            Spacer(modifier = Modifier.width(18.dp))
+            Spacer(
+                modifier = Modifier.width(18.dp)
+            )
 
             Text(
                 text = language.name,
                 modifier = Modifier.weight(1f),
-                color = if (selected) Color(0xFF0396FF) else Color(0xFF555555),
+                color = if (selected) {
+                    Color(0xFF0396FF)
+                } else {
+                    Color(0xFF555555)
+                },
                 fontSize = 15.sp,
-                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
+                fontWeight = if (selected) {
+                    FontWeight.Medium
+                } else {
+                    FontWeight.Normal
+                }
             )
 
             RadioButton(
                 selected = selected,
                 onClick = {
-                    Log.d(TAG, "RadioButton clicked: ${language.name} (${language.code})")
+                    Log.d(
+                        TAG,
+                        "RadioButton clicked: ${language.name} (${language.code})"
+                    )
+
                     onClick()
                 },
                 modifier = Modifier.size(30.dp),
@@ -309,33 +469,58 @@ private fun LanguageCard(
     }
 }
 
-private fun showLanguageSelectionToast(context: Context) {
-    Log.d(TAG, "Showing language selection warning toast")
+private fun showLanguageSelectionToast(
+    context: Context
+) {
+    Log.d(
+        TAG,
+        "Showing language selection warning toast"
+    )
 
     val textView = TextView(context)
-    textView.text = "Don't select your language\nPlease select your language"
-    textView.setTextColor(AndroidColor.rgb(92, 92, 92))
+
+    textView.text =
+        "Don't select your language\nPlease select your language"
+
+    textView.setTextColor(
+        AndroidColor.rgb(92, 92, 92)
+    )
+
     textView.textSize = 14f
     textView.gravity = Gravity.CENTER
-    textView.setPadding(28, 16, 28, 16)
+    textView.setPadding(
+        28,
+        16,
+        28,
+        16
+    )
 
     val background = GradientDrawable()
-    background.setColor(AndroidColor.WHITE)
+
+    background.setColor(
+        AndroidColor.WHITE
+    )
+
     background.cornerRadius = 18f
 
     textView.background = background
     textView.elevation = 6f
 
     val toast = Toast(context)
+
     toast.view = textView
     toast.duration = Toast.LENGTH_SHORT
+
     toast.setGravity(
         Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL,
         0,
         90
     )
+
     toast.show()
 
-    Log.d(TAG, "Language warning toast shown")
+    Log.d(
+        TAG,
+        "Language warning toast shown"
+    )
 }
-

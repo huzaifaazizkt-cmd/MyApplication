@@ -1,4 +1,3 @@
-
 package com.example.myapplication.Design.screens
 
 import androidx.compose.foundation.Canvas
@@ -23,6 +22,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.Design.components.NumberPad
@@ -79,7 +80,11 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                                 else -> stringResource(R.string.four_digit_pin)
                             },
                             color = Color.White,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            // FIX: lamba text ek line me, end me "..."
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.widthIn(max = 240.dp)
                         )
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowDown,
@@ -94,7 +99,13 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         onDismissRequest = { expanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.four_digit_pin)) },
+                            text = {
+                                Text(
+                                    text = stringResource(R.string.four_digit_pin),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
                             onClick = {
                                 authType = "4"
                                 pinLength = 4
@@ -104,7 +115,13 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.six_digit_pin)) },
+                            text = {
+                                Text(
+                                    text = stringResource(R.string.six_digit_pin),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
                             onClick = {
                                 authType = "6"
                                 pinLength = 6
@@ -114,7 +131,13 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.pattern)) },
+                            text = {
+                                Text(
+                                    text = stringResource(R.string.pattern),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
                             onClick = {
                                 authType = "pattern"
                                 pin = ""
@@ -174,7 +197,11 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         Text(
                             text = stringResource(R.string.create_pin, pinLength),
                             color = Color.White,
-                            fontSize = 18.sp
+                            fontSize = 18.sp,
+                            // FIX: lamba title 2 lines tak, center me
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
 
                         Spacer(modifier = Modifier.height(14.dp))
@@ -212,7 +239,10 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         Text(
                             text = stringResource(R.string.create_pattern),
                             color = Color.White,
-                            fontSize = 18.sp
+                            fontSize = 18.sp,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -220,7 +250,10 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         Text(
                             text = stringResource(R.string.connect_four_dots),
                             color = Color.White.copy(alpha = 0.85f),
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
 
                         Spacer(modifier = Modifier.height(20.dp))
@@ -248,7 +281,8 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.End),
+                // FIX: spacing 30 se 12 kiya taake lamba text ko jagah mile
+                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -257,7 +291,11 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         if (isPattern) selectedDots.isEmpty() else pin.isEmpty()
                     ) Color.White.copy(alpha = 0.35f) else Color.White,
                     fontSize = 20.sp,
+                    // FIX: ek line + "..."; weight se dono ko jagah milti hai
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
+                        .weight(1f, fill = false)
                         .clickable(
                             enabled = if (isPattern) selectedDots.isNotEmpty() else pin.isNotEmpty(),
                             indication = null,
@@ -274,7 +312,10 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         if (isPattern) selectedDots.size >= 4 else pin.length == pinLength
                     ) Color.White else Color.White.copy(alpha = 0.35f),
                     fontSize = 20.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
+                        .weight(1f, fill = false)
                         .clickable(
                             enabled = if (isPattern) selectedDots.size >= 4 else pin.length == pinLength,
                             indication = null,
@@ -415,4 +456,3 @@ private fun findDot(touch: Offset, width: Float, height: Float): Int? {
 
     return null
 }
-

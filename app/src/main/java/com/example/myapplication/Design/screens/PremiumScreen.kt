@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,8 +44,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -210,35 +215,33 @@ fun PremiumScreen(
                     )
                 )
 
+                // TITLE
+                // FIX: pehle 2 alag Text ek Row me the, lamba text toot jata tha.
+                // Ab ek hi Text hai (do rang ke saath), jo khud sahi tarah wrap hota hai.
+                val unlockText = stringResource(R.string.premium_unlock)
+                val allFeaturesText = stringResource(R.string.premium_all_features)
+
+                val titleText = buildAnnotatedString {
+                    withStyle(SpanStyle(color = darkText)) {
+                        append(unlockText)
+                    }
+                    append(" ")
+                    withStyle(SpanStyle(color = blueColor)) {
+                        append(allFeaturesText)
+                    }
+                }
+
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(
-                                R.string.premium_unlock
-                            ),
-                            color = darkText,
-                            fontSize = titleSize,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Spacer(modifier = Modifier.width(6.dp))
-
-                        Text(
-                            text = stringResource(
-                                R.string.premium_all_features
-                            ),
-                            color = blueColor,
-                            fontSize = titleSize,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Text(
+                        text = titleText,
+                        fontSize = titleSize,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
                     Text(
                         text = stringResource(
@@ -247,7 +250,8 @@ fun PremiumScreen(
                         color = darkText,
                         fontSize = titleSize,
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
@@ -366,6 +370,7 @@ fun PremiumScreen(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .offset(x = (-40).dp)
+                            .widthIn(max = 120.dp)
                             .height(17.dp)
                             .background(
                                 color = blueColor,
@@ -383,7 +388,8 @@ fun PremiumScreen(
                             color = Color.White,
                             fontSize = 8.sp,
                             fontWeight = FontWeight.Medium,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -436,7 +442,8 @@ fun PremiumScreen(
                                 color = darkText,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
-                                maxLines = 2
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
 
                             Spacer(modifier = Modifier.height(2.dp))
@@ -447,14 +454,17 @@ fun PremiumScreen(
                                 ),
                                 color = Color(0xFF888888),
                                 fontSize = 12.sp,
-                                maxLines = 2
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
 
                         // PRICE
+                        // FIX: width limit, taake lamba text plan details ko na dabaye
                         Column(
+                            modifier = Modifier.widthIn(max = 90.dp),
                             horizontalAlignment = Alignment.End
                         ) {
                             Text(
@@ -474,6 +484,7 @@ fun PremiumScreen(
                                 color = Color(0xFF888888),
                                 fontSize = 11.sp,
                                 maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
                                 textAlign = TextAlign.End
                             )
                         }
@@ -510,7 +521,10 @@ fun PremiumScreen(
                         ),
                         color = Color(0xFF777777),
                         fontSize = 10.sp,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                 }
 
@@ -539,6 +553,7 @@ fun PremiumScreen(
                             }
                         }
                         .padding(
+                            horizontal = 12.dp,
                             vertical = 8.dp
                         ),
                     contentAlignment = Alignment.Center
@@ -551,7 +566,8 @@ fun PremiumScreen(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-                        maxLines = 2
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -562,6 +578,7 @@ fun PremiumScreen(
                 )
 
                 // TERMS + PRIVACY
+                // FIX: dono ko weight, taake ek doosre ko na dhakelen
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -574,8 +591,14 @@ fun PremiumScreen(
                         color = Color(0xFF555555),
                         fontSize = 10.sp,
                         maxLines = 1,
-                        modifier = Modifier.clickable {}
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {}
                     )
+
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Text(
                         text = stringResource(
@@ -584,7 +607,11 @@ fun PremiumScreen(
                         color = Color(0xFF555555),
                         fontSize = 10.sp,
                         maxLines = 1,
-                        modifier = Modifier.clickable {}
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {}
                     )
                 }
 
@@ -633,6 +660,7 @@ private fun PremiumBenefitRow(
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
     }

@@ -1,4 +1,3 @@
-
 package com.example.myapplication.Design.screens
 
 import android.Manifest
@@ -1439,8 +1438,13 @@ private fun VaultProcessingOverlay() {
 
 
             Text(
-                text = "Processing...",
+                text =
+                    stringResource(
+                        R.string.processing
+                    ),
+
                 color = Color.White,
+
                 fontSize = 16.sp
             )
         }
@@ -2796,9 +2800,6 @@ private fun VaultGalleryScreen(
 
             /* ============================================================
                MEDIA GRID
-
-               IMPORTANT:
-               Dropdown is NOT inside this Column.
                ============================================================ */
 
             LazyVerticalGrid(
@@ -3023,14 +3024,6 @@ private fun VaultGalleryScreen(
 
         /* ================================================================
            ALBUM DROPDOWN OVERLAY
-
-           THIS IS THE IMPORTANT FIX.
-
-           Dropdown is a sibling of the main Column.
-           It is drawn ON TOP of the grid.
-
-           It does not consume layout height.
-           Therefore images do NOT move down.
            ================================================================ */
 
         if (albumDropdownOpen) {
@@ -4066,4 +4059,3 @@ private fun getOriginalUriFromVaultItem(
 
     return media.uri
 }
-

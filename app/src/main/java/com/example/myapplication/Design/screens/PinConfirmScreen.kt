@@ -41,6 +41,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -358,7 +359,11 @@ fun PinConfirmScreen(
                 Text(
                     text = if (isPattern) stringResource(R.string.confirm_pattern) else stringResource(R.string.confirm_passcode),
                     color = Color.White,
-                    fontSize = 25.sp
+                    fontSize = 25.sp,
+                    // FIX: lamba title 2 lines tak, center me
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.height(28.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -384,10 +389,26 @@ fun PinConfirmScreen(
                 Spacer(Modifier.height(65.dp))
 
                 if (isPattern) {
-                    Text(text = stringResource(R.string.draw_pattern_again), color = Color.White, fontSize = 18.sp)
+                    Text(
+                        text = stringResource(R.string.draw_pattern_again),
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                     Spacer(Modifier.height(18.dp))
                     Box(modifier = Modifier.fillMaxWidth().height(24.dp), contentAlignment = Alignment.Center) {
-                        if (error.isNotEmpty()) Text(text = error, color = Color.Red, fontSize = 15.sp)
+                        if (error.isNotEmpty()) {
+                            Text(
+                                text = error,
+                                color = Color.Red,
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                     Spacer(Modifier.height(38.dp))
                     ConfirmPatternGrid(
@@ -432,7 +453,9 @@ fun PinConfirmScreen(
                             text = stringResource(R.string.continue_text),
                             color = if (patternConfirmed) Color.White else Color.White.copy(alpha = 0.35f),
                             fontSize = 20.sp,
-                            modifier = Modifier.clickable(
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false).clickable(
                                 enabled = patternConfirmed,
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
@@ -440,7 +463,14 @@ fun PinConfirmScreen(
                         )
                     }
                 } else {
-                    Text(text = stringResource(R.string.confirm_passcode), color = Color.White, fontSize = 18.sp)
+                    Text(
+                        text = stringResource(R.string.confirm_passcode),
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                     Spacer(Modifier.height(18.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                         repeat(pinLength) { index ->
@@ -458,7 +488,14 @@ fun PinConfirmScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         if (error.isNotEmpty()) {
-                            Text(text = error, color = Color.Red, fontSize = 16.sp, textAlign = TextAlign.Center)
+                            Text(
+                                text = error,
+                                color = Color.Red,
+                                fontSize = 16.sp,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                     Spacer(Modifier.height(50.dp))
@@ -480,13 +517,16 @@ fun PinConfirmScreen(
                     Spacer(Modifier.height(55.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(end = 30.dp),
-                        horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.End)
+                        // FIX: spacing 30 se 12 kiya
+                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)
                     ) {
                         Text(
                             text = stringResource(R.string.reset),
                             color = if (confirmPin.isEmpty()) Color.White.copy(alpha = 0.35f) else Color.White,
                             fontSize = 20.sp,
-                            modifier = Modifier.clickable(
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false).clickable(
                                 enabled = confirmPin.isNotEmpty(),
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
@@ -499,7 +539,9 @@ fun PinConfirmScreen(
                             text = stringResource(R.string.continue_text),
                             color = if (confirmPin.length == pinLength) Color.White else Color.White.copy(alpha = 0.35f),
                             fontSize = 20.sp,
-                            modifier = Modifier.clickable(
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false).clickable(
                                 enabled = confirmPin.length == pinLength,
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
@@ -615,7 +657,9 @@ private fun PermissionRequiredDialog(
                     color = Color(0xFF333333),
                     fontSize = 20.sp,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 if (autoStartAvailable) {
                     PermissionRow(
@@ -693,11 +737,12 @@ private fun PermissionRow(
             Spacer(modifier = Modifier.height(5.dp))
             Text(text = description, color = Color(0xFFBDBDBD), fontSize = 13.sp, lineHeight = 18.sp)
         }
+        // FIX: button ki width fixed 72.dp thi; ab text ke hisaab se barhegi (max 100.dp)
         Box(
-            modifier = Modifier.width(72.dp).heightIn(min = 40.dp).background(
+            modifier = Modifier.widthIn(min = 72.dp, max = 100.dp).heightIn(min = 40.dp).background(
                 if (allowed) Color(0xFF4CAF50) else Color(0xFF2196F3),
                 RoundedCornerShape(4.dp)
-            ).clickable(enabled = !allowed) { if (!allowed) onAllow() },
+            ).clickable(enabled = !allowed) { if (!allowed) onAllow() }.padding(horizontal = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -705,7 +750,8 @@ private fun PermissionRow(
                 color = Color.White,
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center,
-                maxLines = 2
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -761,7 +807,9 @@ private fun SecurityQuestionDialog(
                     color = Color(0xFF333333),
                     fontSize = 19.sp,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -791,6 +839,7 @@ private fun SecurityQuestionDialog(
                             color = if (selectedQuestion.isEmpty()) Color(0xFFBDBDBD) else Color(0xFF333333),
                             fontSize = 14.sp,
                             maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
                         )
                         if (!questionLocked) {
@@ -816,7 +865,9 @@ private fun SecurityQuestionDialog(
                                         text = question,
                                         color = Color(0xFF333333),
                                         fontSize = 13.sp,
-                                        maxLines = 1,
+                                        // FIX: lamba sawal 2 lines tak
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier.fillMaxWidth().clickable(
                                             indication = null,
                                             interactionSource = remember { MutableInteractionSource() }
@@ -842,7 +893,13 @@ private fun SecurityQuestionDialog(
                     decorationBox = { innerTextField ->
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
                             if (answer.isEmpty()) {
-                                Text(text = stringResource(R.string.enter_your_answer), color = Color(0xFFBDBDBD), fontSize = 12.sp)
+                                Text(
+                                    text = stringResource(R.string.enter_your_answer),
+                                    color = Color(0xFFBDBDBD),
+                                    fontSize = 12.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                             innerTextField()
                         }
@@ -863,23 +920,27 @@ private fun SecurityQuestionDialog(
                             text = stringResource(R.string.skip),
                             color = Color(0xFF2196F3),
                             fontSize = 16.sp,
-                            modifier = Modifier.clickable(
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false).clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
-                            ) { onSkip() }.padding(horizontal = 20.dp, vertical = 10.dp)
+                            ) { onSkip() }.padding(horizontal = 16.dp, vertical = 10.dp)
                         )
-                        Spacer(Modifier.width(20.dp))
+                        Spacer(Modifier.width(8.dp))
                     }
                     val saveEnabled = selectedQuestion.isNotEmpty() && answer.trim().isNotEmpty()
                     Text(
                         text = stringResource(R.string.save),
                         color = if (saveEnabled) Color(0xFF2196F3) else Color(0xFF90CAF9),
                         fontSize = 16.sp,
-                        modifier = Modifier.clickable(
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false).clickable(
                             enabled = saveEnabled,
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
-                        ) { onSave() }.padding(horizontal = 20.dp, vertical = 10.dp)
+                        ) { onSave() }.padding(horizontal = 16.dp, vertical = 10.dp)
                     )
                 }
             }
