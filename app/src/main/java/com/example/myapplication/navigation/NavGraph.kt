@@ -1,3 +1,4 @@
+
 package com.example.myapplication.navigation
 
 import android.content.Context
@@ -68,7 +69,6 @@ fun NavGraph(
                         launchSingleTop = true
                     }
                 },
-
                 onForgotPasswordSuccess = {
                     navController.navigate("resetCreate") {
                         popUpTo("unlockScreen") {
@@ -76,7 +76,6 @@ fun NavGraph(
                         }
                     }
                 },
-
                 onFingerprintRequest = {}
             )
         }
@@ -90,7 +89,6 @@ fun NavGraph(
         composable("languagesSetup") {
             LanguagesScreen(
                 onBackClick = null,
-
                 onLanguageSelected = {
                     navController.navigate("onboardingScreen") {
                         popUpTo("languagesSetup") {
@@ -117,10 +115,7 @@ fun NavGraph(
             PinCreateScreen(
                 onNext = { type, value ->
                     navController.navigate(
-                        "confirm/" +
-                                Uri.encode(type) +
-                                "/" +
-                                Uri.encode(value)
+                        "confirm/${Uri.encode(type)}/${Uri.encode(value)}"
                     )
                 }
             )
@@ -138,17 +133,13 @@ fun NavGraph(
             )
         ) { backStackEntry ->
 
-            val type =
-                backStackEntry.arguments
-                    ?.getString("type")
-                    ?: "pin"
+            val type = backStackEntry.arguments
+                ?.getString("type") ?: "pin"
 
-            val value =
-                Uri.decode(
-                    backStackEntry.arguments
-                        ?.getString("value")
-                        ?: ""
-                )
+            val value = Uri.decode(
+                backStackEntry.arguments
+                    ?.getString("value") ?: ""
+            )
 
             PinConfirmScreen(
                 navController = navController,
@@ -160,16 +151,15 @@ fun NavGraph(
             )
         }
 
-
+        // Incomplete setup ke liye dedicated permission screen.
+        // Yahan PIN/Pattern confirmation UI nahi dikhai jayegi.
         composable("permissionGate") {
 
             val pendingType =
-                AppPermissionFlow.getPendingType(appContext)
-                    ?: "pin"
+                AppPermissionFlow.getPendingType(appContext) ?: "pin"
 
             val pendingValue =
-                AppPermissionFlow.getPendingValue(appContext)
-                    ?: ""
+                AppPermissionFlow.getPendingValue(appContext) ?: ""
 
             PinConfirmScreen(
                 navController = navController,
@@ -185,10 +175,7 @@ fun NavGraph(
             PinCreateScreen(
                 onNext = { type, value ->
                     navController.navigate(
-                        "resetConfirm/" +
-                                Uri.encode(type) +
-                                "/" +
-                                Uri.encode(value)
+                        "resetConfirm/${Uri.encode(type)}/${Uri.encode(value)}"
                     )
                 }
             )
@@ -206,17 +193,13 @@ fun NavGraph(
             )
         ) { backStackEntry ->
 
-            val type =
-                backStackEntry.arguments
-                    ?.getString("type")
-                    ?: "pin"
+            val type = backStackEntry.arguments
+                ?.getString("type") ?: "pin"
 
-            val value =
-                Uri.decode(
-                    backStackEntry.arguments
-                        ?.getString("value")
-                        ?: ""
-                )
+            val value = Uri.decode(
+                backStackEntry.arguments
+                    ?.getString("value") ?: ""
+            )
 
             PinConfirmScreen(
                 navController = navController,
@@ -250,10 +233,7 @@ fun NavGraph(
                 onIntruderClick = {
                     currentEntry
                         ?.savedStateHandle
-                        ?.set(
-                            "returnToSettings",
-                            true
-                        )
+                        ?.set("returnToSettings", true)
 
                     navController.navigate("intruder")
                 },
@@ -261,10 +241,7 @@ fun NavGraph(
                 onLanguageClick = {
                     currentEntry
                         ?.savedStateHandle
-                        ?.set(
-                            "returnToSettings",
-                            true
-                        )
+                        ?.set("returnToSettings", true)
 
                     navController.navigate("languages")
                 },
@@ -274,7 +251,6 @@ fun NavGraph(
                 },
 
                 openSettings = openSettings,
-
                 navController = navController
             )
         }

@@ -79,7 +79,7 @@ fun LanguagesScreen(
         LanguageItem(name = "Korean", flagRes = R.drawable.korean, code = "ko"),
         LanguageItem(name = "Indonesia", flagRes = R.drawable.indonesia, code = "id"),
         LanguageItem(name = "India", flagRes = R.drawable.india, code = "hi"),
-        LanguageItem(name = "Norway", flagRes = R.drawable.norway, code = "no"),
+        LanguageItem(name = "Norway", flagRes = R.drawable.norway, code = "se"),
         LanguageItem(name = "Arabic", flagRes = R.drawable.sudia, code = "ar")
     )
 

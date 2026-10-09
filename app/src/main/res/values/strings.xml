@@ -250,4 +250,7 @@
     <string name="processing">Disabled</string>
 
 
+    <string name="background_popup">Pop-up in background</string>
+    <string name="background_popup_description">Allow lock screen to appear while other apps are running in the background</string>
+
 </resources>

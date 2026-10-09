@@ -53,6 +53,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import com.example.myapplication.AppPermissionFlow
+import com.example.myapplication.XiaomiPermissionHelper
 import com.example.myapplication.Design.components.NumberPad
 import com.example.myapplication.R
 import com.example.myapplication.data.DataStoreManager
@@ -88,6 +89,7 @@ fun PinConfirmScreen(
     var isNavigatingToAppList by remember { mutableStateOf(false) }
     var overlayAllowed by remember { mutableStateOf(Settings.canDrawOverlays(context)) }
     var accessibilityAllowed by remember { mutableStateOf(isAccessibilityServiceEnabled(context)) }
+    var popupAccess by remember { mutableStateOf(XiaomiPermissionHelper.backgroundPopupAccess(context)) }
     var autoStartAvailable by remember { mutableStateOf(false) }
     var autoStartAllowed by remember { mutableStateOf(false) }
     var autoStartOpened by remember { mutableStateOf(false) }
@@ -131,9 +133,12 @@ fun PinConfirmScreen(
     fun checkPermissions() {
         overlayAllowed = Settings.canDrawOverlays(context)
         accessibilityAllowed = isAccessibilityServiceEnabled(context)
+        popupAccess = XiaomiPermissionHelper.backgroundPopupAccess(context)
     }
 
-    fun allPermissionsAllowed(): Boolean = overlayAllowed && accessibilityAllowed
+    // Xiaomi par background pop-up permission bhi zaroori hai (baqi devices par automatically true)
+    fun allPermissionsAllowed(): Boolean =
+        overlayAllowed && accessibilityAllowed && popupAccess.satisfied
 
     fun openSecurityQuestion() {
         showPermissionDialog = false
@@ -160,13 +165,15 @@ fun PinConfirmScreen(
             if (event == Lifecycle.Event.ON_RESUME) {
                 val newOverlayAllowed = Settings.canDrawOverlays(context)
                 val newAccessibilityAllowed = isAccessibilityServiceEnabled(context)
+                val newPopupAccess = XiaomiPermissionHelper.backgroundPopupAccess(context)
                 overlayAllowed = newOverlayAllowed
                 accessibilityAllowed = newAccessibilityAllowed
+                popupAccess = newPopupAccess
                 if (currentAutoStartOpened.value) {
                     autoStartAllowed = true
                     autoStartOpened = false
                 }
-                if (currentShowPermissionDialog.value && newOverlayAllowed && newAccessibilityAllowed) {
+                if (currentShowPermissionDialog.value && newOverlayAllowed && newAccessibilityAllowed && newPopupAccess.satisfied) {
                     showPermissionDialog = false
                     openSecurityQuestion()
                 }
@@ -186,8 +193,8 @@ fun PinConfirmScreen(
         }
     }
 
-    LaunchedEffect(overlayAllowed, accessibilityAllowed) {
-        if (showPermissionDialog && overlayAllowed && accessibilityAllowed) {
+    LaunchedEffect(overlayAllowed, accessibilityAllowed, popupAccess) {
+        if (showPermissionDialog && overlayAllowed && accessibilityAllowed && popupAccess.satisfied) {
             showPermissionDialog = false
             openSecurityQuestion()
         }
@@ -295,6 +302,10 @@ fun PinConfirmScreen(
                 }
             }
         }
+    }
+
+    fun openBackgroundPopupPermission() {
+        XiaomiPermissionHelper.openBackgroundPopupSettings(context)
     }
 
     fun openAccessibilitySettings() {
@@ -565,8 +576,11 @@ fun PinConfirmScreen(
                 autoStartAllowed = autoStartAllowed,
                 overlayAllowed = overlayAllowed,
                 accessibilityAllowed = accessibilityAllowed,
+                popupRequired = popupAccess.required,
+                popupAllowed = popupAccess.granted,
                 onAutoStartAllow = { openAutoStartSettings() },
                 onOverlayAllow = { openOverlayPermission() },
+                onPopupAllow = { openBackgroundPopupPermission() },
                 onAccessibilityAllow = { openAccessibilitySettings() },
                 onDone = {}
             )
@@ -621,14 +635,20 @@ fun PinConfirmScreen(
     }
 }
 
+// ============================================================
+// RESPONSIVE PERMISSION DIALOG
+// ============================================================
 @Composable
 private fun PermissionRequiredDialog(
     autoStartAvailable: Boolean,
     autoStartAllowed: Boolean,
     overlayAllowed: Boolean,
     accessibilityAllowed: Boolean,
+    popupRequired: Boolean,
+    popupAllowed: Boolean,
     onAutoStartAllow: () -> Unit,
     onOverlayAllow: () -> Unit,
+    onPopupAllow: () -> Unit,
     onAccessibilityAllow: () -> Unit,
     onDone: () -> Unit
 ) {
@@ -645,22 +665,33 @@ private fun PermissionRequiredDialog(
             dialogWindow?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
             onDispose { dialogWindow?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE) }
         }
-        Box(
-            modifier = Modifier.fillMaxSize().background(Color.Transparent).padding(vertical = 20.dp),
+
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
+            val isCompact = maxWidth < 360.dp
+            val dialogWidth = (maxWidth * 0.92f).coerceAtMost(420.dp)   // tablet pe bhi theek
+            val dialogMaxHeight = maxHeight * 0.85f                      // screen ka 85% tak
+            val hPadding = if (isCompact) 16.dp else 24.dp
+            val titleSize = if (isCompact) 18.sp else 20.sp
+
             Column(
-                modifier = Modifier.fillMaxWidth(0.90f).heightIn(min = 260.dp, max = 560.dp).verticalScroll(rememberScrollState()).background(Color.White, RoundedCornerShape(20.dp)).padding(start = 25.dp, end = 25.dp, top = 24.dp, bottom = 24.dp)
+                modifier = Modifier
+                    .width(dialogWidth)
+                    .heightIn(max = dialogMaxHeight)
+                    .background(Color.White, RoundedCornerShape(20.dp))
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = hPadding, vertical = 22.dp)
             ) {
                 Text(
                     text = stringResource(R.string.permissions_required),
                     color = Color(0xFF333333),
-                    fontSize = 20.sp,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    fontSize = titleSize,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+                    textAlign = TextAlign.Center
                 )
+
                 if (autoStartAvailable) {
                     PermissionRow(
                         icon = {
@@ -674,10 +705,12 @@ private fun PermissionRequiredDialog(
                         title = stringResource(R.string.auto_start),
                         description = stringResource(R.string.keep_applock_running),
                         allowed = autoStartAllowed,
-                        onAllow = onAutoStartAllow
+                        onAllow = onAutoStartAllow,
+                        isCompact = isCompact
                     )
                     PermissionDivider()
                 }
+
                 PermissionRow(
                     icon = {
                         Image(
@@ -690,9 +723,30 @@ private fun PermissionRequiredDialog(
                     title = stringResource(R.string.show_over_other_apps),
                     description = stringResource(R.string.allow_lock_screen),
                     allowed = overlayAllowed,
-                    onAllow = onOverlayAllow
+                    onAllow = onOverlayAllow,
+                    isCompact = isCompact
                 )
                 PermissionDivider()
+
+                // Sirf Xiaomi / Redmi / POCO par nazar aati hai
+                if (popupRequired) {
+                    PermissionRow(
+                        icon = {
+                            Image(
+                                painter = painterResource(R.drawable.group1),
+                                contentDescription = stringResource(R.string.background_popup),
+                                modifier = Modifier.size(20.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        },
+                        title = stringResource(R.string.background_popup),
+                        description = stringResource(R.string.background_popup_description),
+                        allowed = popupAllowed,
+                        onAllow = onPopupAllow,
+                        isCompact = isCompact
+                    )
+                    PermissionDivider()
+                }
                 PermissionRow(
                     icon = {
                         Image(
@@ -705,14 +759,16 @@ private fun PermissionRequiredDialog(
                     title = stringResource(R.string.detect_launched_app),
                     description = stringResource(R.string.detect_launched_description),
                     allowed = accessibilityAllowed,
-                    onAllow = onAccessibilityAllow
+                    onAllow = onAccessibilityAllow,
+                    isCompact = isCompact
                 )
+
                 Text(
                     text = stringResource(R.string.permissions_work_properly),
                     color = Color(0xFFBDBDBD),
                     fontSize = 12.sp,
                     lineHeight = 16.sp,
-                    modifier = Modifier.padding(start = 12.dp, top = 20.dp)
+                    modifier = Modifier.fillMaxWidth().padding(top = 18.dp)
                 )
             }
         }
@@ -725,24 +781,42 @@ private fun PermissionRow(
     title: String,
     description: String,
     allowed: Boolean,
-    onAllow: () -> Unit
+    onAllow: () -> Unit,
+    isCompact: Boolean = false
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(vertical = 8.dp),
-        verticalAlignment = Alignment.Top
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(modifier = Modifier.width(32.dp).padding(top = 4.dp), contentAlignment = Alignment.Center) { icon() }
-        Column(modifier = Modifier.weight(1f).padding(start = 8.dp, end = 8.dp)) {
-            Text(text = title, color = Color(0xFF333333), fontSize = 15.sp, lineHeight = 20.sp)
-            Spacer(modifier = Modifier.height(5.dp))
-            Text(text = description, color = Color(0xFFBDBDBD), fontSize = 13.sp, lineHeight = 18.sp)
+        Box(modifier = Modifier.width(28.dp), contentAlignment = Alignment.Center) { icon() }
+
+        // weight(1f) => button ke baad jo jagah bachi wo text ko mile, text wrap ho kar poora dikhe
+        Column(modifier = Modifier.weight(1f).padding(horizontal = 10.dp)) {
+            Text(
+                text = title,
+                color = Color(0xFF333333),
+                fontSize = if (isCompact) 14.sp else 15.sp,
+                lineHeight = 20.sp
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = description,
+                color = Color(0xFFBDBDBD),
+                fontSize = if (isCompact) 12.sp else 13.sp,
+                lineHeight = 17.sp
+                // maxLines / overflow hata diye, taake text kate nahi
+            )
         }
-        // FIX: button ki width fixed 72.dp thi; ab text ke hisaab se barhegi (max 100.dp)
+
         Box(
-            modifier = Modifier.widthIn(min = 72.dp, max = 100.dp).heightIn(min = 40.dp).background(
-                if (allowed) Color(0xFF4CAF50) else Color(0xFF2196F3),
-                RoundedCornerShape(4.dp)
-            ).clickable(enabled = !allowed) { if (!allowed) onAllow() }.padding(horizontal = 8.dp),
+            modifier = Modifier
+                .defaultMinSize(minWidth = 72.dp, minHeight = 40.dp)   // max width nahi, text ke hisaab se barhe
+                .background(
+                    if (allowed) Color(0xFF4CAF50) else Color(0xFF2196F3),
+                    RoundedCornerShape(4.dp)
+                )
+                .clickable(enabled = !allowed) { onAllow() }
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -750,8 +824,7 @@ private fun PermissionRow(
                 color = Color.White,
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                maxLines = 1
             )
         }
     }
