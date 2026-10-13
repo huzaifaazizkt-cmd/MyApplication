@@ -63,13 +63,13 @@
     <!-- Permissions -->
     <string name="permissions_required">Permissions Required</string>
     <string name="show_over_other_apps">Show Over Other Apps</string>
-    <string name="allow_lock_screen">Allow Lock Screen to show over\nother apps</string>
+    <string name="allow_lock_screen">Allow Lock Screen to show over other apps</string>
     <string name="detect_launched_app">Detect Launched App</string>
-    <string name="detect_launched_description">Permit to detect which app is\nlaunched by granting access to...</string>
+    <string name="detect_launched_description">Permit to detect which app is launched by granting access to…</string>
     <string name="auto_start">Auto Start</string>
     <string name="keep_applock_running">Always Keep AppLock Pro Running</string>
     <string name="allow">Allow</string>
-    <string name="permissions_work_properly">Permissions are required for the application to work\nproperly and efficiently</string>
+    <string name="permissions_work_properly">Permissions are required for the application to work properly and efficiently</string>
 
     <!-- Vault -->
     <string name="photos">Photos</string>
@@ -103,7 +103,7 @@
     <string name="pattern">Pattern</string>
     <string name="create_pin">Create %1$d - Digit pin</string>
     <string name="reset">Reset</string>
-    <string name="continue_text">Continue</string>
+    <string name="continue_text">Confirm</string>
     <string name="create_pattern">Create Pattern</string>
     <string name="connect_four_dots">Connect at least 4 dots</string>
 
@@ -113,15 +113,14 @@
     <string name="draw_pattern_again">Draw pattern again</string>
     <string name="confirm_pin">Confirm %1$d - Digit pin</string>
     <string name="password_not_match">Password does not match. Please try again</string>
-    <string name="enter_correct_password">Enter your correct password</string>
+<!--    <string name="enter_correct_password">Enter your correct password</string>-->
 
     <!-- Permission -->
     <string name="allowed">Allowed</string>
 
     <!-- Security Questions -->
     <string name="security_questions">Security Questions</string>
-    <string name="security_question_description">Set a keyword to Recover your passcode when you\nforget it.</string>
-    <string name="select_security_questions">Select Security Questions</string>
+    <string name="security_question_description">Set a keyword to recover your passcode when you forget it.</string>    <string name="select_security_questions">Select Security Questions</string>
     <string name="select_security_question">Select Security Question</string>
     <string name="enter_security_answer">Enter Security Answer</string>
     <string name="enter_your_answer">Enter your answer</string>
@@ -195,7 +194,7 @@
     <string name="onboarding_quick_secure_access">Quick &amp; Secure Access</string>
     <string name="onboarding_privacy_protected">Your Privacy, Protected</string>
 
-    <string name="onboarding_secure_your_apps_description">Keep your private apps protected with a secure passcode and an extra layer of privacy</string>
+    <string name="onboarding_secure_your_apps_description">keep your apps private with a secure passcode and extra layer of privacy</string>
     <string name="onboarding_quick_secure_access_description">Unlock your protected apps instantly with your passcode or fingerprint</string>
     <string name="onboarding_privacy_protected_description">Choose the apps you want to lock and keep your personal content safe from unwanted access</string>
 
@@ -213,8 +212,8 @@
     <string name="premium_description">One-time payment. Enjoy lifetime access\nwith no recurring charges.</string>
 
     <string name="premium_benefits">Premium Benefits</string>
-    <string name="premium_hide_unlimited">Hide Unlimited photos &amp; videos</string>
-    <string name="premium_intruder_selfie">Intruder selfie</string>
+    <string name="premium_hide_unlimited">Hide Unlimited Photos &amp; Videos</string>
+    <string name="premium_intruder_selfie">Intruder Selfie</string>
     <string name="premium_no_ads">No Ads</string>
     <string name="premium_priority_support">Priority Support</string>
     <string name="premium_best_value">Best Value</string>
@@ -250,7 +249,11 @@
     <string name="processing">Disabled</string>
 
 
-    <string name="background_popup">Pop-up in background</string>
+<!--    <string name="background_popup">Pop-up in background</string>-->
     <string name="background_popup_description">Allow lock screen to appear while other apps are running in the background</string>
-
+    <string name="background_popup">Pop-up in background</string>
+    <string name="enter_correct_password">Enter your correct password</string>
+    <string name="password_reset_success">Password reset successfully</string>
+    <string name="password_reset_failed">Password reset failed</string>
+    <string name="enter_correct_answer">Enter your correct answer</string>
 </resources>

@@ -239,62 +239,21 @@ fun LanguagesScreen(
                                 selectedItem.code
                             )
 
-                            Log.d(
-                                TAG,
-                                "Language saved successfully: ${selectedItem.code}"
-                            )
+                            Log.d(TAG, "Language saved successfully: ${selectedItem.code}")
+                            Log.d(TAG, "Calling AppLanguageManager.setLanguage()...")
+                            AppLanguageManager.setLanguage(selectedItem.code)
+                            Log.d(TAG, "AppLanguageManager.setLanguage() completed")
 
-                            /*
-                             * IMPORTANT:
-                             *
-                             * Language ko Settings mode mein bhi
-                             * pehle apply karna zaroori hai.
-                             *
-                             * Pehle code mein Settings mode ke andar
-                             * yahan se return ho raha tha aur
-                             * AppLanguageManager.setLanguage()
-                             * call nahi hota tha.
-                             */
-                            Log.d(
-                                TAG,
-                                "Calling AppLanguageManager.setLanguage()..."
-                            )
-
-                            AppLanguageManager.setLanguage(
-                                selectedItem.code
-                            )
-
-                            Log.d(
-                                TAG,
-                                "AppLanguageManager.setLanguage() completed"
-                            )
-
-                            /*
-                             * Settings se language change hui hai.
-                             * Language apply hone ke baad direct
-                             * Settings screen par wapas jayenge.
-                             */
                             if (!setupMode) {
+                                Log.d(TAG, "SETTINGS MODE")
 
-                                Log.d(
-                                    TAG,
-                                    "SETTINGS MODE"
-                                )
-
-                                Log.d(
-                                    TAG,
-                                    "Language changed, returning to Settings screen"
-                                )
+                                Log.d(TAG, "Language changed, returning to Settings screen")
 
                                 onBackClick?.invoke()
 
                                 return@launch
                             }
 
-                            /*
-                             * Setup mode ka existing flow
-                             * bilkul same rakha gaya hai.
-                             */
                             Log.d(
                                 TAG,
                                 "SETUP MODE"
@@ -479,8 +438,7 @@ private fun showLanguageSelectionToast(
 
     val textView = TextView(context)
 
-    textView.text =
-        "Don't select your language\nPlease select your language"
+    textView.text = "Select your language first"
 
     textView.setTextColor(
         AndroidColor.rgb(92, 92, 92)

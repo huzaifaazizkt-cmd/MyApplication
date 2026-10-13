@@ -1,4 +1,3 @@
-
 package com.example.myapplication.navigation
 
 import android.content.Context
@@ -7,6 +6,9 @@ import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+
+import androidx.fragment.app.FragmentActivity
 
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,6 +19,7 @@ import androidx.navigation.navArgument
 import com.example.myapplication.AppPermissionFlow
 import com.example.myapplication.Design.screens.ExitScreen
 import com.example.myapplication.Design.screens.HomeScreen
+import com.example.myapplication.Design.screens.IntruderCamera
 import com.example.myapplication.Design.screens.IntruderScreen
 import com.example.myapplication.Design.screens.LanguagesScreen
 import com.example.myapplication.Design.screens.MainScreen
@@ -27,6 +30,7 @@ import com.example.myapplication.Design.screens.PremiumScreen
 import com.example.myapplication.Design.screens.StartScreen
 import com.example.myapplication.Design.screens.UnlockScreen
 import com.example.myapplication.Design.screens.WelcomeScreen
+import com.example.myapplication.Design.screens.showFingerprintPrompt
 import com.example.myapplication.data.DataStoreManager
 
 @Composable
@@ -36,6 +40,15 @@ fun NavGraph(
 ) {
     val appContext = context.applicationContext
     val dataStore = DataStoreManager(appContext)
+
+    // MainActivity AppCompatActivity hai, yani FragmentActivity bhi hai
+    val activity = context as? FragmentActivity
+
+    val intruderCamera = remember(activity) {
+        activity?.let {
+            IntruderCamera(it, DataStoreManager(appContext))
+        }
+    }
 
     val appInitialized by dataStore
         .getAppInitialized()
@@ -76,7 +89,21 @@ fun NavGraph(
                         }
                     }
                 },
-                onFingerprintRequest = {}
+                onFingerprintRequest = {
+                    activity?.let { act ->
+                        showFingerprintPrompt(act) {
+                            navController.navigate("appList") {
+                                popUpTo("unlockScreen") {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                },
+                onIntruderCapture = { _ ->
+                    intruderCamera?.capture()
+                }
             )
         }
 

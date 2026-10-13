@@ -1,6 +1,4 @@
-
 package com.example.myapplication.service
-import com.example.myapplication.service.AppLockServiceHolder
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
@@ -12,15 +10,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
-import android.view.accessibility.AccessibilityWindowInfo
 import android.view.inputmethod.InputMethodManager
+import androidx.core.content.ContextCompat
 import com.example.myapplication.Design.screens.LockScreenActivity
+import com.example.myapplication.R
 import com.example.myapplication.data.DataStoreManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -1070,6 +1071,32 @@ class AppLockService : AccessibilityService() {
         super.onDestroy()
     }
 
+    // App ka rangeen icon notification ke andar dikhane ke liye
+    private fun getAppIconBitmap(): Bitmap? {
+        return try {
+            val drawable =
+                ContextCompat.getDrawable(this, R.drawable.applock)
+                    ?: return null
+
+            val size = 128
+
+            val bitmap = Bitmap.createBitmap(
+                size,
+                size,
+                Bitmap.Config.ARGB_8888
+            )
+
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, size, size)
+            drawable.draw(canvas)
+
+            bitmap
+        } catch (e: Exception) {
+            Log.e(TAG, "APP ICON BITMAP ERROR", e)
+            null
+        }
+    }
+
     private fun startForegroundServiceNotification() {
         try {
             if (
@@ -1109,8 +1136,10 @@ class AppLockService : AccessibilityService() {
                             "AppLock protection is running"
                         )
                         .setSmallIcon(
-                            applicationInfo.icon
+                            R.drawable.ic_notification
                         )
+                        .setLargeIcon(getAppIconBitmap())
+                        .setColor(0xFF2196F3.toInt())
                         .setOngoing(true)
                         .setAutoCancel(false)
                         .setCategory(
@@ -1127,8 +1156,10 @@ class AppLockService : AccessibilityService() {
                             "AppLock protection is running"
                         )
                         .setSmallIcon(
-                            applicationInfo.icon
+                            R.drawable.ic_notification
                         )
+                        .setLargeIcon(getAppIconBitmap())
+                        .setColor(0xFF2196F3.toInt())
                         .setOngoing(true)
                         .setAutoCancel(false)
                         .setCategory(
@@ -1151,6 +1182,8 @@ class AppLockService : AccessibilityService() {
                 )
             }
         } catch (e: Exception) {
+
+
             Log.e(
                 TAG,
                 "FOREGROUND SERVICE ERROR",

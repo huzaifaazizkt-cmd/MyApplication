@@ -7,7 +7,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.DropdownMenu
@@ -15,7 +17,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -43,227 +44,253 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
     val backgroundColor = Color(0xFF189FFF)
     val patternDotColor = Color(0xFF83CCFF)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-    ) {
-        Column(
+    LimitFontScale {
+
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 26.dp, end = 26.dp, top = 18.dp, bottom = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(backgroundColor)
+                .statusBarsPadding()
+                .navigationBarsPadding()
         ) {
-            Row(
+            // ---------- Responsive values ----------
+            val isCompact = maxHeight < 640.dp || maxWidth < 360.dp
+
+            val sidePadding = if (isCompact) 20.dp else 26.dp
+            val titleSize = if (isCompact) 16.sp else 18.sp
+            val subTitleSize = if (isCompact) 13.sp else 14.sp
+            val actionSize = if (isCompact) 17.sp else 20.sp
+            val stepLineWidth = if (isCompact) 70.dp else 100.dp
+
+            val gridSize = minOf(
+                maxWidth - sidePadding * 2,
+                maxHeight * 0.42f,
+                330.dp
+            ).coerceAtLeast(200.dp)
+
+            Column(
                 modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .widthIn(max = 480.dp)
                     .fillMaxWidth()
-                    .height(35.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxHeight()
+                    .padding(
+                        start = sidePadding,
+                        end = sidePadding,
+                        top = if (isCompact) 10.dp else 18.dp,
+                        bottom = 6.dp
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box {
-                    Row(
-                        modifier = Modifier
-                            .height(35.dp)
-                            .clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) { expanded = true },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = when (authType) {
-                                "4" -> stringResource(R.string.four_digit_pin)
-                                "6" -> stringResource(R.string.six_digit_pin)
-                                "pattern" -> stringResource(R.string.pattern)
-                                else -> stringResource(R.string.four_digit_pin)
-                            },
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            // FIX: lamba text ek line me, end me "..."
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.widthIn(max = 240.dp)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
 
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = stringResource(R.string.four_digit_pin),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            },
-                            onClick = {
-                                authType = "4"
-                                pinLength = 4
-                                pin = ""
-                                selectedDots = emptyList()
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = stringResource(R.string.six_digit_pin),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            },
-                            onClick = {
-                                authType = "6"
-                                pinLength = 6
-                                pin = ""
-                                selectedDots = emptyList()
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = stringResource(R.string.pattern),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            },
-                            onClick = {
-                                authType = "pattern"
-                                pin = ""
-                                selectedDots = emptyList()
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(22.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
+                // ---------- PIN TYPE DROPDOWN ----------
+                Row(
                     modifier = Modifier
-                        .size(31.dp)
-                        .background(Color.White.copy(alpha = 0.08f), CircleShape)
-                        .border(2.dp, Color.White.copy(alpha = 0.35f), CircleShape),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .heightIn(min = 35.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(21.dp)
-                            .background(Color.White, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "1", color = backgroundColor, fontSize = 15.sp)
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .width(100.dp)
-                        .height(2.dp)
-                        .background(Color.White)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(25.dp)
-                        .border(2.dp, Color.White, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "2", color = Color.White, fontSize = 12.sp)
-                }
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                if (!isPattern) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = stringResource(R.string.create_pin, pinLength),
-                            color = Color.White,
-                            fontSize = 18.sp,
-                            // FIX: lamba title 2 lines tak, center me
-                            textAlign = TextAlign.Center,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                            repeat(pinLength) { index ->
-                                Box(
-                                    modifier = Modifier
-                                        .size(20.dp)
-                                        .border(1.5.dp, Color.White, CircleShape)
-                                        .background(
-                                            if (index < pin.length) Color.White else Color.Transparent,
-                                            CircleShape
-                                        )
-                                )
-                            }
+                    Box {
+                        Row(
+                            modifier = Modifier
+                                .heightIn(min = 35.dp)
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) { expanded = true },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = when (authType) {
+                                    "4" -> stringResource(R.string.four_digit_pin)
+                                    "6" -> stringResource(R.string.six_digit_pin)
+                                    "pattern" -> stringResource(R.string.pattern)
+                                    else -> stringResource(R.string.four_digit_pin)
+                                },
+                                color = Color.White,
+                                fontSize = subTitleSize,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.widthIn(max = 240.dp)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
 
-                        Spacer(modifier = Modifier.height(32.dp))
-
-                        NumberPad(
-                            onNumberClick = { number ->
-                                if (pin.length < pinLength) pin += number
-                            },
-                            onDelete = {
-                                if (pin.isNotEmpty()) pin = pin.dropLast(1)
-                            }
-                        )
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = stringResource(R.string.four_digit_pin),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                },
+                                onClick = {
+                                    authType = "4"
+                                    pinLength = 4
+                                    pin = ""
+                                    selectedDots = emptyList()
+                                    expanded = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = stringResource(R.string.six_digit_pin),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                },
+                                onClick = {
+                                    authType = "6"
+                                    pinLength = 6
+                                    pin = ""
+                                    selectedDots = emptyList()
+                                    expanded = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = stringResource(R.string.pattern),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                },
+                                onClick = {
+                                    authType = "pattern"
+                                    pin = ""
+                                    selectedDots = emptyList()
+                                    expanded = false
+                                }
+                            )
+                        }
                     }
-                } else {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                }
+
+                Spacer(modifier = Modifier.height(if (isCompact) 14.dp else 22.dp))
+
+                // ---------- STEP INDICATOR ----------
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(31.dp)
+                            .background(Color.White.copy(alpha = 0.08f), CircleShape)
+                            .border(2.dp, Color.White.copy(alpha = 0.35f), CircleShape),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = stringResource(R.string.create_pattern),
-                            color = Color.White,
-                            fontSize = 18.sp,
-                            textAlign = TextAlign.Center,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Text(
-                            text = stringResource(R.string.connect_four_dots),
-                            color = Color.White.copy(alpha = 0.85f),
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        BoxWithConstraints(
-                            modifier = Modifier.fillMaxWidth(),
+                        Box(
+                            modifier = Modifier
+                                .size(21.dp)
+                                .background(Color.White, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            val availableWidth = maxWidth - 20.dp
-                            val gridSize = minOf(availableWidth, 330.dp)
+                            Text(text = "1", color = backgroundColor, fontSize = 15.sp)
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .width(stepLineWidth)
+                            .height(2.dp)
+                            .background(Color.White)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(25.dp)
+                            .border(2.dp, Color.White, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "2", color = Color.White, fontSize = 12.sp)
+                    }
+                }
+
+                // ---------- MIDDLE CONTENT (center + scroll agar jagah kam ho) ----------
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (!isPattern) {
+                        Column(
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = stringResource(R.string.create_pin, pinLength),
+                                color = Color.White,
+                                fontSize = titleSize,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Spacer(modifier = Modifier.height(if (isCompact) 10.dp else 14.dp))
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                                repeat(pinLength) { index ->
+                                    Box(
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .border(1.5.dp, Color.White, CircleShape)
+                                            .background(
+                                                if (index < pin.length) Color.White else Color.Transparent,
+                                                CircleShape
+                                            )
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(if (isCompact) 18.dp else 32.dp))
+
+                            NumberPad(
+                                onNumberClick = { number ->
+                                    if (pin.length < pinLength) pin += number
+                                },
+                                onDelete = {
+                                    if (pin.isNotEmpty()) pin = pin.dropLast(1)
+                                }
+                            )
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = stringResource(R.string.create_pattern),
+                                color = Color.White,
+                                fontSize = titleSize,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = stringResource(R.string.connect_four_dots),
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = subTitleSize,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Spacer(modifier = Modifier.height(if (isCompact) 12.dp else 20.dp))
 
                             PatternGrid(
                                 modifier = Modifier.size(gridSize),
@@ -275,60 +302,59 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         }
                     }
                 }
-            }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 4.dp),
-                // FIX: spacing 30 se 12 kiya taake lamba text ko jagah mile
-                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.reset),
-                    color = if (
-                        if (isPattern) selectedDots.isEmpty() else pin.isEmpty()
-                    ) Color.White.copy(alpha = 0.35f) else Color.White,
-                    fontSize = 20.sp,
-                    // FIX: ek line + "..."; weight se dono ko jagah milti hai
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                // ---------- RESET / CONTINUE ----------
+                Row(
                     modifier = Modifier
-                        .weight(1f, fill = false)
-                        .clickable(
-                            enabled = if (isPattern) selectedDots.isNotEmpty() else pin.isNotEmpty(),
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) {
-                            if (isPattern) selectedDots = emptyList() else pin = ""
-                        }
-                        .padding(horizontal = 10.dp, vertical = 8.dp)
-                )
-
-                Text(
-                    text = stringResource(R.string.continue_text),
-                    color = if (
-                        if (isPattern) selectedDots.size >= 4 else pin.length == pinLength
-                    ) Color.White else Color.White.copy(alpha = 0.35f),
-                    fontSize = 20.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .clickable(
-                            enabled = if (isPattern) selectedDots.size >= 4 else pin.length == pinLength,
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) {
-                            if (isPattern) {
-                                onNext("pattern", selectedDots.joinToString("-"))
-                            } else {
-                                onNext("pin", pin)
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.reset),
+                        color = if (
+                            if (isPattern) selectedDots.isEmpty() else pin.isEmpty()
+                        ) Color.White.copy(alpha = 0.35f) else Color.White,
+                        fontSize = actionSize,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .clickable(
+                                enabled = if (isPattern) selectedDots.isNotEmpty() else pin.isNotEmpty(),
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
+                                if (isPattern) selectedDots = emptyList() else pin = ""
                             }
-                        }
-                        .padding(horizontal = 10.dp, vertical = 8.dp)
-                )
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                    )
+
+                    Text(
+                        text = stringResource(R.string.continue_text),
+                        color = if (
+                            if (isPattern) selectedDots.size >= 4 else pin.length == pinLength
+                        ) Color.White else Color.White.copy(alpha = 0.35f),
+                        fontSize = actionSize,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .clickable(
+                                enabled = if (isPattern) selectedDots.size >= 4 else pin.length == pinLength,
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
+                                if (isPattern) {
+                                    onNext("pattern", selectedDots.joinToString("-"))
+                                } else {
+                                    onNext("pin", pin)
+                                }
+                            }
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                    )
+                }
             }
         }
     }

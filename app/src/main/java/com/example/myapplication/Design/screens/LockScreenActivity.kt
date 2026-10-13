@@ -166,22 +166,23 @@ class LockScreenActivity : FragmentActivity() {
     private fun showBiometricPrompt() {
         if (biometricStarted || unlockHandled || leavingLockScreen) return
 
-        val biometricManager = BiometricManager.from(this)
         val authenticators =
             BiometricManager.Authenticators.BIOMETRIC_STRONG or
                     BiometricManager.Authenticators.BIOMETRIC_WEAK
 
-        if (
-            biometricManager.canAuthenticate(authenticators) !=
-            BiometricManager.BIOMETRIC_SUCCESS
-        ) {
-            Log.d(TAG, "BIOMETRIC NOT AVAILABLE")
+        val canAuth = BiometricManager.from(this).canAuthenticate(authenticators)
+        Log.d(TAG, "BIOMETRIC canAuthenticate = $canAuth (0 = success)")
+
+        if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
+            Log.d(TAG, "BIOMETRIC NOT AVAILABLE, code = $canAuth")
             return
         }
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle("Fingerprint Lock")
             .setSubtitle("Use your fingerprint to unlock")
+            .setAllowedAuthenticators(authenticators)   // <-- yeh line missing thi
+            .setConfirmationRequired(false)
             .setNegativeButtonText("Use PIN / Pattern")
             .build()
 
@@ -206,18 +207,23 @@ class LockScreenActivity : FragmentActivity() {
                 ) {
                     super.onAuthenticationError(errorCode, errString)
                     biometricStarted = false
-                    Log.d(TAG, "BIOMETRIC ERROR = $errString")
+                    Log.d(TAG, "BIOMETRIC ERROR code=$errorCode msg=$errString")
                 }
 
                 override fun onAuthenticationFailed() {
                     super.onAuthenticationFailed()
-                    Log.d(TAG, "BIOMETRIC FAILED")
+                    Log.d(TAG, "BIOMETRIC FAILED (finger not recognized)")
                 }
             }
         )
 
         biometricStarted = true
-        biometricPrompt?.authenticate(promptInfo)
+        try {
+            biometricPrompt?.authenticate(promptInfo)
+        } catch (e: Exception) {
+            biometricStarted = false
+            Log.e(TAG, "BIOMETRIC AUTHENTICATE EXCEPTION", e)
+        }
     }
 
     private fun captureIntruderPhoto() {

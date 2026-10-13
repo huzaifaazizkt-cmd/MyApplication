@@ -1,9 +1,12 @@
+
 package com.example.myapplication.Design.screens
 
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.widget.Toast
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,13 +42,16 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
+
 import com.example.myapplication.R
 import com.example.myapplication.data.DataStoreManager
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+
 
 data class AppItem(
     val applicationInfo: ApplicationInfo,
@@ -54,7 +60,9 @@ data class AppItem(
     val iconBitmap: ImageBitmap?
 )
 
+
 object AppListCache {
+
     @Volatile
     private var apps: List<AppItem>? = null
 
@@ -73,9 +81,11 @@ object AppListCache {
 
                 val result = withContext(Dispatchers.IO) {
                     val pm = appContext.packageManager
-                    val launcherIntent = Intent(Intent.ACTION_MAIN).apply {
-                        addCategory(Intent.CATEGORY_LAUNCHER)
-                    }
+
+                    val launcherIntent =
+                        Intent(Intent.ACTION_MAIN).apply {
+                            addCategory(Intent.CATEGORY_LAUNCHER)
+                        }
 
                     val launcherApps = pm.queryIntentActivities(
                         launcherIntent,
@@ -94,7 +104,8 @@ object AppListCache {
                                 return@mapNotNull null
                             }
 
-                            val appName = resolveInfo.loadLabel(pm).toString()
+                            val appName =
+                                resolveInfo.loadLabel(pm).toString()
 
                             val iconBitmap = try {
                                 pm.getApplicationIcon(applicationInfo)
@@ -114,8 +125,12 @@ object AppListCache {
                             null
                         }
                     }
-                        .distinctBy { it.applicationInfo.packageName }
-                        .sortedBy { it.searchName }
+                        .distinctBy {
+                            it.applicationInfo.packageName
+                        }
+                        .sortedBy {
+                            it.searchName
+                        }
                 }
 
                 apps = result
@@ -142,16 +157,32 @@ object AppListCache {
     }
 }
 
+
 @Composable
 fun AppListScreen(context: Context) {
-    val appContext = remember { context.applicationContext }
-    val scope = rememberCoroutineScope()
-    val dataStore = remember { DataStoreManager(appContext) }
 
-    var selectedTab by remember { mutableStateOf(0) }
-    var searchText by remember { mutableStateOf("") }
+    val appContext = remember {
+        context.applicationContext
+    }
+
+    val scope = rememberCoroutineScope()
+
+    val dataStore = remember {
+        DataStoreManager(appContext)
+    }
+
+    var selectedTab by remember {
+        mutableStateOf(0)
+    }
+
+    var searchText by remember {
+        mutableStateOf("")
+    }
+
     var apps by remember {
-        mutableStateOf(AppListCache.getApps() ?: emptyList())
+        mutableStateOf(
+            AppListCache.getApps() ?: emptyList()
+        )
     }
 
     LaunchedEffect(Unit) {
@@ -161,13 +192,16 @@ fun AppListScreen(context: Context) {
             apps = cachedApps
         } else {
             AppListCache.preload(appContext)
+
             AppListCache.getApps()?.let { loadedApps ->
                 apps = loadedApps
             }
         }
     }
 
-    val lockedApps by dataStore.lockedAppsFlow.collectAsState(initial = emptySet())
+    val lockedApps by dataStore.lockedAppsFlow.collectAsState(
+        initial = emptySet()
+    )
 
     val normalizedSearch = remember(searchText) {
         searchText.trim().lowercase()
@@ -208,12 +242,14 @@ fun AppListScreen(context: Context) {
             .background(Color(0xFFF7F7F7))
             .statusBarsPadding()
     ) {
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 20.dp, top = 15.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+
             Image(
                 painter = painterResource(R.drawable.applock),
                 contentDescription = null,
@@ -246,18 +282,25 @@ fun AppListScreen(context: Context) {
                 }
             }
         ) {
+
             Tab(
                 selected = selectedTab == 0,
-                onClick = { selectedTab = 0 },
+                onClick = {
+                    selectedTab = 0
+                },
                 modifier = Modifier.height(42.dp)
             ) {
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
+
                     Image(
                         painter = painterResource(R.drawable.unlock),
-                        contentDescription = stringResource(R.string.unlocked),
+                        contentDescription = stringResource(
+                            R.string.unlocked
+                        ),
                         colorFilter = ColorFilter.tint(
                             if (selectedTab == 0) {
                                 Color(0xFF0396FF)
@@ -284,16 +327,22 @@ fun AppListScreen(context: Context) {
 
             Tab(
                 selected = selectedTab == 1,
-                onClick = { selectedTab = 1 },
+                onClick = {
+                    selectedTab = 1
+                },
                 modifier = Modifier.height(42.dp)
             ) {
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
+
                     Image(
                         painter = painterResource(R.drawable.locked),
-                        contentDescription = stringResource(R.string.locked),
+                        contentDescription = stringResource(
+                            R.string.locked
+                        ),
                         colorFilter = ColorFilter.tint(
                             if (selectedTab == 1) {
                                 Color(0xFF0396FF)
@@ -322,7 +371,11 @@ fun AppListScreen(context: Context) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 14.dp, end = 14.dp, top = 15.dp)
+                .padding(
+                    start = 14.dp,
+                    end = 14.dp,
+                    top = 15.dp
+                )
                 .height(39.dp)
                 .clip(RoundedCornerShape(22.dp))
                 .background(Color(0xFFF7F7F7))
@@ -332,15 +385,22 @@ fun AppListScreen(context: Context) {
                     shape = RoundedCornerShape(22.dp)
                 )
         ) {
+
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 12.dp, end = 12.dp),
+                    .padding(
+                        start = 12.dp,
+                        end = 12.dp
+                    ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = stringResource(R.string.search),
+                    contentDescription = stringResource(
+                        R.string.search
+                    ),
                     tint = Color(0xFFBDBDBD),
                     modifier = Modifier.size(19.dp)
                 )
@@ -349,24 +409,32 @@ fun AppListScreen(context: Context) {
 
                 BasicTextField(
                     value = searchText,
-                    onValueChange = { searchText = it },
+                    onValueChange = {
+                        searchText = it
+                    },
                     singleLine = true,
                     textStyle = TextStyle(
                         color = Color(0xFF555555),
                         fontSize = 14.sp
                     ),
-                    cursorBrush = SolidColor(Color(0xFF0396FF)),
+                    cursorBrush = SolidColor(
+                        Color(0xFF0396FF)
+                    ),
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
                     decorationBox = { innerTextField ->
+
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.CenterStart
                         ) {
+
                             if (searchText.isEmpty()) {
                                 Text(
-                                    text = stringResource(R.string.search),
+                                    text = stringResource(
+                                        R.string.search
+                                    ),
                                     color = Color(0xFFBDBDBD),
                                     fontSize = 14.sp
                                 )
@@ -395,6 +463,7 @@ fun AppListScreen(context: Context) {
         Spacer(modifier = Modifier.height(18.dp))
 
         if (selectedTab == 1 && filteredApps.isEmpty()) {
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -403,8 +472,11 @@ fun AppListScreen(context: Context) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+
                 Image(
-                    painter = painterResource(R.drawable.applistlock),
+                    painter = painterResource(
+                        R.drawable.applistlock
+                    ),
                     contentDescription = null,
                     modifier = Modifier.size(90.dp)
                 )
@@ -417,7 +489,9 @@ fun AppListScreen(context: Context) {
                     fontSize = 15.sp
                 )
             }
+
         } else {
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -430,14 +504,18 @@ fun AppListScreen(context: Context) {
                     bottom = 16.dp
                 )
             ) {
+
                 items(
                     items = filteredApps,
                     key = { appItem ->
                         appItem.applicationInfo.packageName
                     }
                 ) { appItem ->
+
                     val appName = appItem.appName
-                    val packageName = appItem.applicationInfo.packageName
+                    val packageName =
+                        appItem.applicationInfo.packageName
+
                     val isLocked = lockedApps.contains(packageName)
                     val cardShape = RoundedCornerShape(12.dp)
 
@@ -448,8 +526,12 @@ fun AppListScreen(context: Context) {
                                 elevation = 5.dp,
                                 shape = cardShape,
                                 clip = false,
-                                ambientColor = Color.Black.copy(alpha = 0.10f),
-                                spotColor = Color.Black.copy(alpha = 0.10f)
+                                ambientColor = Color.Black.copy(
+                                    alpha = 0.10f
+                                ),
+                                spotColor = Color.Black.copy(
+                                    alpha = 0.10f
+                                )
                             )
                             .clip(cardShape),
                         shape = cardShape,
@@ -461,13 +543,18 @@ fun AppListScreen(context: Context) {
                             pressedElevation = 1.dp
                         )
                     ) {
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(58.dp)
-                                .padding(start = 12.dp, end = 10.dp),
+                                .padding(
+                                    start = 12.dp,
+                                    end = 10.dp
+                                ),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+
                             if (appItem.iconBitmap != null) {
                                 Image(
                                     bitmap = appItem.iconBitmap,
@@ -475,7 +562,9 @@ fun AppListScreen(context: Context) {
                                     modifier = Modifier.size(32.dp)
                                 )
                             } else {
-                                Spacer(modifier = Modifier.size(32.dp))
+                                Spacer(
+                                    modifier = Modifier.size(32.dp)
+                                )
                             }
 
                             Spacer(modifier = Modifier.width(18.dp))
@@ -492,14 +581,25 @@ fun AppListScreen(context: Context) {
                                 onClick = {
                                     scope.launch {
                                         if (isLocked) {
-                                            dataStore.removeLockedApp(packageName)
+                                            dataStore.removeLockedApp(
+                                                packageName
+                                            )
                                         } else {
-                                            dataStore.saveLockedApp(packageName)
+                                            dataStore.saveLockedApp(
+                                                packageName
+                                            )
+
+                                            Toast.makeText(
+                                                appContext,
+                                                "App locked successfully",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
                                     }
                                 },
                                 modifier = Modifier.size(30.dp)
                             ) {
+
                                 Image(
                                     painter = painterResource(
                                         id = if (isLocked) {

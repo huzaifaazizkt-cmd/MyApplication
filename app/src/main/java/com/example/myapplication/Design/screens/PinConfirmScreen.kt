@@ -5,8 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import android.view.Gravity
 import android.view.WindowManager
 import android.widget.TextView
@@ -35,6 +35,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -42,6 +43,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -62,7 +65,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.min
 import kotlin.math.sqrt
+
+private const val PERMISSION_DEBUG_TAG = "APPLOCK_PERMISSION_DEBUG"
 
 @Composable
 fun PinConfirmScreen(
@@ -77,41 +83,53 @@ fun PinConfirmScreen(
     val appContext = remember { context.applicationContext }
     val dataStore = remember { DataStoreManager(appContext) }
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(Unit) { AppListCache.preload(appContext) }
+
+    LaunchedEffect(Unit) {
+        AppListCache.preload(appContext)
+    }
+
     var confirmPin by remember { mutableStateOf("") }
     var confirmPattern by remember { mutableStateOf<List<Int>>(emptyList()) }
     var error by remember { mutableStateOf("") }
     var patternError by remember { mutableStateOf(false) }
     var patternConfirmed by remember { mutableStateOf(false) }
     var clearErrorJob by remember { mutableStateOf<Job?>(null) }
+
     var showPermissionDialog by remember { mutableStateOf(false) }
     var showSecurityDialog by remember { mutableStateOf(false) }
     var isNavigatingToAppList by remember { mutableStateOf(false) }
-    var overlayAllowed by remember { mutableStateOf(Settings.canDrawOverlays(context)) }
-    var accessibilityAllowed by remember { mutableStateOf(isAccessibilityServiceEnabled(context)) }
-    var popupAccess by remember { mutableStateOf(XiaomiPermissionHelper.backgroundPopupAccess(context)) }
-    var autoStartAvailable by remember { mutableStateOf(false) }
-    var autoStartAllowed by remember { mutableStateOf(false) }
-    var autoStartOpened by remember { mutableStateOf(false) }
+
+    var overlayAllowed by remember {
+        mutableStateOf(Settings.canDrawOverlays(context))
+    }
+    var accessibilityAllowed by remember {
+        mutableStateOf(isAccessibilityServiceEnabled(context))
+    }
+    var popupAccess by remember {
+        mutableStateOf(XiaomiPermissionHelper.backgroundPopupAccess(context))
+    }
+
     var selectedQuestion by remember { mutableStateOf("") }
     var securityAnswer by remember { mutableStateOf("") }
     var securityDropdownExpanded by remember { mutableStateOf(false) }
     var securityAnswerError by remember { mutableStateOf(false) }
     var securityQuestionLocked by remember { mutableStateOf(false) }
+
     val isPattern = type.equals("pattern", ignoreCase = true)
     val backgroundColor = Color(0xFF29A0F0)
     val numberButtonColor = Color(0xFF69B9F3)
     val patternDotColor = Color(0xFF83CCFF)
     val errorColor = Color.Red
     val pinLength = value.length
+
     val passwordNotMatchText = stringResource(R.string.password_not_match)
     val enterCorrectPasswordText = stringResource(R.string.enter_correct_password)
-
-    LaunchedEffect(Unit) { autoStartAvailable = getAutoStartIntent(appContext) != null }
+    val resetSuccessText = stringResource(R.string.password_reset_success)
+    val resetFailedText = stringResource(R.string.password_reset_failed)
 
     fun showResetToast() {
         val toastView = TextView(context).apply {
-            text = "Password reset successfully"
+            text = resetSuccessText
             setTextColor(android.graphics.Color.rgb(0x7B, 0x7B, 0x7B))
             textSize = 14f
             gravity = Gravity.CENTER
@@ -122,6 +140,7 @@ fun PinConfirmScreen(
             }
             elevation = 6f
         }
+
         Toast(context).apply {
             duration = Toast.LENGTH_LONG
             view = toastView
@@ -131,16 +150,62 @@ fun PinConfirmScreen(
     }
 
     fun checkPermissions() {
-        overlayAllowed = Settings.canDrawOverlays(context)
-        accessibilityAllowed = isAccessibilityServiceEnabled(context)
-        popupAccess = XiaomiPermissionHelper.backgroundPopupAccess(context)
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "========== CHECK PERMISSIONS START =========="
+        )
+
+        val overlay = Settings.canDrawOverlays(context)
+        val accessibility = isAccessibilityServiceEnabled(context)
+        val popup = XiaomiPermissionHelper.backgroundPopupAccess(context)
+
+        overlayAllowed = overlay
+        accessibilityAllowed = accessibility
+        popupAccess = popup
+
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "CHECK_RESULT: overlay=$overlay, " +
+                    "accessibility=$accessibility, " +
+                    "popupRequired=${popup.required}, " +
+                    "popupGranted=${popup.granted}, " +
+                    "popupVerified=${popup.verified}, " +
+                    "popupSatisfied=${popup.satisfied}, " +
+                    "allAllowed=${overlay && accessibility && popup.satisfied}"
+        )
+
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "========== CHECK PERMISSIONS END =========="
+        )
     }
 
-    // Xiaomi par background pop-up permission bhi zaroori hai (baqi devices par automatically true)
-    fun allPermissionsAllowed(): Boolean =
-        overlayAllowed && accessibilityAllowed && popupAccess.satisfied
+    fun allPermissionsAllowed(): Boolean {
+        val result =
+            overlayAllowed &&
+                    accessibilityAllowed &&
+                    popupAccess.satisfied
+
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "ALL_PERMISSIONS_ALLOWED: result=$result, " +
+                    "overlay=$overlayAllowed, " +
+                    "accessibility=$accessibilityAllowed, " +
+                    "popupRequired=${popupAccess.required}, " +
+                    "popupGranted=${popupAccess.granted}, " +
+                    "popupVerified=${popupAccess.verified}, " +
+                    "popupSatisfied=${popupAccess.satisfied}"
+        )
+
+        return result
+    }
 
     fun openSecurityQuestion() {
+        Log.w(
+            PERMISSION_DEBUG_TAG,
+            "OPEN_SECURITY_QUESTION: Opening Security Question dialog"
+        )
+
         showPermissionDialog = false
         securityAnswer = ""
         securityAnswerError = false
@@ -151,42 +216,128 @@ fun PinConfirmScreen(
     }
 
     LaunchedEffect(permissionOnly) {
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "INITIAL_PERMISSION_FLOW: permissionOnly=$permissionOnly"
+        )
+
         if (permissionOnly) {
             checkPermissions()
-            if (allPermissionsAllowed()) openSecurityQuestion() else showPermissionDialog = true
+
+            if (allPermissionsAllowed()) {
+                Log.w(
+                    PERMISSION_DEBUG_TAG,
+                    "INITIAL_PERMISSION_FLOW: Permissions already allowed"
+                )
+                openSecurityQuestion()
+            } else {
+                Log.w(
+                    PERMISSION_DEBUG_TAG,
+                    "INITIAL_PERMISSION_FLOW: Showing permission dialog"
+                )
+                showPermissionDialog = true
+            }
         }
     }
 
-    val currentShowPermissionDialog = rememberUpdatedState(showPermissionDialog)
-    val currentAutoStartOpened = rememberUpdatedState(autoStartOpened)
+    val currentShowPermissionDialog =
+        rememberUpdatedState(showPermissionDialog)
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                val newOverlayAllowed = Settings.canDrawOverlays(context)
-                val newAccessibilityAllowed = isAccessibilityServiceEnabled(context)
-                val newPopupAccess = XiaomiPermissionHelper.backgroundPopupAccess(context)
+                Log.d(
+                    PERMISSION_DEBUG_TAG,
+                    "ON_RESUME: Returned to PinConfirmScreen"
+                )
+
+                val newOverlayAllowed =
+                    Settings.canDrawOverlays(context)
+
+                val newAccessibilityAllowed =
+                    isAccessibilityServiceEnabled(context)
+
+                val newPopupAccess =
+                    XiaomiPermissionHelper.backgroundPopupAccess(context)
+
+                Log.d(
+                    PERMISSION_DEBUG_TAG,
+                    "ON_RESUME_STATUS: " +
+                            "overlay=$newOverlayAllowed, " +
+                            "accessibility=$newAccessibilityAllowed, " +
+                            "popupRequired=${newPopupAccess.required}, " +
+                            "popupGranted=${newPopupAccess.granted}, " +
+                            "popupVerified=${newPopupAccess.verified}, " +
+                            "popupSatisfied=${newPopupAccess.satisfied}, " +
+                            "dialogVisible=${currentShowPermissionDialog.value}"
+                )
+
                 overlayAllowed = newOverlayAllowed
                 accessibilityAllowed = newAccessibilityAllowed
                 popupAccess = newPopupAccess
-                if (currentAutoStartOpened.value) {
-                    autoStartAllowed = true
-                    autoStartOpened = false
-                }
-                if (currentShowPermissionDialog.value && newOverlayAllowed && newAccessibilityAllowed && newPopupAccess.satisfied) {
+
+                val allAllowed =
+                    newOverlayAllowed &&
+                            newAccessibilityAllowed &&
+                            newPopupAccess.satisfied
+
+                Log.d(
+                    PERMISSION_DEBUG_TAG,
+                    "ON_RESUME_DECISION: allAllowed=$allAllowed"
+                )
+
+                if (
+                    currentShowPermissionDialog.value &&
+                    newOverlayAllowed &&
+                    newAccessibilityAllowed &&
+                    newPopupAccess.satisfied
+                ) {
+                    Log.w(
+                        PERMISSION_DEBUG_TAG,
+                        "ON_RESUME_ACTION: Closing permission dialog " +
+                                "and opening Security Question"
+                    )
+
                     showPermissionDialog = false
                     openSecurityQuestion()
+                } else {
+                    Log.d(
+                        PERMISSION_DEBUG_TAG,
+                        "ON_RESUME_ACTION: Conditions not met; " +
+                                "dialog remains unchanged"
+                    )
                 }
             }
         }
+
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     LaunchedEffect(showPermissionDialog) {
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "EFFECT_DIALOG_CHANGED: showPermissionDialog=$showPermissionDialog"
+        )
+
         if (showPermissionDialog) {
             checkPermissions()
-            if (allPermissionsAllowed()) {
+
+            val allAllowed = allPermissionsAllowed()
+
+            Log.d(
+                PERMISSION_DEBUG_TAG,
+                "EFFECT_DIALOG_CHECK: allAllowed=$allAllowed"
+            )
+
+            if (allAllowed) {
+                Log.w(
+                    PERMISSION_DEBUG_TAG,
+                    "EFFECT_DIALOG_ACTION: Opening Security Question"
+                )
                 showPermissionDialog = false
                 openSecurityQuestion()
             }
@@ -194,24 +345,39 @@ fun PinConfirmScreen(
     }
 
     LaunchedEffect(overlayAllowed, accessibilityAllowed, popupAccess) {
-        if (showPermissionDialog && overlayAllowed && accessibilityAllowed && popupAccess.satisfied) {
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "EFFECT_PERMISSION_STATE: " +
+                    "overlay=$overlayAllowed, " +
+                    "accessibility=$accessibilityAllowed, " +
+                    "popupRequired=${popupAccess.required}, " +
+                    "popupGranted=${popupAccess.granted}, " +
+                    "popupVerified=${popupAccess.verified}, " +
+                    "popupSatisfied=${popupAccess.satisfied}, " +
+                    "dialogVisible=$showPermissionDialog"
+        )
+
+        if (
+            showPermissionDialog &&
+            overlayAllowed &&
+            accessibilityAllowed &&
+            popupAccess.satisfied
+        ) {
+            Log.w(
+                PERMISSION_DEBUG_TAG,
+                "EFFECT_PERMISSION_ACTION: Opening Security Question"
+            )
+
             showPermissionDialog = false
             openSecurityQuestion()
         }
-    }
-
-    fun clearPatternError() {
-        clearErrorJob?.cancel()
-        clearErrorJob = null
-        patternError = false
-        error = ""
-        confirmPattern = emptyList()
     }
 
     fun showPatternError() {
         clearErrorJob?.cancel()
         patternError = true
         error = passwordNotMatchText
+
         clearErrorJob = scope.launch {
             delay(1500)
             confirmPattern = emptyList()
@@ -223,9 +389,11 @@ fun PinConfirmScreen(
 
     fun finishReset() {
         if (isNavigatingToAppList) return
+
         isNavigatingToAppList = true
         showSecurityDialog = false
         showPermissionDialog = false
+
         scope.launch(Dispatchers.IO) {
             try {
                 if (isPattern) {
@@ -235,17 +403,26 @@ fun PinConfirmScreen(
                     dataStore.savePin(value)
                     dataStore.saveAuthType("pin")
                 }
+
                 withContext(Dispatchers.Main) {
                     showResetToast()
+
                     if (!navController.popBackStack("appList", false)) {
-                        navController.navigate("appList") { launchSingleTop = true }
+                        navController.navigate("appList") {
+                            launchSingleTop = true
+                        }
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+
                 withContext(Dispatchers.Main) {
                     isNavigatingToAppList = false
-                    Toast.makeText(context, "Password reset failed", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        context,
+                        resetFailedText,
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
@@ -256,8 +433,15 @@ fun PinConfirmScreen(
             finishReset()
             return
         }
+
         checkPermissions()
-        AppPermissionFlow.savePendingSetup(context = appContext, type = "pin", value = value)
+
+        AppPermissionFlow.savePendingSetup(
+            context = appContext,
+            type = "pin",
+            value = value
+        )
+
         scope.launch(Dispatchers.IO) {
             try {
                 dataStore.savePin(value)
@@ -266,6 +450,11 @@ fun PinConfirmScreen(
                 e.printStackTrace()
             }
         }
+
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "CONTINUE_WITH_PIN: Showing permission dialog"
+        )
         showPermissionDialog = true
     }
 
@@ -274,8 +463,15 @@ fun PinConfirmScreen(
             finishReset()
             return
         }
+
         checkPermissions()
-        AppPermissionFlow.savePendingSetup(context = appContext, type = "pattern", value = value)
+
+        AppPermissionFlow.savePendingSetup(
+            context = appContext,
+            type = "pattern",
+            value = value
+        )
+
         scope.launch(Dispatchers.IO) {
             try {
                 dataStore.savePattern(value)
@@ -284,62 +480,98 @@ fun PinConfirmScreen(
                 e.printStackTrace()
             }
         }
+
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "CONTINUE_WITH_PATTERN: Showing permission dialog"
+        )
         showPermissionDialog = true
     }
 
     fun openOverlayPermission() {
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "OVERLAY_BUTTON_CLICKED: Opening overlay settings"
+        )
+
         try {
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}"))
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:${context.packageName}")
+            )
             context.startActivity(intent)
         } catch (e: Exception) {
+            Log.e(
+                PERMISSION_DEBUG_TAG,
+                "OVERLAY_SETTINGS_ERROR: First intent failed",
+                e
+            )
+
             try {
-                context.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+                context.startActivity(
+                    Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+                )
             } catch (e2: Exception) {
+                Log.e(
+                    PERMISSION_DEBUG_TAG,
+                    "OVERLAY_SETTINGS_ERROR: Second intent failed",
+                    e2
+                )
+
                 try {
                     context.startActivity(Intent(Settings.ACTION_SETTINGS))
                 } catch (e3: Exception) {
-                    e3.printStackTrace()
+                    Log.e(
+                        PERMISSION_DEBUG_TAG,
+                        "OVERLAY_SETTINGS_ERROR: Could not open settings",
+                        e3
+                    )
                 }
             }
         }
     }
 
     fun openBackgroundPopupPermission() {
-        XiaomiPermissionHelper.openBackgroundPopupSettings(context)
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "POPUP_BUTTON_CLICKED: Opening Xiaomi background popup settings"
+        )
+
+        val opened =
+            XiaomiPermissionHelper.openBackgroundPopupSettings(context)
+
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "POPUP_SETTINGS_OPEN_RESULT: opened=$opened"
+        )
     }
 
     fun openAccessibilitySettings() {
-        try {
-            context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
+        Log.d(
+            PERMISSION_DEBUG_TAG,
+            "ACCESSIBILITY_BUTTON_CLICKED: Opening accessibility settings"
+        )
 
-    fun openAutoStartSettings() {
-        val autoStartIntent = getAutoStartIntent(context)
-        if (autoStartIntent == null) {
-            autoStartAvailable = false
-            return
-        }
-        autoStartOpened = true
         try {
-            context.startActivity(autoStartIntent)
+            context.startActivity(
+                Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+            )
         } catch (e: Exception) {
-            autoStartOpened = false
-            try {
-                context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")))
-            } catch (e2: Exception) {
-                e2.printStackTrace()
-            }
+            Log.e(
+                PERMISSION_DEBUG_TAG,
+                "ACCESSIBILITY_SETTINGS_ERROR",
+                e
+            )
         }
     }
 
     fun goToAppList() {
         if (isNavigatingToAppList) return
+
         isNavigatingToAppList = true
         showSecurityDialog = false
         showPermissionDialog = false
+
         scope.launch {
             try {
                 dataStore.saveAppInitialized(true)
@@ -347,290 +579,444 @@ fun PinConfirmScreen(
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+
             navController.navigate("appList") {
                 if (permissionOnly) {
-                    popUpTo("permissionGate") { inclusive = true }
+                    popUpTo("permissionGate") {
+                        inclusive = true
+                    }
                 } else {
-                    popUpTo("create") { inclusive = true }
+                    popUpTo("create") {
+                        inclusive = true
+                    }
                 }
+
                 launchSingleTop = true
             }
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize().background(backgroundColor)
-    ) {
-        if (!permissionOnly) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 30.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = if (isPattern) stringResource(R.string.confirm_pattern) else stringResource(R.string.confirm_passcode),
-                    color = Color.White,
-                    fontSize = 25.sp,
-                    // FIX: lamba title 2 lines tak, center me
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(Modifier.height(28.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier.size(25.dp).border(2.dp, Color.White, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "1", color = Color.White, fontSize = 12.sp)
-                    }
-                    Box(modifier = Modifier.width(95.dp).height(2.dp).background(Color.White))
-                    Box(
-                        modifier = Modifier.size(31.dp).background(Color.White.copy(alpha = 0.08f), CircleShape).border(2.dp, Color.White.copy(alpha = 0.35f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier.size(21.dp).background(Color.White, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = "2", color = backgroundColor, fontSize = 15.sp)
-                        }
-                    }
-                }
-                Spacer(Modifier.height(65.dp))
+    // ============================================================
+    // UI
+    // ============================================================
 
-                if (isPattern) {
-                    Text(
-                        text = stringResource(R.string.draw_pattern_again),
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        textAlign = TextAlign.Center,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(Modifier.height(18.dp))
-                    Box(modifier = Modifier.fillMaxWidth().height(24.dp), contentAlignment = Alignment.Center) {
-                        if (error.isNotEmpty()) {
-                            Text(
-                                text = error,
-                                color = Color.Red,
-                                fontSize = 15.sp,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(38.dp))
-                    ConfirmPatternGrid(
-                        selectedDots = confirmPattern,
-                        isError = patternError,
-                        onPatternChanged = { dots ->
-                            confirmPattern = dots
-                            if (patternError) {
-                                clearErrorJob?.cancel()
-                                clearErrorJob = null
-                                patternError = false
-                                error = ""
-                            }
-                        },
-                        onPatternFinished = { pattern ->
-                            val originalPattern = value.split("-").mapNotNull { it.toIntOrNull() }
-                            if (pattern.size < 4) {
-                                showPatternError()
-                                return@ConfirmPatternGrid
-                            }
-                            if (pattern != originalPattern) {
-                                showPatternError()
-                                return@ConfirmPatternGrid
-                            }
-                            clearErrorJob?.cancel()
-                            clearErrorJob = null
-                            patternError = false
-                            error = ""
-                            confirmPattern = pattern
-                            patternConfirmed = true
-                        },
-                        dotColor = patternDotColor,
-                        errorColor = errorColor,
-                        backgroundColor = backgroundColor
-                    )
-                    Spacer(Modifier.height(55.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(end = 30.dp),
-                        horizontalArrangement = Arrangement.End
+    LimitFontScale {
+
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundColor)
+        ) {
+            // ---------- Responsive values ----------
+            val isCompact = maxHeight < 700.dp || maxWidth < 360.dp
+
+            val titleSize = if (isCompact) 21.sp else 25.sp
+            val subTitleSize = if (isCompact) 16.sp else 18.sp
+            val errorSize = if (isCompact) 13.sp else 15.sp
+            val actionSize = if (isCompact) 17.sp else 20.sp
+            val stepLineWidth = if (isCompact) 70.dp else 95.dp
+            val gapAfterTitle = if (isCompact) 16.dp else 28.dp
+            val gapAfterSteps = if (isCompact) 24.dp else 65.dp
+            val gapAfterSubTitle = if (isCompact) 10.dp else 18.dp
+            val gapBeforePattern = if (isCompact) 12.dp else 38.dp
+            val gapBeforePad = if (isCompact) 14.dp else 50.dp
+            val gapBeforeActions = if (isCompact) 20.dp else 55.dp
+            val actionEndPadding = if (isCompact) 8.dp else 30.dp
+
+            val gridSize = minOf(
+                maxWidth - 80.dp,
+                maxHeight * 0.40f,
+                330.dp
+            ).coerceAtLeast(200.dp)
+
+            if (!permissionOnly) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .navigationBarsPadding(),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .widthIn(max = 480.dp)
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 30.dp, vertical = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = stringResource(R.string.continue_text),
-                            color = if (patternConfirmed) Color.White else Color.White.copy(alpha = 0.35f),
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false).clickable(
-                                enabled = patternConfirmed,
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) { continueWithPattern() }.padding(10.dp)
+                            text = if (isPattern) {
+                                stringResource(R.string.confirm_pattern)
+                            } else {
+                                stringResource(R.string.confirm_passcode)
+                            },
+                            color = Color.White,
+                            fontSize = titleSize,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
-                    }
-                } else {
-                    Text(
-                        text = stringResource(R.string.confirm_passcode),
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        textAlign = TextAlign.Center,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(Modifier.height(18.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                        repeat(pinLength) { index ->
+
+                        Spacer(Modifier.height(gapAfterTitle))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
-                                modifier = Modifier.size(20.dp).border(1.5.dp, Color.White, CircleShape).background(
-                                    if (index < confirmPin.length) Color.White else Color.Transparent,
-                                    CircleShape
-                                )
+                                modifier = Modifier
+                                    .size(25.dp)
+                                    .border(2.dp, Color.White, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("1", color = Color.White, fontSize = 12.sp)
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .width(stepLineWidth)
+                                    .height(2.dp)
+                                    .background(Color.White)
                             )
+
+                            Box(
+                                modifier = Modifier
+                                    .size(31.dp)
+                                    .background(
+                                        Color.White.copy(alpha = 0.08f),
+                                        CircleShape
+                                    )
+                                    .border(
+                                        2.dp,
+                                        Color.White.copy(alpha = 0.35f),
+                                        CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(21.dp)
+                                        .background(Color.White, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        "2",
+                                        color = backgroundColor,
+                                        fontSize = 15.sp
+                                    )
+                                }
+                            }
                         }
-                    }
-                    Spacer(Modifier.height(15.dp))
-                    Box(
-                        modifier = Modifier.fillMaxWidth().height(22.dp).padding(top = 5.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (error.isNotEmpty()) {
+
+                        Spacer(Modifier.height(gapAfterSteps))
+
+                        if (isPattern) {
                             Text(
-                                text = error,
-                                color = Color.Red,
-                                fontSize = 16.sp,
+                                text = stringResource(R.string.draw_pattern_again),
+                                color = Color.White,
+                                fontSize = subTitleSize,
                                 textAlign = TextAlign.Center,
-                                maxLines = 1,
+                                maxLines = 2,
                                 overflow = TextOverflow.Ellipsis
                             )
-                        }
-                    }
-                    Spacer(Modifier.height(50.dp))
-                    NumberPad(
-                        onNumberClick = { number ->
-                            if (confirmPin.length < pinLength) {
-                                confirmPin += number
-                                error = ""
-                            }
-                        },
-                        onDelete = {
-                            if (confirmPin.isNotEmpty()) {
-                                confirmPin = confirmPin.dropLast(1)
-                                error = ""
-                            }
-                        },
-                        buttonColor = numberButtonColor
-                    )
-                    Spacer(Modifier.height(55.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(end = 30.dp),
-                        // FIX: spacing 30 se 12 kiya
-                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.reset),
-                            color = if (confirmPin.isEmpty()) Color.White.copy(alpha = 0.35f) else Color.White,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false).clickable(
-                                enabled = confirmPin.isNotEmpty(),
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
+
+                            Spacer(Modifier.height(gapAfterSubTitle))
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 24.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                confirmPin = ""
-                                error = ""
-                            }.padding(10.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.continue_text),
-                            color = if (confirmPin.length == pinLength) Color.White else Color.White.copy(alpha = 0.35f),
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false).clickable(
-                                enabled = confirmPin.length == pinLength,
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) {
-                                if (confirmPin != value) {
-                                    error = enterCorrectPasswordText
-                                    confirmPin = ""
-                                    return@clickable
+                                if (error.isNotEmpty()) {
+                                    Text(
+                                        text = error,
+                                        color = Color.Red,
+                                        fontSize = errorSize,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
-                                continueWithPin()
-                            }.padding(10.dp)
-                        )
+                            }
+
+                            Spacer(Modifier.height(gapBeforePattern))
+
+                            ConfirmPatternGrid(
+                                modifier = Modifier.size(gridSize),
+                                selectedDots = confirmPattern,
+                                isError = patternError,
+                                onPatternChanged = { dots ->
+                                    confirmPattern = dots
+
+                                    if (patternError) {
+                                        clearErrorJob?.cancel()
+                                        clearErrorJob = null
+                                        patternError = false
+                                        error = ""
+                                    }
+                                },
+                                onPatternFinished = { pattern ->
+                                    val originalPattern = value
+                                        .split("-")
+                                        .mapNotNull { it.toIntOrNull() }
+
+                                    if (pattern.size < 4) {
+                                        showPatternError()
+                                        return@ConfirmPatternGrid
+                                    }
+
+                                    if (pattern != originalPattern) {
+                                        showPatternError()
+                                        return@ConfirmPatternGrid
+                                    }
+
+                                    clearErrorJob?.cancel()
+                                    clearErrorJob = null
+                                    patternError = false
+                                    error = ""
+                                    confirmPattern = pattern
+                                    patternConfirmed = true
+                                },
+                                dotColor = patternDotColor,
+                                errorColor = errorColor,
+                                backgroundColor = backgroundColor
+                            )
+
+                            Spacer(Modifier.height(gapBeforeActions))
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(end = actionEndPadding),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.continue_text),
+                                    color = if (patternConfirmed) {
+                                        Color.White
+                                    } else {
+                                        Color.White.copy(alpha = 0.35f)
+                                    },
+                                    fontSize = actionSize,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier
+                                        .weight(1f, fill = false)
+                                        .clickable(
+                                            enabled = patternConfirmed,
+                                            indication = null,
+                                            interactionSource = remember {
+                                                MutableInteractionSource()
+                                            }
+                                        ) {
+                                            continueWithPattern()
+                                        }
+                                        .padding(10.dp)
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = stringResource(R.string.confirm_passcode),
+                                color = Color.White,
+                                fontSize = subTitleSize,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Spacer(Modifier.height(gapAfterSubTitle))
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                                repeat(pinLength) { index ->
+                                    Box(
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .border(1.5.dp, Color.White, CircleShape)
+                                            .background(
+                                                if (index < confirmPin.length) {
+                                                    Color.White
+                                                } else {
+                                                    Color.Transparent
+                                                },
+                                                CircleShape
+                                            )
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.height(15.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 22.dp)
+                                    .padding(top = 5.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (error.isNotEmpty()) {
+                                    Text(
+                                        text = error,
+                                        color = Color.Red,
+                                        fontSize = errorSize,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.height(gapBeforePad))
+
+                            NumberPad(
+                                onNumberClick = { number ->
+                                    if (confirmPin.length < pinLength) {
+                                        confirmPin += number
+                                        error = ""
+                                    }
+                                },
+                                onDelete = {
+                                    if (confirmPin.isNotEmpty()) {
+                                        confirmPin = confirmPin.dropLast(1)
+                                        error = ""
+                                    }
+                                },
+                                buttonColor = numberButtonColor
+                            )
+
+                            Spacer(Modifier.height(gapBeforeActions))
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(end = actionEndPadding),
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    12.dp,
+                                    Alignment.End
+                                )
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.reset),
+                                    color = if (confirmPin.isEmpty()) {
+                                        Color.White.copy(alpha = 0.35f)
+                                    } else {
+                                        Color.White
+                                    },
+                                    fontSize = actionSize,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier
+                                        .weight(1f, fill = false)
+                                        .clickable(
+                                            enabled = confirmPin.isNotEmpty(),
+                                            indication = null,
+                                            interactionSource = remember {
+                                                MutableInteractionSource()
+                                            }
+                                        ) {
+                                            confirmPin = ""
+                                            error = ""
+                                        }
+                                        .padding(10.dp)
+                                )
+
+                                Text(
+                                    text = stringResource(R.string.continue_text),
+                                    color = if (confirmPin.length == pinLength) {
+                                        Color.White
+                                    } else {
+                                        Color.White.copy(alpha = 0.35f)
+                                    },
+                                    fontSize = actionSize,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier
+                                        .weight(1f, fill = false)
+                                        .clickable(
+                                            enabled = confirmPin.length == pinLength,
+                                            indication = null,
+                                            interactionSource = remember {
+                                                MutableInteractionSource()
+                                            }
+                                        ) {
+                                            if (confirmPin != value) {
+                                                error = enterCorrectPasswordText
+                                                confirmPin = ""
+                                                return@clickable
+                                            }
+
+                                            continueWithPin()
+                                        }
+                                        .padding(10.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
-        }
 
-        if (showPermissionDialog) {
-            PermissionRequiredDialog(
-                autoStartAvailable = autoStartAvailable,
-                autoStartAllowed = autoStartAllowed,
-                overlayAllowed = overlayAllowed,
-                accessibilityAllowed = accessibilityAllowed,
-                popupRequired = popupAccess.required,
-                popupAllowed = popupAccess.granted,
-                onAutoStartAllow = { openAutoStartSettings() },
-                onOverlayAllow = { openOverlayPermission() },
-                onPopupAllow = { openBackgroundPopupPermission() },
-                onAccessibilityAllow = { openAccessibilitySettings() },
-                onDone = {}
-            )
-        }
+            if (showPermissionDialog) {
+                PermissionRequiredDialog(
+                    overlayAllowed = overlayAllowed,
+                    accessibilityAllowed = accessibilityAllowed,
+                    popupRequired = popupAccess.required,
+                    popupAllowed = popupAccess.granted,
+                    onOverlayAllow = { openOverlayPermission() },
+                    onPopupAllow = { openBackgroundPopupPermission() },
+                    onAccessibilityAllow = { openAccessibilitySettings() }
+                )
+            }
 
-        if (showSecurityDialog) {
-            SecurityQuestionDialog(
-                selectedQuestion = selectedQuestion,
-                answer = securityAnswer,
-                dropdownExpanded = securityDropdownExpanded,
-                isReset = isReset,
-                questionLocked = securityQuestionLocked,
-                answerError = securityAnswerError,
-                onDropdownClick = {
-                    if (!securityQuestionLocked) securityDropdownExpanded = !securityDropdownExpanded
-                },
-                onQuestionSelected = { question ->
-                    if (!securityQuestionLocked) {
-                        selectedQuestion = question
-                        securityDropdownExpanded = false
-                        securityAnswerError = false
-                    }
-                },
-                onAnswerChanged = { newAnswer ->
-                    securityAnswer = newAnswer
-                    securityAnswerError = false
-                },
-                onSkip = {
-                    if (!isReset) goToAppList()
-                },
-                onSave = {
-                    scope.launch {
-                        try {
-                            val question = selectedQuestion.trim()
-                            val enteredAnswer = securityAnswer.trim()
-                            if (question.isEmpty() || enteredAnswer.isEmpty()) {
-                                securityAnswerError = true
-                                return@launch
-                            }
-                            dataStore.saveSecurityQuestion(question)
-                            dataStore.saveSecurityAnswer(enteredAnswer)
+            if (showSecurityDialog) {
+                SecurityQuestionDialog(
+                    selectedQuestion = selectedQuestion,
+                    answer = securityAnswer,
+                    dropdownExpanded = securityDropdownExpanded,
+                    isReset = isReset,
+                    questionLocked = securityQuestionLocked,
+                    answerError = securityAnswerError,
+                    onDropdownClick = {
+                        if (!securityQuestionLocked) {
+                            securityDropdownExpanded = !securityDropdownExpanded
+                        }
+                    },
+                    onQuestionSelected = { question ->
+                        if (!securityQuestionLocked) {
+                            selectedQuestion = question
+                            securityDropdownExpanded = false
                             securityAnswerError = false
-                            goToAppList()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            securityAnswerError = true
+                        }
+                    },
+                    onAnswerChanged = { newAnswer ->
+                        securityAnswer = newAnswer
+                        securityAnswerError = false
+                    },
+                    onSkip = {
+                        if (!isReset) goToAppList()
+                    },
+                    onSave = {
+                        scope.launch {
+                            try {
+                                val question = selectedQuestion.trim()
+                                val enteredAnswer = securityAnswer.trim()
+
+                                if (question.isEmpty() || enteredAnswer.isEmpty()) {
+                                    securityAnswerError = true
+                                    return@launch
+                                }
+
+                                dataStore.saveSecurityQuestion(question)
+                                dataStore.saveSecurityAnswer(enteredAnswer)
+                                securityAnswerError = false
+                                goToAppList()
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                securityAnswerError = true
+                            }
                         }
                     }
-                }
-            )
+                )
+            }
         }
     }
 }
@@ -638,19 +1024,16 @@ fun PinConfirmScreen(
 // ============================================================
 // RESPONSIVE PERMISSION DIALOG
 // ============================================================
+
 @Composable
 private fun PermissionRequiredDialog(
-    autoStartAvailable: Boolean,
-    autoStartAllowed: Boolean,
     overlayAllowed: Boolean,
     accessibilityAllowed: Boolean,
     popupRequired: Boolean,
     popupAllowed: Boolean,
-    onAutoStartAllow: () -> Unit,
     onOverlayAllow: () -> Unit,
     onPopupAllow: () -> Unit,
-    onAccessibilityAllow: () -> Unit,
-    onDone: () -> Unit
+    onAccessibilityAllow: () -> Unit
 ) {
     Dialog(
         onDismissRequest = {},
@@ -660,10 +1043,19 @@ private fun PermissionRequiredDialog(
             usePlatformDefaultWidth = false
         )
     ) {
-        val dialogWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
+        val dialogWindow =
+            (LocalView.current.parent as? DialogWindowProvider)?.window
+
         DisposableEffect(dialogWindow) {
-            dialogWindow?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
-            onDispose { dialogWindow?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE) }
+            dialogWindow?.setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+            )
+
+            onDispose {
+                dialogWindow?.setSoftInputMode(
+                    WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                )
+            }
         }
 
         BoxWithConstraints(
@@ -671,105 +1063,112 @@ private fun PermissionRequiredDialog(
             contentAlignment = Alignment.Center
         ) {
             val isCompact = maxWidth < 360.dp
-            val dialogWidth = (maxWidth * 0.92f).coerceAtMost(420.dp)   // tablet pe bhi theek
-            val dialogMaxHeight = maxHeight * 0.85f                      // screen ka 85% tak
-            val hPadding = if (isCompact) 16.dp else 24.dp
-            val titleSize = if (isCompact) 18.sp else 20.sp
+            val dialogWidth = (maxWidth * 0.92f).coerceAtMost(420.dp)
+            val dialogMaxHeight = maxHeight * 0.85f
+            val hPadding = if (isCompact) 14.dp else 24.dp
+            val titleSize = if (isCompact) 17.sp else 20.sp
 
-            Column(
-                modifier = Modifier
-                    .width(dialogWidth)
-                    .heightIn(max = dialogMaxHeight)
-                    .background(Color.White, RoundedCornerShape(20.dp))
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = hPadding, vertical = 22.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.permissions_required),
-                    color = Color(0xFF333333),
-                    fontSize = titleSize,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
-                    textAlign = TextAlign.Center
-                )
+            // System font size bara ho tab bhi dialog na toote
+            val density = LocalDensity.current
+            val limitedDensity = Density(
+                density = density.density,
+                fontScale = density.fontScale.coerceAtMost(1.15f)
+            )
 
-                if (autoStartAvailable) {
-                    PermissionRow(
-                        icon = {
-                            Image(
-                                painter = painterResource(R.drawable.group3),
-                                contentDescription = stringResource(R.string.auto_start),
-                                modifier = Modifier.size(20.dp),
-                                contentScale = ContentScale.Fit
-                            )
-                        },
-                        title = stringResource(R.string.auto_start),
-                        description = stringResource(R.string.keep_applock_running),
-                        allowed = autoStartAllowed,
-                        onAllow = onAutoStartAllow,
-                        isCompact = isCompact
+            CompositionLocalProvider(LocalDensity provides limitedDensity) {
+                Column(
+                    modifier = Modifier
+                        .width(dialogWidth)
+                        .heightIn(max = dialogMaxHeight)
+                        .background(Color.White, RoundedCornerShape(20.dp))
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = hPadding, vertical = 22.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.permissions_required),
+                        color = Color(0xFF333333),
+                        fontSize = titleSize,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 20.dp),
+                        textAlign = TextAlign.Center
                     )
-                    PermissionDivider()
-                }
 
-                PermissionRow(
-                    icon = {
-                        Image(
-                            painter = painterResource(R.drawable.group1),
-                            contentDescription = stringResource(R.string.show_over_other_apps),
-                            modifier = Modifier.size(20.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                    },
-                    title = stringResource(R.string.show_over_other_apps),
-                    description = stringResource(R.string.allow_lock_screen),
-                    allowed = overlayAllowed,
-                    onAllow = onOverlayAllow,
-                    isCompact = isCompact
-                )
-                PermissionDivider()
-
-                // Sirf Xiaomi / Redmi / POCO par nazar aati hai
-                if (popupRequired) {
                     PermissionRow(
                         icon = {
                             Image(
                                 painter = painterResource(R.drawable.group1),
-                                contentDescription = stringResource(R.string.background_popup),
+                                contentDescription = stringResource(
+                                    R.string.show_over_other_apps
+                                ),
                                 modifier = Modifier.size(20.dp),
                                 contentScale = ContentScale.Fit
                             )
                         },
-                        title = stringResource(R.string.background_popup),
-                        description = stringResource(R.string.background_popup_description),
-                        allowed = popupAllowed,
-                        onAllow = onPopupAllow,
+                        title = stringResource(R.string.show_over_other_apps),
+                        description = stringResource(R.string.allow_lock_screen),
+                        allowed = overlayAllowed,
+                        onAllow = onOverlayAllow,
                         isCompact = isCompact
                     )
-                    PermissionDivider()
-                }
-                PermissionRow(
-                    icon = {
-                        Image(
-                            painter = painterResource(R.drawable.group2),
-                            contentDescription = stringResource(R.string.detect_launched_app),
-                            modifier = Modifier.size(20.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                    },
-                    title = stringResource(R.string.detect_launched_app),
-                    description = stringResource(R.string.detect_launched_description),
-                    allowed = accessibilityAllowed,
-                    onAllow = onAccessibilityAllow,
-                    isCompact = isCompact
-                )
 
-                Text(
-                    text = stringResource(R.string.permissions_work_properly),
-                    color = Color(0xFFBDBDBD),
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
-                    modifier = Modifier.fillMaxWidth().padding(top = 18.dp)
-                )
+                    PermissionDivider()
+
+                    // Sirf Xiaomi / Redmi / POCO par nazar aati hai.
+                    if (popupRequired) {
+                        PermissionRow(
+                            icon = {
+                                Image(
+                                    painter = painterResource(R.drawable.group1),
+                                    contentDescription = stringResource(
+                                        R.string.background_popup
+                                    ),
+                                    modifier = Modifier.size(20.dp),
+                                    contentScale = ContentScale.Fit
+                                )
+                            },
+                            title = stringResource(R.string.background_popup),
+                            description = stringResource(
+                                R.string.background_popup_description
+                            ),
+                            allowed = popupAllowed,
+                            onAllow = onPopupAllow,
+                            isCompact = isCompact
+                        )
+
+                        PermissionDivider()
+                    }
+
+                    PermissionRow(
+                        icon = {
+                            Image(
+                                painter = painterResource(R.drawable.group2),
+                                contentDescription = stringResource(
+                                    R.string.detect_launched_app
+                                ),
+                                modifier = Modifier.size(20.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        },
+                        title = stringResource(R.string.detect_launched_app),
+                        description = stringResource(
+                            R.string.detect_launched_description
+                        ),
+                        allowed = accessibilityAllowed,
+                        onAllow = onAccessibilityAllow,
+                        isCompact = isCompact
+                    )
+
+                    Text(
+                        text = stringResource(R.string.permissions_work_properly),
+                        color = Color(0xFFBDBDBD),
+                        fontSize = if (isCompact) 11.sp else 12.sp,
+                        lineHeight = 16.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 18.dp)
+                    )
+                }
             }
         }
     }
@@ -785,44 +1184,64 @@ private fun PermissionRow(
     isCompact: Boolean = false
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(modifier = Modifier.width(28.dp), contentAlignment = Alignment.Center) { icon() }
+        Box(
+            modifier = Modifier.width(if (isCompact) 24.dp else 28.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            icon()
+        }
 
-        // weight(1f) => button ke baad jo jagah bachi wo text ko mile, text wrap ho kar poora dikhe
-        Column(modifier = Modifier.weight(1f).padding(horizontal = 10.dp)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = if (isCompact) 8.dp else 10.dp)
+        ) {
             Text(
                 text = title,
                 color = Color(0xFF333333),
                 fontSize = if (isCompact) 14.sp else 15.sp,
-                lineHeight = 20.sp
+                lineHeight = 20.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
+
             Spacer(Modifier.height(4.dp))
+
             Text(
                 text = description,
                 color = Color(0xFFBDBDBD),
-                fontSize = if (isCompact) 12.sp else 13.sp,
-                lineHeight = 17.sp
-                // maxLines / overflow hata diye, taake text kate nahi
+                fontSize = if (isCompact) 11.sp else 13.sp,
+                lineHeight = if (isCompact) 15.sp else 17.sp,
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
         Box(
             modifier = Modifier
-                .defaultMinSize(minWidth = 72.dp, minHeight = 40.dp)   // max width nahi, text ke hisaab se barhe
+                .widthIn(min = if (isCompact) 64.dp else 72.dp)
+                .heightIn(min = 40.dp)
                 .background(
                     if (allowed) Color(0xFF4CAF50) else Color(0xFF2196F3),
                     RoundedCornerShape(4.dp)
                 )
                 .clickable(enabled = !allowed) { onAllow() }
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = 10.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = if (allowed) stringResource(R.string.allowed) else stringResource(R.string.allow),
+                text = if (allowed) {
+                    stringResource(R.string.allowed)
+                } else {
+                    stringResource(R.string.allow)
+                },
                 color = Color.White,
-                fontSize = 13.sp,
+                fontSize = if (isCompact) 12.sp else 13.sp,
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )
@@ -833,9 +1252,20 @@ private fun PermissionRow(
 @Composable
 private fun PermissionDivider() {
     Spacer(Modifier.height(9.dp))
-    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color(0xFFE5E5E5)))
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(Color(0xFFE5E5E5))
+    )
+
     Spacer(Modifier.height(9.dp))
 }
+
+// ============================================================
+// SECURITY QUESTION DIALOG
+// ============================================================
 
 @Composable
 private fun SecurityQuestionDialog(
@@ -858,6 +1288,8 @@ private fun SecurityQuestionDialog(
         stringResource(R.string.security_question_job)
     )
 
+    val answerErrorText = stringResource(R.string.enter_correct_answer)
+
     Dialog(
         onDismissRequest = {},
         properties = DialogProperties(
@@ -866,25 +1298,57 @@ private fun SecurityQuestionDialog(
             usePlatformDefaultWidth = false
         )
     ) {
-        val dialogWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
+        val dialogWindow =
+            (LocalView.current.parent as? DialogWindowProvider)?.window
+
         DisposableEffect(dialogWindow) {
-            dialogWindow?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
-            onDispose { dialogWindow?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE) }
+            dialogWindow?.setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+            )
+
+            onDispose {
+                dialogWindow?.setSoftInputMode(
+                    WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                )
+            }
         }
-        Box(modifier = Modifier.fillMaxSize().background(Color.Transparent), contentAlignment = Alignment.Center) {
+
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            val isCompact = maxWidth < 360.dp || maxHeight < 600.dp
+            val dialogWidth = (maxWidth * 0.90f).coerceAtMost(420.dp)
+            val dialogMaxHeight = maxHeight * 0.90f
+            val hPad = if (isCompact) 18.dp else 25.dp
+            val vPad = if (isCompact) 20.dp else 30.dp
+            val fieldWidth = dialogWidth - hPad * 2
+
+            val density = LocalDensity.current
+            val popupOffset = with(density) {
+                IntOffset(0, 44.dp.roundToPx())
+            }
+
             Column(
-                modifier = Modifier.fillMaxWidth(0.90f).wrapContentHeight().background(Color.White, RoundedCornerShape(26.dp)).padding(start = 25.dp, end = 25.dp, top = 30.dp, bottom = 30.dp)
+                modifier = Modifier
+                    .width(dialogWidth)
+                    .heightIn(max = dialogMaxHeight)
+                    .background(Color.White, RoundedCornerShape(26.dp))
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = hPad, vertical = vPad)
             ) {
                 Text(
                     text = stringResource(R.string.security_questions),
                     color = Color(0xFF333333),
-                    fontSize = 19.sp,
+                    fontSize = if (isCompact) 17.sp else 19.sp,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+
                 Spacer(Modifier.height(8.dp))
+
                 Text(
                     text = stringResource(R.string.security_question_description),
                     color = Color(0xFFBDBDBD),
@@ -893,96 +1357,193 @@ private fun SecurityQuestionDialog(
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
-                Spacer(Modifier.height(28.dp))
-                Text(text = stringResource(R.string.select_security_questions), color = Color(0xFF333333), fontSize = 14.sp)
+
+                Spacer(Modifier.height(if (isCompact) 18.dp else 28.dp))
+
+                Text(
+                    text = stringResource(R.string.select_security_questions),
+                    color = Color(0xFF333333),
+                    fontSize = 14.sp
+                )
+
                 Spacer(Modifier.height(8.dp))
-                Box(modifier = Modifier.fillMaxWidth().height(40.dp)) {
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().height(40.dp).background(Color(0xFFF8F8F8), RoundedCornerShape(15.dp)).clickable(
-                            enabled = !questionLocked,
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) {
-                            if (!questionLocked) onDropdownClick()
-                        }.padding(start = 18.dp, end = 14.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .background(
+                                Color(0xFFF8F8F8),
+                                RoundedCornerShape(15.dp)
+                            )
+                            .clickable(
+                                enabled = !questionLocked,
+                                indication = null,
+                                interactionSource = remember {
+                                    MutableInteractionSource()
+                                }
+                            ) {
+                                if (!questionLocked) {
+                                    onDropdownClick()
+                                }
+                            }
+                            .padding(start = 18.dp, end = 14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (selectedQuestion.isEmpty()) stringResource(R.string.select_security_question) else selectedQuestion,
-                            color = if (selectedQuestion.isEmpty()) Color(0xFFBDBDBD) else Color(0xFF333333),
+                            text = if (selectedQuestion.isEmpty()) {
+                                stringResource(R.string.select_security_question)
+                            } else {
+                                selectedQuestion
+                            },
+                            color = if (selectedQuestion.isEmpty()) {
+                                Color(0xFFBDBDBD)
+                            } else {
+                                Color(0xFF333333)
+                            },
                             fontSize = 14.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
                         )
+
                         if (!questionLocked) {
                             Icon(
                                 imageVector = Icons.Outlined.KeyboardArrowDown,
-                                contentDescription = stringResource(R.string.select_security_question),
+                                contentDescription = stringResource(
+                                    R.string.select_security_question
+                                ),
                                 tint = Color(0xFF8F8F8F),
                                 modifier = Modifier.size(22.dp)
                             )
                         }
                     }
+
                     if (dropdownExpanded && !questionLocked) {
+                        // Field ke bilkul neeche, field jitni chauri
                         Popup(
-                            alignment = Alignment.TopEnd,
+                            alignment = Alignment.TopStart,
+                            offset = popupOffset,
                             onDismissRequest = { onDropdownClick() },
                             properties = PopupProperties(focusable = true)
                         ) {
                             Column(
-                                modifier = Modifier.width(210.dp).background(Color.White, RoundedCornerShape(15.dp)).border(1.dp, Color(0xFFE5E5E5), RoundedCornerShape(15.dp))
+                                modifier = Modifier
+                                    .width(fieldWidth)
+                                    .background(
+                                        Color.White,
+                                        RoundedCornerShape(15.dp)
+                                    )
+                                    .border(
+                                        1.dp,
+                                        Color(0xFFE5E5E5),
+                                        RoundedCornerShape(15.dp)
+                                    )
                             ) {
                                 questions.forEachIndexed { index, question ->
                                     Text(
                                         text = question,
                                         color = Color(0xFF333333),
                                         fontSize = 13.sp,
-                                        // FIX: lamba sawal 2 lines tak
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.fillMaxWidth().clickable(
-                                            indication = null,
-                                            interactionSource = remember { MutableInteractionSource() }
-                                        ) { onQuestionSelected(question) }.padding(horizontal = 18.dp, vertical = 14.dp)
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable(
+                                                indication = null,
+                                                interactionSource = remember {
+                                                    MutableInteractionSource()
+                                                }
+                                            ) {
+                                                onQuestionSelected(question)
+                                            }
+                                            .padding(
+                                                horizontal = 18.dp,
+                                                vertical = 14.dp
+                                            )
                                     )
+
                                     if (index < questions.lastIndex) {
-                                        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color(0xFFF0F0F0)))
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(1.dp)
+                                                .background(Color(0xFFF0F0F0))
+                                        )
                                     }
                                 }
                             }
                         }
                     }
                 }
-                Spacer(Modifier.height(23.dp))
-                Text(text = stringResource(R.string.enter_security_answer), color = Color(0xFF333333), fontSize = 14.sp)
+
+                Spacer(Modifier.height(if (isCompact) 16.dp else 23.dp))
+
+                Text(
+                    text = stringResource(R.string.enter_security_answer),
+                    color = Color(0xFF333333),
+                    fontSize = 14.sp
+                )
+
                 Spacer(Modifier.height(8.dp))
+
                 BasicTextField(
                     value = answer,
                     onValueChange = onAnswerChanged,
-                    modifier = Modifier.fillMaxWidth().height(40.dp).background(Color(0xFFF8F8F8), RoundedCornerShape(15.dp)).padding(horizontal = 15.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                        .background(
+                            Color(0xFFF8F8F8),
+                            RoundedCornerShape(15.dp)
+                        )
+                        .padding(horizontal = 15.dp),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color(0xFF333333), fontSize = 12.sp, lineHeight = 16.sp),
+                    textStyle = TextStyle(
+                        color = Color(0xFF333333),
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    ),
                     decorationBox = { innerTextField ->
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
                             if (answer.isEmpty()) {
                                 Text(
-                                    text = stringResource(R.string.enter_your_answer),
+                                    text = stringResource(
+                                        R.string.enter_your_answer
+                                    ),
                                     color = Color(0xFFBDBDBD),
                                     fontSize = 12.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
+
                             innerTextField()
                         }
                     }
                 )
+
                 if (answerError) {
                     Spacer(Modifier.height(5.dp))
-                    Text(text = "Enter your correct answer", color = Color.Red, fontSize = 12.sp, modifier = Modifier.fillMaxWidth())
+
+                    Text(
+                        text = answerErrorText,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
-                Spacer(Modifier.height(30.dp))
+
+                Spacer(Modifier.height(if (isCompact) 20.dp else 30.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
@@ -995,25 +1556,54 @@ private fun SecurityQuestionDialog(
                             fontSize = 16.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false).clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) { onSkip() }.padding(horizontal = 16.dp, vertical = 10.dp)
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember {
+                                        MutableInteractionSource()
+                                    }
+                                ) {
+                                    onSkip()
+                                }
+                                .padding(
+                                    horizontal = 16.dp,
+                                    vertical = 10.dp
+                                )
                         )
+
                         Spacer(Modifier.width(8.dp))
                     }
-                    val saveEnabled = selectedQuestion.isNotEmpty() && answer.trim().isNotEmpty()
+
+                    val saveEnabled =
+                        selectedQuestion.isNotEmpty() &&
+                                answer.trim().isNotEmpty()
+
                     Text(
                         text = stringResource(R.string.save),
-                        color = if (saveEnabled) Color(0xFF2196F3) else Color(0xFF90CAF9),
+                        color = if (saveEnabled) {
+                            Color(0xFF2196F3)
+                        } else {
+                            Color(0xFF90CAF9)
+                        },
                         fontSize = 16.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false).clickable(
-                            enabled = saveEnabled,
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) { onSave() }.padding(horizontal = 16.dp, vertical = 10.dp)
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .clickable(
+                                enabled = saveEnabled,
+                                indication = null,
+                                interactionSource = remember {
+                                    MutableInteractionSource()
+                                }
+                            ) {
+                                onSave()
+                            }
+                            .padding(
+                                horizontal = 16.dp,
+                                vertical = 10.dp
+                            )
                     )
                 }
             }
@@ -1021,19 +1611,30 @@ private fun SecurityQuestionDialog(
     }
 }
 
+// ============================================================
+// HELPERS
+// ============================================================
+
 private fun isAccessibilityServiceEnabled(context: Context): Boolean {
     return try {
         val enabledServices = Settings.Secure.getString(
             context.contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
         )
+
         if (enabledServices.isNullOrEmpty()) {
             false
         } else {
             val packageName = context.packageName
+
             enabledServices.split(":").any { serviceName ->
-                val component = ComponentName.unflattenFromString(serviceName)
-                component?.packageName?.equals(packageName, ignoreCase = true) == true
+                val component =
+                    ComponentName.unflattenFromString(serviceName)
+
+                component?.packageName?.equals(
+                    packageName,
+                    ignoreCase = true
+                ) == true
             }
         }
     } catch (e: Exception) {
@@ -1042,42 +1643,13 @@ private fun isAccessibilityServiceEnabled(context: Context): Boolean {
     }
 }
 
-private fun getAutoStartIntent(context: Context): Intent? {
-    val manufacturer = Build.MANUFACTURER.lowercase()
-    val intents = when {
-        manufacturer.contains("xiaomi") -> listOf(
-            Intent("miui.intent.action.OP_AUTO_START"),
-            Intent().setComponent(ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"))
-        )
-        manufacturer.contains("oppo") -> listOf(
-            Intent("oppo.intent.action.OPPO_AUTO_START"),
-            Intent().setComponent(ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"))
-        )
-        manufacturer.contains("vivo") -> listOf(
-            Intent("vivo.intent.action.OP_AUTO_START"),
-            Intent().setComponent(ComponentName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"))
-        )
-        manufacturer.contains("huawei") -> listOf(
-            Intent().setComponent(ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"))
-        )
-        manufacturer.contains("honor") -> listOf(
-            Intent().setComponent(ComponentName("com.hihonor.systemmanager", "com.hihonor.systemmanager.startupmgr.ui.StartupNormalAppListActivity"))
-        )
-        else -> emptyList()
-    }
-
-    for (intent in intents) {
-        try {
-            if (intent.resolveActivity(context.packageManager) != null) return intent
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-    return null
-}
+// ============================================================
+// PATTERN GRID
+// ============================================================
 
 @Composable
 private fun ConfirmPatternGrid(
+    modifier: Modifier = Modifier,
     selectedDots: List<Int>,
     isError: Boolean,
     onPatternChanged: (List<Int>) -> Unit,
@@ -1090,67 +1662,100 @@ private fun ConfirmPatternGrid(
     val latestOnPatternFinished by rememberUpdatedState(onPatternFinished)
 
     Box(
-        modifier = Modifier.size(330.dp).pointerInput(Unit) {
-            var currentDots = mutableListOf<Int>()
-            var patternFinished = false
-            detectDragGestures(
-                onDragStart = { offset ->
-                    currentDots = mutableListOf()
-                    patternFinished = false
-                    val dot = findConfirmDot(offset, size.width.toFloat(), size.height.toFloat())
-                    if (dot != null) {
-                        currentDots.add(dot)
-                        latestOnPatternChanged(currentDots.toList())
+        modifier = modifier
+            .pointerInput(Unit) {
+                var currentDots = mutableListOf<Int>()
+                var patternFinished = false
+
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        currentDots = mutableListOf()
+                        patternFinished = false
+
+                        val dot = findConfirmDot(
+                            offset,
+                            size.width.toFloat(),
+                            size.height.toFloat()
+                        )
+
+                        if (dot != null) {
+                            currentDots.add(dot)
+                            latestOnPatternChanged(currentDots.toList())
+                        }
+                    },
+                    onDrag = { change, _ ->
+                        change.consume()
+
+                        val dot = findConfirmDot(
+                            change.position,
+                            size.width.toFloat(),
+                            size.height.toFloat()
+                        )
+
+                        if (dot != null && !currentDots.contains(dot)) {
+                            currentDots.add(dot)
+                            latestOnPatternChanged(currentDots.toList())
+                        }
+                    },
+                    onDragEnd = {
+                        if (!patternFinished) {
+                            patternFinished = true
+                            val finalPattern = currentDots.toList()
+
+                            if (finalPattern.isNotEmpty()) {
+                                latestOnPatternFinished(finalPattern)
+                            }
+                        }
+                    },
+                    onDragCancel = {
+                        if (!patternFinished) {
+                            patternFinished = true
+                            val finalPattern = currentDots.toList()
+
+                            if (finalPattern.isNotEmpty()) {
+                                latestOnPatternFinished(finalPattern)
+                            }
+                        }
                     }
-                },
-                onDrag = { change, _ ->
-                    change.consume()
-                    val dot = findConfirmDot(change.position, size.width.toFloat(), size.height.toFloat())
-                    if (dot != null && !currentDots.contains(dot)) {
-                        currentDots.add(dot)
-                        latestOnPatternChanged(currentDots.toList())
-                    }
-                },
-                onDragEnd = {
-                    if (!patternFinished) {
-                        patternFinished = true
-                        val finalPattern = currentDots.toList()
-                        if (finalPattern.isNotEmpty()) latestOnPatternFinished(finalPattern)
-                    }
-                },
-                onDragCancel = {
-                    if (!patternFinished) {
-                        patternFinished = true
-                        val finalPattern = currentDots.toList()
-                        if (finalPattern.isNotEmpty()) latestOnPatternFinished(finalPattern)
-                    }
-                }
-            )
-        }
+                )
+            }
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val positions = getConfirmPositions(size.width, size.height)
+
             if (selectedDots.size >= 2) {
                 for (i in 0 until selectedDots.size - 1) {
                     drawLine(
                         color = if (isError) errorColor else Color.White,
                         start = positions[selectedDots[i]],
                         end = positions[selectedDots[i + 1]],
-                        strokeWidth = 8f
+                        strokeWidth = size.minDimension * 0.024f
                     )
                 }
             }
+
             positions.forEachIndexed { index, position ->
                 val selected = selectedDots.contains(index)
-                drawCircle(color = dotColor, radius = 17.5.dp.toPx(), center = position)
-                drawCircle(color = backgroundColor, radius = 13.5.dp.toPx(), center = position)
+
+                drawCircle(
+                    color = dotColor,
+                    radius = size.minDimension * 0.053f,
+                    center = position
+                )
+
+                drawCircle(
+                    color = backgroundColor,
+                    radius = size.minDimension * 0.041f,
+                    center = position
+                )
+
                 drawCircle(
                     color = when {
                         selected && isError -> errorColor
                         selected -> Color.White
                         else -> dotColor
                     },
-                    radius = 9.dp.toPx(),
+                    radius = size.minDimension * 0.027f,
                     center = position
                 )
             }
@@ -1158,13 +1763,18 @@ private fun ConfirmPatternGrid(
     }
 }
 
-private fun getConfirmPositions(width: Float, height: Float): List<Offset> {
+private fun getConfirmPositions(
+    width: Float,
+    height: Float
+): List<Offset> {
     val x1 = width * 0.1667f
     val x2 = width * 0.5f
     val x3 = width * 0.8333f
+
     val y1 = height * 0.1667f
     val y2 = height * 0.5f
     val y3 = height * 0.8333f
+
     return listOf(
         Offset(x1, y1),
         Offset(x2, y1),
@@ -1178,13 +1788,21 @@ private fun getConfirmPositions(width: Float, height: Float): List<Offset> {
     )
 }
 
-private fun findConfirmDot(touch: Offset, width: Float, height: Float): Int? {
+private fun findConfirmDot(
+    touch: Offset,
+    width: Float,
+    height: Float
+): Int? {
     val positions = getConfirmPositions(width, height)
+    val touchRadius = min(width, height) * 0.17f
+
     positions.forEachIndexed { index, dot ->
         val dx = touch.x - dot.x
         val dy = touch.y - dot.y
         val distance = sqrt(dx * dx + dy * dy)
-        if (distance <= 55f) return index
+
+        if (distance <= touchRadius) return index
     }
+
     return null
 }

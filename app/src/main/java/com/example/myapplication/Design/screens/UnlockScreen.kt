@@ -18,17 +18,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -36,15 +29,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -54,6 +39,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -68,6 +55,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlin.math.min
 import kotlin.math.sqrt
 
 fun showCustomToast(context: Context, message: String) {
@@ -95,17 +83,22 @@ fun showCustomToast(context: Context, message: String) {
 private fun performUnlockVibration(context: Context, duration: Long = 70L) {
     try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            val vibratorManager =
+                context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
             val vibrator = vibratorManager.defaultVibrator
             if (vibrator.hasVibrator()) {
-                vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
+                vibrator.vibrate(
+                    VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
+                )
             }
         } else {
             @Suppress("DEPRECATION")
             val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             if (vibrator.hasVibrator()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
+                    vibrator.vibrate(
+                        VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
+                    )
                 } else {
                     @Suppress("DEPRECATION")
                     vibrator.vibrate(duration)
@@ -302,296 +295,392 @@ fun UnlockScreen(
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize().background(backgroundColor)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 30.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    LimitFontScale {
+
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundColor)
         ) {
-            Text(
-                text = if (authType == "pattern") stringResource(R.string.draw_pattern) else stringResource(R.string.enter_passcode),
-                color = Color.White,
-                fontSize = 25.sp,
-                fontWeight = FontWeight.Normal
-            )
+            // ---------- Responsive values ----------
+            val isCompact = maxHeight < 700.dp || maxWidth < 360.dp
 
-            Spacer(modifier = Modifier.height(15.dp))
+            val titleSize = if (isCompact) 21.sp else 25.sp
+            val subTitleSize = if (isCompact) 14.sp else 16.sp
+            val errorSize = if (isCompact) 13.sp else 15.sp
+            val linkSize = if (isCompact) 14.sp else 16.sp
+            val gapAfterTitle = if (isCompact) 10.dp else 15.dp
+            val gapAfterSubTitle = if (isCompact) 12.dp else 18.dp
+            val gapBeforePad = if (isCompact) 14.dp else 35.dp
+            val gapBeforeLink = if (isCompact) 14.dp else 30.dp
+            val linkEndPadding = if (isCompact) 8.dp else 30.dp
 
-            if (authType == "pin") {
-                val pinLength = if (savedPin.isNotEmpty()) savedPin.length else 6
+            val gridSize = minOf(
+                maxWidth - 60.dp,
+                maxHeight * 0.42f,
+                330.dp
+            ).coerceAtLeast(200.dp)
 
-                Text(
-                    text = stringResource(R.string.enter_digit_pin, pinLength),
-                    color = Color.White,
-                    fontSize = 16.sp
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding(),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = 480.dp)
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 30.dp, vertical = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = if (authType == "pattern") {
+                            stringResource(R.string.draw_pattern)
+                        } else {
+                            stringResource(R.string.enter_passcode)
+                        },
+                        color = Color.White,
+                        fontSize = titleSize,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
 
-                Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(gapAfterTitle))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    repeat(pinLength) { index ->
+                    if (authType == "pin") {
+                        val pinLength = if (savedPin.isNotEmpty()) savedPin.length else 6
+
+                        Text(
+                            text = stringResource(R.string.enter_digit_pin, pinLength),
+                            color = Color.White,
+                            fontSize = subTitleSize,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Spacer(modifier = Modifier.height(gapAfterSubTitle))
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                            repeat(pinLength) { index ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(14.dp)
+                                        .background(
+                                            if (index < enteredPin.length) {
+                                                Color.White
+                                            } else {
+                                                Color.White.copy(alpha = 0.45f)
+                                            },
+                                            CircleShape
+                                        )
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(if (isCompact) 10.dp else 20.dp))
+
+                        // Error ke liye jagah hamesha reserve, taake layout na uchhle
                         Box(
                             modifier = Modifier
-                                .size(14.dp)
-                                .background(
-                                    if (index < enteredPin.length) Color.White else Color.White.copy(alpha = 0.45f),
-                                    CircleShape
-                                )
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(25.dp))
-
-                if (error.isNotEmpty()) {
-                    Text(text = error, color = Color.Red, fontSize = 14.sp)
-                }
-
-                Spacer(modifier = Modifier.height(35.dp))
-
-                NumberPad(
-                    onNumberClick = { number ->
-                        if (enteredPin.length < pinLength) {
-                            val newPin = enteredPin + number
-                            enteredPin = newPin
-                            error = ""
-                            if (newPin.length == pinLength) {
-                                checkPin(newPin)
-                            }
-                        }
-                    },
-                    onDelete = {
-                        if (enteredPin.isNotEmpty()) {
-                            enteredPin = enteredPin.dropLast(1)
-                            error = ""
-                        }
-                    },
-                    buttonColor = numberButtonColor
-                )
-
-                Spacer(modifier = Modifier.height(30.dp))
-
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(end = 30.dp),
-                    contentAlignment = Alignment.CenterEnd
-                ) {
-                    Text(
-                        text = stringResource(R.string.forgot_password),
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        modifier = Modifier
-                            .clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) {
-                                openForgotPassword()
-                            }
-                            .padding(8.dp)
-                    )
-                }
-            } else {
-                Box(
-                    modifier = Modifier.height(24.dp).fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (patternError && error.isNotEmpty()) {
-                        Text(text = error, color = Color.Red, fontSize = 20.sp)
-                    }
-                }
-
-                UnlockPatternGrid(
-                    selectedDots = enteredPattern,
-                    isError = patternError,
-                    hideTrack = hideTrackEnabled,
-                    vibrationEnabled = vibrationEnabled,
-                    onPatternChanged = { dots ->
-                        enteredPattern = dots
-                        if (patternError) {
-                            clearErrorJob?.cancel()
-                            clearErrorJob = null
-                            patternError = false
-                            error = ""
-                        }
-                    },
-                    onPatternFinished = { pattern ->
-                        val originalPattern = savedPattern.split("-").mapNotNull { it.toIntOrNull() }
-
-                        if (pattern != originalPattern) {
-                            showPatternError()
-                            return@UnlockPatternGrid
-                        }
-
-                        clearErrorJob?.cancel()
-                        clearErrorJob = null
-                        patternError = false
-                        error = ""
-                        enteredPattern = emptyList()
-
-                        scope.launch {
-                            try {
-                                dataStore.resetIntruderWrongAttempts()
-                            } catch (e: Exception) {
-                                Log.e("INTRUDER_DEBUG", "RESET ERROR", e)
-                            }
-                        }
-
-                        onUnlockSuccess()
-                    },
-                    dotColor = patternDotColor,
-                    errorColor = errorColor,
-                    backgroundColor = backgroundColor
-                )
-
-                Spacer(modifier = Modifier.height(30.dp))
-
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(end = 30.dp),
-                    contentAlignment = Alignment.CenterEnd
-                ) {
-                    Text(
-                        text = stringResource(R.string.forgot_password),
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        modifier = Modifier
-                            .clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) {
-                                openForgotPassword()
-                            }
-                            .padding(8.dp)
-                    )
-                }
-            }
-        }
-
-        if (showForgotPasswordDialog) {
-            Dialog(
-                onDismissRequest = {
-                    if (!checkingSecurityQuestion) {
-                        showForgotPasswordDialog = false
-                        securityAnswer = ""
-                        securityQuestionError = ""
-                    }
-                },
-                properties = DialogProperties(
-                    dismissOnBackPress = !checkingSecurityQuestion,
-                    dismissOnClickOutside = !checkingSecurityQuestion,
-                    usePlatformDefaultWidth = true
-                )
-            ) {
-                val dialogWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
-
-                DisposableEffect(dialogWindow) {
-                    dialogWindow?.setSoftInputMode(
-                        WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
-                    )
-                    onDispose {
-                        dialogWindow?.setSoftInputMode(
-                            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-                        )
-                    }
-                }
-
-                Surface(
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 6.dp
-                ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Text(
-                            text = stringResource(R.string.security_question),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.SemiBold
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = securityQuestion,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        TextField(
-                            value = securityAnswer,
-                            onValueChange = {
-                                securityAnswer = it
-                                securityQuestionError = ""
-                            },
-                            singleLine = true,
-                            enabled = !checkingSecurityQuestion,
-                            placeholder = {
+                                .fillMaxWidth()
+                                .heightIn(min = 22.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (error.isNotEmpty()) {
                                 Text(
-                                    text = stringResource(R.string.answer),
-                                    color = Color(0xFF7B7B7B)
+                                    text = error,
+                                    color = Color.Red,
+                                    fontSize = errorSize,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
                                 )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(gapBeforePad))
+
+                        NumberPad(
+                            onNumberClick = { number ->
+                                if (enteredPin.length < pinLength) {
+                                    val newPin = enteredPin + number
+                                    enteredPin = newPin
+                                    error = ""
+                                    if (newPin.length == pinLength) {
+                                        checkPin(newPin)
+                                    }
+                                }
                             },
-                            isError = securityQuestionError.isNotEmpty(),
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent,
-                                errorContainerColor = Color.Transparent
-                            ),
-                            modifier = Modifier.fillMaxWidth()
+                            onDelete = {
+                                if (enteredPin.isNotEmpty()) {
+                                    enteredPin = enteredPin.dropLast(1)
+                                    error = ""
+                                }
+                            },
+                            buttonColor = numberButtonColor
                         )
 
-                        if (securityQuestionError.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(gapBeforeLink))
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = linkEndPadding),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
                             Text(
-                                text = securityQuestionError,
-                                color = Color.Red,
-                                fontSize = 13.sp
+                                text = stringResource(R.string.forgot_password),
+                                color = Color.White,
+                                fontSize = linkSize,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .clickable(
+                                        indication = null,
+                                        interactionSource = remember { MutableInteractionSource() }
+                                    ) {
+                                        openForgotPassword()
+                                    }
+                                    .padding(8.dp)
                             )
                         }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 24.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Button(
-                                enabled = !checkingSecurityQuestion,
-                                onClick = {
-                                    showForgotPasswordDialog = false
-                                    securityAnswer = ""
+                            if (patternError && error.isNotEmpty()) {
+                                Text(
+                                    text = error,
+                                    color = Color.Red,
+                                    fontSize = if (isCompact) 16.sp else 20.sp,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(if (isCompact) 6.dp else 10.dp))
+
+                        UnlockPatternGrid(
+                            modifier = Modifier.size(gridSize),
+                            selectedDots = enteredPattern,
+                            isError = patternError,
+                            hideTrack = hideTrackEnabled,
+                            vibrationEnabled = vibrationEnabled,
+                            onPatternChanged = { dots ->
+                                enteredPattern = dots
+                                if (patternError) {
+                                    clearErrorJob?.cancel()
+                                    clearErrorJob = null
+                                    patternError = false
+                                    error = ""
+                                }
+                            },
+                            onPatternFinished = { pattern ->
+                                val originalPattern =
+                                    savedPattern.split("-").mapNotNull { it.toIntOrNull() }
+
+                                if (pattern != originalPattern) {
+                                    showPatternError()
+                                    return@UnlockPatternGrid
+                                }
+
+                                clearErrorJob?.cancel()
+                                clearErrorJob = null
+                                patternError = false
+                                error = ""
+                                enteredPattern = emptyList()
+
+                                scope.launch {
+                                    try {
+                                        dataStore.resetIntruderWrongAttempts()
+                                    } catch (e: Exception) {
+                                        Log.e("INTRUDER_DEBUG", "RESET ERROR", e)
+                                    }
+                                }
+
+                                onUnlockSuccess()
+                            },
+                            dotColor = patternDotColor,
+                            errorColor = errorColor,
+                            backgroundColor = backgroundColor
+                        )
+
+                        Spacer(modifier = Modifier.height(gapBeforeLink))
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = linkEndPadding),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
+                            Text(
+                                text = stringResource(R.string.forgot_password),
+                                color = Color.White,
+                                fontSize = linkSize,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .clickable(
+                                        indication = null,
+                                        interactionSource = remember { MutableInteractionSource() }
+                                    ) {
+                                        openForgotPassword()
+                                    }
+                                    .padding(8.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (showForgotPasswordDialog) {
+                Dialog(
+                    onDismissRequest = {
+                        if (!checkingSecurityQuestion) {
+                            showForgotPasswordDialog = false
+                            securityAnswer = ""
+                            securityQuestionError = ""
+                        }
+                    },
+                    properties = DialogProperties(
+                        dismissOnBackPress = !checkingSecurityQuestion,
+                        dismissOnClickOutside = !checkingSecurityQuestion,
+                        usePlatformDefaultWidth = true
+                    )
+                ) {
+                    val dialogWindow =
+                        (LocalView.current.parent as? DialogWindowProvider)?.window
+
+                    DisposableEffect(dialogWindow) {
+                        dialogWindow?.setSoftInputMode(
+                            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+                        )
+                        onDispose {
+                            dialogWindow?.setSoftInputMode(
+                                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = MaterialTheme.shapes.extraLarge,
+                        color = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 6.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .verticalScroll(rememberScrollState())
+                                .padding(if (isCompact) 18.dp else 24.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.security_question),
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                text = securityQuestion,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            TextField(
+                                value = securityAnswer,
+                                onValueChange = {
+                                    securityAnswer = it
                                     securityQuestionError = ""
                                 },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Transparent,
+                                singleLine = true,
+                                enabled = !checkingSecurityQuestion,
+                                placeholder = {
+                                    Text(
+                                        text = stringResource(R.string.answer),
+                                        color = Color(0xFF7B7B7B)
+                                    )
+                                },
+                                isError = securityQuestionError.isNotEmpty(),
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
                                     disabledContainerColor = Color.Transparent,
-                                    contentColor = Color(0xFF7B7B7B),
-                                    disabledContentColor = Color(0xFF7B7B7B)
-                                )
-                            ) {
+                                    errorContainerColor = Color.Transparent
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            if (securityQuestionError.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = stringResource(R.string.cancel),
-                                    color = Color(0xFF7B7B7B)
+                                    text = securityQuestionError,
+                                    color = Color.Red,
+                                    fontSize = 13.sp
                                 )
                             }
 
-                            Button(
-                                enabled = !checkingSecurityQuestion,
-                                onClick = {
-                                    verifySecurityAnswer()
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Transparent,
-                                    disabledContainerColor = Color.Transparent,
-                                    contentColor = backgroundColor,
-                                    disabledContentColor = backgroundColor
-                                )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
                             ) {
-                                Text(
-                                    text = stringResource(R.string.continue_text),
-                                    color = backgroundColor
-                                )
+                                Button(
+                                    enabled = !checkingSecurityQuestion,
+                                    onClick = {
+                                        showForgotPasswordDialog = false
+                                        securityAnswer = ""
+                                        securityQuestionError = ""
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Transparent,
+                                        disabledContainerColor = Color.Transparent,
+                                        contentColor = Color(0xFF7B7B7B),
+                                        disabledContentColor = Color(0xFF7B7B7B)
+                                    )
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.cancel),
+                                        color = Color(0xFF7B7B7B),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+
+                                Button(
+                                    enabled = !checkingSecurityQuestion,
+                                    onClick = { verifySecurityAnswer() },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Transparent,
+                                        disabledContainerColor = Color.Transparent,
+                                        contentColor = backgroundColor,
+                                        disabledContentColor = backgroundColor
+                                    )
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.continue_text),
+                                        color = backgroundColor,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             }
                         }
                     }
@@ -603,6 +692,7 @@ fun UnlockScreen(
 
 @Composable
 private fun UnlockPatternGrid(
+    modifier: Modifier = Modifier,
     selectedDots: List<Int>,
     isError: Boolean,
     hideTrack: Boolean,
@@ -618,46 +708,14 @@ private fun UnlockPatternGrid(
     val latestOnPatternFinished by rememberUpdatedState(onPatternFinished)
 
     Box(
-        modifier = Modifier
-            .size(270.dp)
+        modifier = modifier
             .pointerInput(vibrationEnabled) {
                 var currentDots = mutableListOf<Int>()
                 var patternFinished = false
 
                 fun vibrate() {
-                    if (!vibrationEnabled) return
-
-                    try {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                            val vibrator = vibratorManager.defaultVibrator
-                            if (vibrator.hasVibrator()) {
-                                vibrator.vibrate(
-                                    VibrationEffect.createOneShot(
-                                        35L,
-                                        VibrationEffect.DEFAULT_AMPLITUDE
-                                    )
-                                )
-                            }
-                        } else {
-                            @Suppress("DEPRECATION")
-                            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                            if (vibrator.hasVibrator()) {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    vibrator.vibrate(
-                                        VibrationEffect.createOneShot(
-                                            35L,
-                                            VibrationEffect.DEFAULT_AMPLITUDE
-                                        )
-                                    )
-                                } else {
-                                    @Suppress("DEPRECATION")
-                                    vibrator.vibrate(35L)
-                                }
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.e("PATTERN_VIBRATION", "VIBRATION ERROR", e)
+                    if (vibrationEnabled) {
+                        performUnlockVibration(context, 35L)
                     }
                 }
 
@@ -726,7 +784,7 @@ private fun UnlockPatternGrid(
                         color = if (isError) errorColor else Color.White,
                         start = positions[selectedDots[i]],
                         end = positions[selectedDots[i + 1]],
-                        strokeWidth = 8f
+                        strokeWidth = size.minDimension * 0.012f
                     )
                 }
             }
@@ -736,13 +794,13 @@ private fun UnlockPatternGrid(
 
                 drawCircle(
                     color = dotColor,
-                    radius = 17.5.dp.toPx(),
+                    radius = size.minDimension * 0.055f,
                     center = position
                 )
 
                 drawCircle(
                     color = backgroundColor,
-                    radius = 13.5.dp.toPx(),
+                    radius = size.minDimension * 0.042f,
                     center = position
                 )
 
@@ -752,7 +810,7 @@ private fun UnlockPatternGrid(
                         selected -> Color.White
                         else -> dotColor
                     },
-                    radius = 9.dp.toPx(),
+                    radius = size.minDimension * 0.028f,
                     center = position
                 )
             }
@@ -783,13 +841,14 @@ private fun getUnlockPositions(width: Float, height: Float): List<Offset> {
 
 private fun findUnlockDot(touch: Offset, width: Float, height: Float): Int? {
     val positions = getUnlockPositions(width = width, height = height)
+    val touchRadius = min(width, height) * 0.15f
 
     positions.forEachIndexed { index, dot ->
         val dx = touch.x - dot.x
         val dy = touch.y - dot.y
         val distance = sqrt(dx * dx + dy * dy)
 
-        if (distance <= 55f) {
+        if (distance <= touchRadius) {
             return index
         }
     }

@@ -1,10 +1,7 @@
+
 package com.example.myapplication.Design.screens
 
 import android.app.Activity
-import android.view.WindowManager
-
-import androidx.compose.ui.draw.clip
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,7 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -27,26 +24,23 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -55,7 +49,6 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import com.example.myapplication.R
 import com.example.myapplication.data.DataStoreManager
-
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -64,8 +57,7 @@ import kotlinx.coroutines.launch
 private data class SettingsItemData(
     val key: String,
     val titleRes: Int,
-    val iconRes: Int,
-    val descriptionRes: Int?
+    val iconRes: Int
 )
 
 @Composable
@@ -74,142 +66,109 @@ fun SettingsScreen(
     onLanguageClick: () -> Unit,
     onResetPasswordClick: () -> Unit
 ) {
+    LimitFontScale {
+        SettingsScreenContent(
+            onIntruderClick = onIntruderClick,
+            onLanguageClick = onLanguageClick,
+            onResetPasswordClick = onResetPasswordClick
+        )
+    }
+}
+
+@Composable
+private fun SettingsScreenContent(
+    onIntruderClick: () -> Unit,
+    onLanguageClick: () -> Unit,
+    onResetPasswordClick: () -> Unit
+) {
     val context = LocalContext.current
     val activity = context as? Activity
 
     DisposableEffect(activity) {
-
         val previousSoftInputMode =
             activity?.window?.attributes?.softInputMode
-                ?: WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
 
         activity?.window?.setSoftInputMode(
-            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+            android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
         )
 
         onDispose {
-            activity?.window?.setSoftInputMode(
-                previousSoftInputMode
-            )
+            if (previousSoftInputMode != null) {
+                activity?.window?.setSoftInputMode(previousSoftInputMode)
+            }
         }
     }
 
-    val dataStore = remember {
+    val dataStore = remember(context) {
         DataStoreManager(context)
     }
 
     val scope = rememberCoroutineScope()
 
-    var hideRecentJob by remember {
-        mutableStateOf<Job?>(null)
-    }
+    var hideRecentJob by remember { mutableStateOf<Job?>(null) }
+    var appProtectionEnabled by remember { mutableStateOf(false) }
+    var expandedItem by remember { mutableStateOf<String?>(null) }
+    var hideFromRecents by remember { mutableStateOf(false) }
 
-    var appProtectionEnabled by remember {
-        mutableStateOf(false)
-    }
+    var showRelockDialog by remember { mutableStateOf(false) }
+    var relockOption by remember { mutableStateOf("relock_after_quitting") }
+    var tempRelockOption by remember { mutableStateOf("relock_after_quitting") }
 
-    var expandedItem by remember {
-        mutableStateOf<String?>(null)
-    }
+    var showDelayDialog by remember { mutableStateOf(false) }
+    var delayOption by remember { mutableStateOf("never") }
+    var tempDelayOption by remember { mutableStateOf("never") }
 
-    var hideFromRecents by remember {
-        mutableStateOf(false)
-    }
-
-    var showRelockDialog by remember {
-        mutableStateOf(false)
-    }
-
-    var relockOption by remember {
-        mutableStateOf("relock_after_quitting")
-    }
-
-    var tempRelockOption by remember {
-        mutableStateOf("relock_after_quitting")
-    }
-
-    var showDelayDialog by remember {
-        mutableStateOf(false)
-    }
-
-    var delayOption by remember {
-        mutableStateOf("never")
-    }
-
-    var tempDelayOption by remember {
-        mutableStateOf("never")
-    }
-
-    var showSecurityQuestionDialog by remember {
-        mutableStateOf(false)
-    }
-
-    var securityQuestion by remember {
-        mutableStateOf("")
-    }
-
-    var securityAnswer by remember {
-        mutableStateOf("")
-    }
-
-    var securityDropdownExpanded by remember {
-        mutableStateOf(false)
-    }
+    var showSecurityQuestionDialog by remember { mutableStateOf(false) }
+    var securityQuestion by remember { mutableStateOf("") }
+    var securityAnswer by remember { mutableStateOf("") }
+    var securityDropdownExpanded by remember { mutableStateOf(false) }
 
     val settingsItems = listOf(
         SettingsItemData(
-            key = "languages",
-            titleRes = R.string.languages,
-            iconRes = R.drawable.language,
-            descriptionRes = R.string.language_description
+            "languages",
+            R.string.languages,
+            R.drawable.language
         ),
         SettingsItemData(
-            key = "lock_setting",
-            titleRes = R.string.lock_setting,
-            iconRes = R.drawable.settingicon,
-            descriptionRes = R.string.lock_settings_description
+            "lock_setting",
+            R.string.lock_setting,
+            R.drawable.settingicon
         ),
         SettingsItemData(
-            key = "intruder",
-            titleRes = R.string.intruder,
-            iconRes = R.drawable.intruder,
-            descriptionRes = R.string.intruder_settings
+            "intruder",
+            R.string.intruder,
+            R.drawable.intruder
         ),
         SettingsItemData(
-            key = "hide_settings",
-            titleRes = R.string.hide_settings,
-            iconRes = R.drawable.hideicon,
-            descriptionRes = R.string.hide_settings_description
+            "hide_settings",
+            R.string.hide_settings,
+            R.drawable.hideicon
         ),
         SettingsItemData(
-            key = "rate_us",
-            titleRes = R.string.rate_us,
-            iconRes = R.drawable.rateus,
-            descriptionRes = R.string.rate_us_description
+            "rate_us",
+            R.string.rate_us,
+            R.drawable.rateus
         ),
         SettingsItemData(
-            key = "share",
-            titleRes = R.string.share,
-            iconRes = R.drawable.share,
-            descriptionRes = null
+            "share",
+            R.string.share,
+            R.drawable.share
         ),
         SettingsItemData(
-            key = "about",
-            titleRes = R.string.about,
-            iconRes = R.drawable.feedback,
-            descriptionRes = R.string.about_applock
+            "about",
+            R.string.about,
+            R.drawable.feedback
         ),
         SettingsItemData(
-            key = "privacy_policy",
-            titleRes = R.string.privacy_policy,
-            iconRes = R.drawable.privacy,
-            descriptionRes = R.string.about_applock
+            "privacy_policy",
+            R.string.privacy_policy,
+            R.drawable.privacy
         )
     )
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(dataStore) {
         appProtectionEnabled =
-            dataStore.getAppProtectionEnabled().first() ?: true
+            dataStore.getAppProtectionEnabled().first()
 
         hideFromRecents =
             dataStore.getHideFromRecents().first()
@@ -217,49 +176,30 @@ fun SettingsScreen(
         relockOption =
             dataStore.getRelockOption().first()
 
-        tempRelockOption =
-            relockOption
+        tempRelockOption = relockOption
 
-        val savedDelay =
-            dataStore.getRelockDelay().first()
-
-        delayOption = when (savedDelay) {
-            "never" -> "never"
-
-            "five_seconds",
-            "5_seconds" -> "five_seconds"
-
-            "ten_seconds",
-            "10_seconds" -> "ten_seconds"
-
-            "thirty_seconds",
-            "30_seconds" -> "thirty_seconds"
-
-            "one_minute",
-            "1_minute" -> "one_minute"
-
-            "two_minutes",
-            "2_minutes" -> "two_minutes"
-
-            "five_minutes",
-            "5_minutes" -> "five_minutes"
-
+        delayOption = when (dataStore.getRelockDelay().first()) {
+            "five_seconds", "5_seconds" -> "five_seconds"
+            "ten_seconds", "10_seconds" -> "ten_seconds"
+            "thirty_seconds", "30_seconds" -> "thirty_seconds"
+            "one_minute", "1_minute" -> "one_minute"
+            "two_minutes", "2_minutes" -> "two_minutes"
+            "five_minutes", "5_minutes" -> "five_minutes"
             else -> "never"
         }
 
-        tempDelayOption =
-            delayOption
+        tempDelayOption = delayOption
     }
 
     val scrollState = rememberScrollState()
 
     Box(
-        modifier = Modifier
+        Modifier
             .fillMaxSize()
             .background(Color(0xFFF7F7F7))
     ) {
         Column(
-            modifier = Modifier
+            Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.statusBars)
         ) {
@@ -276,12 +216,10 @@ fun SettingsScreen(
                 overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(
-                modifier = Modifier.height(22.dp)
-            )
+            Spacer(Modifier.height(22.dp))
 
             Column(
-                modifier = Modifier
+                Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .verticalScroll(scrollState)
@@ -302,30 +240,18 @@ fun SettingsScreen(
                     }
                 )
 
-                Spacer(
-                    modifier = Modifier.height(12.dp)
-                )
+                Spacer(Modifier.height(12.dp))
 
                 settingsItems.forEach { item ->
-
-                    val title =
-                        stringResource(item.titleRes)
-
-                    val description =
-                        item.descriptionRes?.let {
-                            stringResource(it)
-                        } ?: ""
+                    val title = stringResource(item.titleRes)
 
                     SettingsItem(
                         itemKey = item.key,
                         title = title,
                         iconRes = item.iconRes,
-                        description = description,
                         expanded = expandedItem == item.key,
                         hideFromRecents = hideFromRecents,
-
                         onHideFromRecentsChange = { enabled ->
-
                             hideFromRecents = enabled
 
                             hideRecentJob?.cancel()
@@ -337,7 +263,6 @@ fun SettingsScreen(
 
                             if (enabled) {
                                 hideRecentJob = scope.launch {
-
                                     delay(2_000L)
 
                                     (context as? Activity)
@@ -347,33 +272,25 @@ fun SettingsScreen(
                                 }
                             }
                         },
-
                         onRelockClick = {
                             tempRelockOption = relockOption
                             showRelockDialog = true
                         },
-
                         onDelayClick = {
                             tempDelayOption = delayOption
                             showDelayDialog = true
                         },
-
                         delayOption = delayOption,
                         relockOption = relockOption,
-
                         onSecurityQuestionClick = {
-
                             scope.launch {
-
                                 securityQuestion =
-                                    dataStore
-                                        .getSecurityQuestion()
+                                    dataStore.getSecurityQuestion()
                                         .first()
                                         .orEmpty()
 
                                 securityAnswer =
-                                    dataStore
-                                        .getSecurityAnswer()
+                                    dataStore.getSecurityAnswer()
                                         .first()
                                         .orEmpty()
 
@@ -381,171 +298,104 @@ fun SettingsScreen(
                                 showSecurityQuestionDialog = true
                             }
                         },
-
                         onCardClick = {
-
                             when (item.key) {
+                                "languages" -> onLanguageClick()
 
-                                "languages" -> {
-                                    onLanguageClick()
-                                }
-
-                                "lock_setting" -> {
-
+                                "lock_setting", "hide_settings" -> {
                                     expandedItem =
-                                        if (
-                                            expandedItem ==
-                                            "lock_setting"
-                                        ) {
+                                        if (expandedItem == item.key) {
                                             null
                                         } else {
-                                            "lock_setting"
+                                            item.key
                                         }
                                 }
 
-                                "intruder" -> {
-                                    onIntruderClick()
-                                }
+                                "intruder" -> onIntruderClick()
 
-                                "hide_settings" -> {
-
-                                    expandedItem =
-                                        if (
-                                            expandedItem ==
-                                            "hide_settings"
-                                        ) {
-                                            null
-                                        } else {
-                                            "hide_settings"
-                                        }
-                                }
-
-                                "rate_us" -> Unit
-
-                                "share" -> Unit
-
-                                "about" -> Unit
+                                "rate_us",
+                                "share",
 
                                 "privacy_policy" -> Unit
                             }
                         },
-
-                        onResetPasswordClick =
-                            onResetPasswordClick
+                        onResetPasswordClick = onResetPasswordClick
                     )
 
-                    Spacer(
-                        modifier = Modifier.height(12.dp)
-                    )
+                    Spacer(Modifier.height(12.dp))
                 }
             }
         }
 
         if (showRelockDialog) {
-
             RelockOptionDialog(
                 selectedOption = tempRelockOption,
-
                 onOptionSelected = {
                     tempRelockOption = it
                 },
-
                 onCancel = {
                     tempRelockOption = relockOption
                     showRelockDialog = false
                 },
-
                 onConfirm = {
-
                     relockOption = tempRelockOption
                     showRelockDialog = false
 
                     scope.launch {
-                        dataStore.saveRelockOption(
-                            tempRelockOption
-                        )
+                        dataStore.saveRelockOption(tempRelockOption)
                     }
                 }
             )
         }
 
         if (showDelayDialog) {
-
             DelayToRelockDialog(
                 selectedOption = tempDelayOption,
-
                 onOptionSelected = {
                     tempDelayOption = it
                 },
-
                 onCancel = {
                     tempDelayOption = delayOption
                     showDelayDialog = false
                 },
-
                 onConfirm = {
-
                     delayOption = tempDelayOption
                     showDelayDialog = false
 
                     scope.launch {
-                        dataStore.saveRelockDelay(
-                            tempDelayOption
-                        )
+                        dataStore.saveRelockDelay(tempDelayOption)
                     }
                 }
             )
         }
 
         if (showSecurityQuestionDialog) {
-
             SecurityQuestionSettingsDialog(
                 selectedQuestion = securityQuestion,
                 answer = securityAnswer,
-                dropdownExpanded =
-                    securityDropdownExpanded,
-
+                dropdownExpanded = securityDropdownExpanded,
                 onDropdownClick = {
-                    securityDropdownExpanded =
-                        !securityDropdownExpanded
+                    securityDropdownExpanded = !securityDropdownExpanded
                 },
-
                 onQuestionSelected = {
                     securityQuestion = it
                     securityDropdownExpanded = false
                 },
-
                 onAnswerChanged = {
                     securityAnswer = it
                 },
-
                 onCancel = {
                     securityDropdownExpanded = false
                     showSecurityQuestionDialog = false
                 },
-
                 onSave = {
+                    val question = securityQuestion.trim()
+                    val answer = securityAnswer.trim()
 
-                    val question =
-                        securityQuestion.trim()
-
-                    val answer =
-                        securityAnswer.trim()
-
-                    if (
-                        question.isNotEmpty() &&
-                        answer.isNotEmpty()
-                    ) {
-
+                    if (question.isNotEmpty() && answer.isNotEmpty()) {
                         scope.launch {
-
-                            dataStore.saveSecurityQuestion(
-                                question
-                            )
-
-                            dataStore.saveSecurityAnswer(
-                                answer
-                            )
+                            dataStore.saveSecurityQuestion(question)
+                            dataStore.saveSecurityAnswer(answer)
 
                             securityDropdownExpanded = false
                             showSecurityQuestionDialog = false
@@ -557,17 +407,12 @@ fun SettingsScreen(
     }
 }
 
-// =============================================================
-// APP PROTECTION CARD
-// =============================================================
-
 @Composable
 private fun AppProtectionCard(
     enabled: Boolean,
     onEnabledChange: (Boolean) -> Unit
 ) {
-    val cardShape =
-        RoundedCornerShape(12.dp)
+    val cardShape = RoundedCornerShape(12.dp)
 
     Card(
         modifier = Modifier
@@ -576,39 +421,22 @@ private fun AppProtectionCard(
                 elevation = 5.dp,
                 shape = cardShape,
                 clip = false,
-                ambientColor =
-                    Color.Black.copy(alpha = 0.10f),
-                spotColor =
-                    Color.Black.copy(alpha = 0.10f)
+                ambientColor = Color.Black.copy(alpha = 0.10f),
+                spotColor = Color.Black.copy(alpha = 0.10f)
             )
-            .clip(cardShape)
-            .clickable(
-                interactionSource = remember {
-                    MutableInteractionSource()
-                },
-                indication = ripple(
-                    bounded = true
-                )
-            ) {
-                // Switch controls App Protection.
-            },
-
+            .clip(cardShape),
         shape = cardShape,
-
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
-
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp,
             pressedElevation = 1.dp
         )
     ) {
-
         Row(
-            modifier = Modifier
+            Modifier
                 .fillMaxWidth()
-                // FIX: fixed height hata kar min height; lamba text ho to card barh jaye
                 .heightIn(min = 52.dp)
                 .padding(
                     start = 8.dp,
@@ -616,54 +444,29 @@ private fun AppProtectionCard(
                     top = 6.dp,
                     bottom = 6.dp
                 ),
-
-            verticalAlignment =
-                Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically
         ) {
-
             Image(
-                painter = painterResource(
-                    R.drawable.enable
+                painter = painterResource(R.drawable.enable),
+                contentDescription = stringResource(
+                    R.string.enable_app_protection
                 ),
-
-                contentDescription =
-                    stringResource(
-                        R.string.enable_app_protection
-                    ),
-
                 modifier = Modifier.size(38.dp),
-
-                contentScale =
-                    ContentScale.FillBounds
+                contentScale = ContentScale.FillBounds
             )
 
-            Spacer(
-                modifier = Modifier.width(18.dp)
-            )
+            Spacer(Modifier.width(18.dp))
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-
+            Column(Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(
-                        R.string.enable_app_protection
-                    ),
-
-                    color =
-                        Color(0xFF333333),
-
+                    text = stringResource(R.string.enable_app_protection),
+                    color = Color(0xFF333333),
                     fontSize = 15.sp,
-
                     maxLines = 2,
-
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(
-                    modifier = Modifier.height(1.dp)
-                )
-
+                Spacer(Modifier.height(1.dp))
 
                 Text(
                     text = if (enabled) {
@@ -671,65 +474,39 @@ private fun AppProtectionCard(
                     } else {
                         stringResource(R.string.status_disabled)
                     },
-
                     color = if (enabled) {
                         Color(0xFF0396FF)
                     } else {
                         Color(0xFF999999)
                     },
-
                     fontSize = 11.sp,
-
                     maxLines = 1,
-
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
             Switch(
                 checked = enabled,
-
-                onCheckedChange =
-                    onEnabledChange,
-
-                modifier =
-                    Modifier.scale(0.72f),
-
-                colors =
-                    SwitchDefaults.colors(
-                        checkedThumbColor =
-                            Color.White,
-
-                        checkedTrackColor =
-                            Color(0xFF0396FF),
-
-                        uncheckedThumbColor =
-                            Color(0xFFAAAAAA),
-
-                        uncheckedTrackColor =
-                            Color(0xFFE3E3E3),
-
-                        uncheckedBorderColor =
-                            Color.Transparent,
-
-                        checkedBorderColor =
-                            Color.Transparent
-                    )
+                onCheckedChange = onEnabledChange,
+                modifier = Modifier.scale(0.72f),
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = Color(0xFF0396FF),
+                    uncheckedThumbColor = Color(0xFFAAAAAA),
+                    uncheckedTrackColor = Color(0xFFE3E3E3),
+                    uncheckedBorderColor = Color.Transparent,
+                    checkedBorderColor = Color.Transparent
+                )
             )
         }
     }
 }
-
-// =============================================================
-// SETTINGS ITEM
-// =============================================================
 
 @Composable
 private fun SettingsItem(
     itemKey: String,
     title: String,
     iconRes: Int,
-    description: String,
     expanded: Boolean,
     hideFromRecents: Boolean,
     onHideFromRecentsChange: (Boolean) -> Unit,
@@ -741,13 +518,10 @@ private fun SettingsItem(
     onCardClick: () -> Unit,
     onResetPasswordClick: () -> Unit
 ) {
-
     val expandable =
-        itemKey == "lock_setting" ||
-                itemKey == "hide_settings"
+        itemKey == "lock_setting" || itemKey == "hide_settings"
 
-    val cardShape =
-        RoundedCornerShape(12.dp)
+    val cardShape = RoundedCornerShape(12.dp)
 
     Card(
         modifier = Modifier
@@ -756,45 +530,31 @@ private fun SettingsItem(
                 elevation = 5.dp,
                 shape = cardShape,
                 clip = false,
-                ambientColor =
-                    Color.Black.copy(alpha = 0.10f),
-                spotColor =
-                    Color.Black.copy(alpha = 0.10f)
+                ambientColor = Color.Black.copy(alpha = 0.10f),
+                spotColor = Color.Black.copy(alpha = 0.10f)
             )
             .clip(cardShape)
             .clickable(
                 interactionSource = remember {
                     MutableInteractionSource()
                 },
-                indication = ripple(
-                    bounded = true
-                )
+                indication = ripple(bounded = true)
             ) {
                 onCardClick()
             },
-
         shape = cardShape,
-
-        colors =
-            CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-
-        elevation =
-            CardDefaults.cardElevation(
-                defaultElevation = 2.dp,
-                pressedElevation = 1.dp
-            )
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 1.dp
+        )
     ) {
-
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-
+        Column(Modifier.fillMaxWidth()) {
             Row(
-                modifier = Modifier
+                Modifier
                     .fillMaxWidth()
-                    // FIX: fixed height hata kar min height
                     .heightIn(min = 52.dp)
                     .padding(
                         start = 8.dp,
@@ -802,137 +562,76 @@ private fun SettingsItem(
                         top = 6.dp,
                         bottom = 6.dp
                     ),
-
-                verticalAlignment =
-                    Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
-
                 Image(
-                    painter =
-                        painterResource(iconRes),
-
-                    contentDescription =
-                        title,
-
-                    modifier =
-                        Modifier.size(38.dp),
-
-                    contentScale =
-                        ContentScale.FillBounds
+                    painter = painterResource(iconRes),
+                    contentDescription = title,
+                    modifier = Modifier.size(38.dp),
+                    contentScale = ContentScale.FillBounds
                 )
 
-                Spacer(
-                    modifier = Modifier.width(18.dp)
-                )
+                Spacer(Modifier.width(18.dp))
 
                 Text(
                     text = title,
-
-                    modifier =
-                        Modifier.weight(1f),
-
-                    color =
-                        Color(0xFF333333),
-
+                    modifier = Modifier.weight(1f),
+                    color = Color(0xFF333333),
                     fontSize = 15.sp,
-
                     maxLines = 2,
-
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(
-                    modifier = Modifier.width(8.dp)
-                )
+                Spacer(Modifier.width(8.dp))
 
                 Image(
-                    painter =
-                        painterResource(
-                            id =
-                                if (expandable) {
-
-                                    if (expanded) {
-                                        R.drawable.uparrow
-                                    } else {
-                                        R.drawable.downicon
-                                    }
-
-                                } else {
-                                    R.drawable.sidearrow
-                                }
-                        ),
-
-                    contentDescription = null,
-
-                    modifier =
-                        Modifier.size(
-                            if (expandable) {
-                                12.dp
+                    painter = painterResource(
+                        if (expandable) {
+                            if (expanded) {
+                                R.drawable.uparrow
                             } else {
-                                14.dp
+                                R.drawable.downicon
                             }
-                        ),
-
-                    contentScale =
-                        ContentScale.Fit
+                        } else {
+                            R.drawable.sidearrow
+                        }
+                    ),
+                    contentDescription = null,
+                    modifier = Modifier.size(
+                        if (expandable) 12.dp else 14.dp
+                    ),
+                    contentScale = ContentScale.Fit
                 )
             }
 
-            if (
-                expanded &&
-                itemKey == "lock_setting"
-            ) {
-
+            if (expanded && itemKey == "lock_setting") {
                 LockSettingExpandedContent(
-                    onRelockClick =
-                        onRelockClick,
-
-                    onDelayClick =
-                        onDelayClick,
-
-                    delayOption =
-                        delayOption,
-
-                    relockOption =
-                        relockOption,
-
-                    onResetPasswordClick =
-                        onResetPasswordClick,
-
-                    onSecurityQuestionClick =
-                        onSecurityQuestionClick
+                    onRelockClick = onRelockClick,
+                    onDelayClick = onDelayClick,
+                    delayOption = delayOption,
+                    relockOption = relockOption,
+                    onResetPasswordClick = onResetPasswordClick,
+                    onSecurityQuestionClick = onSecurityQuestionClick
                 )
             }
 
-            if (
-                expanded &&
-                itemKey == "hide_settings"
-            ) {
-
+            if (expanded && itemKey == "hide_settings") {
                 HideSettingsExpandedContent(
-                    hideFromRecents =
-                        hideFromRecents,
-
-                    onHideFromRecentsChange =
-                        onHideFromRecentsChange
+                    hideFromRecents = hideFromRecents,
+                    onHideFromRecentsChange = onHideFromRecentsChange
                 )
             }
         }
     }
 }
 
-// =============================================================
-// HIDE SETTINGS
-// =============================================================
-
 @Composable
 private fun HideSettingsExpandedContent(
     hideFromRecents: Boolean,
     onHideFromRecentsChange: (Boolean) -> Unit
 ) {
-
     Row(
-        modifier = Modifier
+        Modifier
             .fillMaxWidth()
             .padding(
                 start = 12.dp,
@@ -940,89 +639,45 @@ private fun HideSettingsExpandedContent(
                 top = 8.dp,
                 bottom = 8.dp
             ),
-
-        verticalAlignment =
-            Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically
     ) {
-
         Image(
-            painter =
-                painterResource(
-                    R.drawable.eyehide
-                ),
-
-            contentDescription =
-                stringResource(
-                    R.string.hide_from_recent_screen
-                ),
-
-            modifier =
-                Modifier.size(22.dp),
-
-            contentScale =
-                ContentScale.Fit
+            painter = painterResource(R.drawable.eyehide),
+            contentDescription = stringResource(
+                R.string.hide_from_recent_screen
+            ),
+            modifier = Modifier.size(22.dp),
+            contentScale = ContentScale.Fit
         )
 
-        Spacer(
-            modifier = Modifier.width(13.dp)
-        )
+        Spacer(Modifier.width(13.dp))
 
         Text(
-            text =
-                stringResource(
-                    R.string.apps_hide_from_recent_screen
-                ),
-
-            color =
-                Color(0xFF444444),
-
+            text = stringResource(
+                R.string.apps_hide_from_recent_screen
+            ),
+            color = Color(0xFF444444),
             fontSize = 14.sp,
-
             maxLines = 3,
-
             overflow = TextOverflow.Ellipsis,
-
-            modifier =
-                Modifier.weight(1f)
+            modifier = Modifier.weight(1f)
         )
 
         Switch(
-            checked =
-                hideFromRecents,
-
-            onCheckedChange =
-                onHideFromRecentsChange,
-
-            modifier =
-                Modifier.scale(0.72f),
-
-            colors =
-                SwitchDefaults.colors(
-                    checkedThumbColor =
-                        Color.White,
-
-                    checkedTrackColor =
-                        Color(0xFF9C27B0),
-
-                    uncheckedThumbColor =
-                        Color(0xFFAAAAAA),
-
-                    uncheckedTrackColor =
-                        Color(0xFFE3E3E3),
-
-                    uncheckedBorderColor =
-                        Color.Transparent,
-
-                    checkedBorderColor =
-                        Color.Transparent
-                )
+            checked = hideFromRecents,
+            onCheckedChange = onHideFromRecentsChange,
+            modifier = Modifier.scale(0.72f),
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = Color(0xFF9C27B0),
+                uncheckedThumbColor = Color(0xFFAAAAAA),
+                uncheckedTrackColor = Color(0xFFE3E3E3),
+                uncheckedBorderColor = Color.Transparent,
+                checkedBorderColor = Color.Transparent
+            )
         )
     }
 }
-
-// =============================================================
-// LOCK SETTINGS
-// =============================================================
 
 @Composable
 private fun LockSettingExpandedContent(
@@ -1033,274 +688,135 @@ private fun LockSettingExpandedContent(
     onResetPasswordClick: () -> Unit,
     onSecurityQuestionClick: () -> Unit
 ) {
-
-    val context =
-        LocalContext.current
-
-    val dataStore =
-        remember {
-            DataStoreManager(context)
-        }
-
-    val scope =
-        rememberCoroutineScope()
-
-    var fingerprintEnabled by remember {
-        mutableStateOf(false)
+    // FIX: Read LocalContext.current in the composable scope.
+    val context = LocalContext.current
+    val dataStore = remember(context) {
+        DataStoreManager(context)
     }
 
-    var vibrationEnabled by remember {
-        mutableStateOf(false)
-    }
+    val scope = rememberCoroutineScope()
 
-    var hideTrackEnabled by remember {
-        mutableStateOf(false)
-    }
+    var fingerprintEnabled by remember { mutableStateOf(false) }
+    var vibrationEnabled by remember { mutableStateOf(false) }
+    var hideTrackEnabled by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-
+    LaunchedEffect(dataStore) {
         fingerprintEnabled =
-            dataStore
-                .getFingerprintEnabled()
-                .first()
+            dataStore.getFingerprintEnabled().first()
 
         vibrationEnabled =
-            dataStore
-                .getVibrationEnabled()
-                .first()
+            dataStore.getVibrationEnabled().first()
 
         hideTrackEnabled =
-            dataStore
-                .getHideTrackEnabled()
-                .first()
+            dataStore.getHideTrackEnabled().first()
     }
 
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-    ) {
+    Column(Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.password),
+            color = Color(0xFF888888),
+            fontSize = 16.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(
+                start = 10.dp,
+                end = 10.dp,
+                top = 6.dp,
+                bottom = 6.dp
+            )
+        )
+
+        LockSettingRow(
+            R.drawable.redlock,
+            stringResource(R.string.reset_password),
+            stringResource(R.string.pattern),
+            onResetPasswordClick
+        )
+
+        SettingDivider()
+
+        LockSettingRow(
+            R.drawable.security,
+            stringResource(R.string.security_settings),
+            stringResource(R.string.set_security_email),
+            onSecurityQuestionClick
+        )
+
+        SettingDivider()
+
+        LockSettingSwitchRow(
+            R.drawable.fingerprint,
+            stringResource(R.string.fingerprint_lock),
+            stringResource(R.string.use_fingerprint_to_unlock),
+            fingerprintEnabled
+        ) {
+            fingerprintEnabled = it
+            scope.launch {
+                dataStore.saveFingerprintEnabled(it)
+            }
+        }
 
         Text(
-            text =
-                stringResource(
-                    R.string.password
-                ),
-
-            color =
-                Color(0xFF888888),
-
+            text = stringResource(R.string.unlock),
+            color = Color(0xFF888888),
             fontSize = 16.sp,
-
             maxLines = 1,
-
             overflow = TextOverflow.Ellipsis,
-
-            modifier =
-                Modifier.padding(
-                    start = 10.dp,
-                    end = 10.dp,
-                    top = 6.dp,
-                    bottom = 6.dp
-                )
+            modifier = Modifier.padding(
+                start = 10.dp,
+                end = 10.dp,
+                top = 8.dp,
+                bottom = 6.dp
+            )
         )
 
-        LockSettingRow(
-            iconRes =
-                R.drawable.redlock,
-
-            title =
-                stringResource(
-                    R.string.reset_password
-                ),
-
-            subtitle =
-                stringResource(
-                    R.string.pattern
-                ),
-
-            onClick =
-                onResetPasswordClick
-        )
-
-        SettingDivider()
-
-        LockSettingRow(
-            iconRes =
-                R.drawable.security,
-
-            title =
-                stringResource(
-                    R.string.security_settings
-                ),
-
-            subtitle =
-                stringResource(
-                    R.string.set_security_email
-                ),
-
-            onClick =
-                onSecurityQuestionClick
-        )
+        LockSettingSwitchRow(
+            R.drawable.vibration,
+            stringResource(R.string.vibration),
+            null,
+            vibrationEnabled
+        ) {
+            vibrationEnabled = it
+            scope.launch {
+                dataStore.saveVibrationEnabled(it)
+            }
+        }
 
         SettingDivider()
 
         LockSettingSwitchRow(
-            iconRes =
-                R.drawable.fingerprint,
-
-            title =
-                stringResource(
-                    R.string.fingerprint_lock
-                ),
-
-            subtitle =
-                stringResource(
-                    R.string.use_fingerprint_to_unlock
-                ),
-
-            checked =
-                fingerprintEnabled,
-
-            onCheckedChange = {
-
-                fingerprintEnabled = it
-
-                scope.launch {
-                    dataStore
-                        .saveFingerprintEnabled(it)
-                }
+            R.drawable.track,
+            stringResource(R.string.hide_track),
+            stringResource(R.string.hide_track_description),
+            hideTrackEnabled
+        ) {
+            hideTrackEnabled = it
+            scope.launch {
+                dataStore.saveHideTrackEnabled(it)
             }
-        )
-
-        Text(
-            text =
-                stringResource(
-                    R.string.unlock
-                ),
-
-            color =
-                Color(0xFF888888),
-
-            fontSize = 16.sp,
-
-            maxLines = 1,
-
-            overflow = TextOverflow.Ellipsis,
-
-            modifier =
-                Modifier.padding(
-                    start = 10.dp,
-                    end = 10.dp,
-                    top = 8.dp,
-                    bottom = 6.dp
-                )
-        )
-
-        LockSettingSwitchRow(
-            iconRes =
-                R.drawable.vibration,
-
-            title =
-                stringResource(
-                    R.string.vibration
-                ),
-
-            subtitle = null,
-
-            checked =
-                vibrationEnabled,
-
-            onCheckedChange = {
-
-                vibrationEnabled = it
-
-                scope.launch {
-                    dataStore
-                        .saveVibrationEnabled(it)
-                }
-            }
-        )
+        }
 
         SettingDivider()
 
-        LockSettingSwitchRow(
-            iconRes =
-                R.drawable.track,
-
-            title =
-                stringResource(
-                    R.string.hide_track
-                ),
-
-            subtitle =
-                stringResource(
-                    R.string.hide_track_description
-                ),
-
-            checked =
-                hideTrackEnabled,
-
-            onCheckedChange = {
-
-                hideTrackEnabled = it
-
-                scope.launch {
-                    dataStore
-                        .saveHideTrackEnabled(it)
-                }
-            }
+        LockSettingRow(
+            R.drawable.relock,
+            stringResource(R.string.relock_option),
+            getRelockText(relockOption),
+            onRelockClick
         )
 
         SettingDivider()
 
         LockSettingRow(
-            iconRes =
-                R.drawable.relock,
-
-            title =
-                stringResource(
-                    R.string.relock_option
-                ),
-
-            subtitle =
-                getRelockText(
-                    relockOption
-                ),
-
-            onClick =
-                onRelockClick
+            R.drawable.delay,
+            stringResource(R.string.delay_to_relock),
+            getDelayText(delayOption),
+            onDelayClick
         )
 
-        SettingDivider()
-
-        LockSettingRow(
-            iconRes =
-                R.drawable.delay,
-
-            title =
-                stringResource(
-                    R.string.delay_to_relock
-                ),
-
-            subtitle =
-                getDelayText(
-                    delayOption
-                ),
-
-            onClick =
-                onDelayClick
-        )
-
-        Spacer(
-            modifier =
-                Modifier.height(8.dp)
-        )
+        Spacer(Modifier.height(8.dp))
     }
 }
-
-// =============================================================
-// LOCK SETTING ROW
-// =============================================================
 
 @Composable
 private fun LockSettingRow(
@@ -1309,97 +825,55 @@ private fun LockSettingRow(
     subtitle: String?,
     onClick: () -> Unit
 ) {
-
     Row(
-        modifier = Modifier
+        Modifier
             .fillMaxWidth()
-            .clickable {
-                onClick()
-            }
+            .clickable { onClick() }
             .padding(
                 start = 10.dp,
                 end = 14.dp,
                 top = 8.dp,
                 bottom = 8.dp
             ),
-
-        verticalAlignment =
-            Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically
     ) {
-
         Box(
-            modifier =
-                Modifier.width(28.dp),
-
-            contentAlignment =
-                Alignment.Center
+            Modifier.width(28.dp),
+            contentAlignment = Alignment.Center
         ) {
-
             Image(
-                painter =
-                    painterResource(iconRes),
-
-                contentDescription =
-                    title,
-
-                modifier =
-                    Modifier.size(19.dp),
-
-                contentScale =
-                    ContentScale.Fit
+                painter = painterResource(iconRes),
+                contentDescription = title,
+                modifier = Modifier.size(19.dp),
+                contentScale = ContentScale.Fit
             )
         }
 
-        Spacer(
-            modifier =
-                Modifier.width(8.dp)
-        )
+        Spacer(Modifier.width(8.dp))
 
-        Column(
-            modifier =
-                Modifier.weight(1f)
-        ) {
-
+        Column(Modifier.weight(1f)) {
             Text(
                 text = title,
-
-                color =
-                    Color(0xFF333333),
-
+                color = Color(0xFF333333),
                 fontSize = 14.sp,
-
                 maxLines = 2,
-
                 overflow = TextOverflow.Ellipsis
             )
 
             if (!subtitle.isNullOrEmpty()) {
-
-                Spacer(
-                    modifier =
-                        Modifier.height(2.dp)
-                )
+                Spacer(Modifier.height(2.dp))
 
                 Text(
                     text = subtitle,
-
-                    color =
-                        Color(0xFF666666),
-
+                    color = Color(0xFF666666),
                     fontSize = 11.sp,
-
                     maxLines = 2,
-
                     overflow = TextOverflow.Ellipsis
                 )
             }
         }
     }
 }
-
-// =============================================================
-// LOCK SETTING SWITCH ROW
-// =============================================================
 
 @Composable
 private fun LockSettingSwitchRow(
@@ -1409,9 +883,8 @@ private fun LockSettingSwitchRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-
     Row(
-        modifier = Modifier
+        Modifier
             .fillMaxWidth()
             .padding(
                 start = 10.dp,
@@ -1419,116 +892,59 @@ private fun LockSettingSwitchRow(
                 top = 7.dp,
                 bottom = 7.dp
             ),
-
-        verticalAlignment =
-            Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically
     ) {
-
         Box(
-            modifier =
-                Modifier.width(28.dp),
-
-            contentAlignment =
-                Alignment.Center
+            Modifier.width(28.dp),
+            contentAlignment = Alignment.Center
         ) {
-
             Image(
-                painter =
-                    painterResource(iconRes),
-
-                contentDescription =
-                    title,
-
-                modifier =
-                    Modifier.size(19.dp),
-
-                contentScale =
-                    ContentScale.Fit
+                painter = painterResource(iconRes),
+                contentDescription = title,
+                modifier = Modifier.size(19.dp),
+                contentScale = ContentScale.Fit
             )
         }
 
-        Spacer(
-            modifier =
-                Modifier.width(8.dp)
-        )
+        Spacer(Modifier.width(8.dp))
 
-        Column(
-            modifier =
-                Modifier.weight(1f)
-        ) {
-
+        Column(Modifier.weight(1f)) {
             Text(
                 text = title,
-
-                color =
-                    Color(0xFF333333),
-
+                color = Color(0xFF333333),
                 fontSize = 14.sp,
-
                 maxLines = 2,
-
                 overflow = TextOverflow.Ellipsis
             )
 
             if (!subtitle.isNullOrEmpty()) {
-
-                Spacer(
-                    modifier =
-                        Modifier.height(2.dp)
-                )
+                Spacer(Modifier.height(2.dp))
 
                 Text(
                     text = subtitle,
-
-                    color =
-                        Color(0xFF666666),
-
+                    color = Color(0xFF666666),
                     fontSize = 11.sp,
-
                     maxLines = 2,
-
                     overflow = TextOverflow.Ellipsis
                 )
             }
         }
 
         Switch(
-            checked =
-                checked,
-
-            onCheckedChange =
-                onCheckedChange,
-
-            modifier =
-                Modifier.scale(0.72f),
-
-            colors =
-                SwitchDefaults.colors(
-                    checkedThumbColor =
-                        Color.White,
-
-                    checkedTrackColor =
-                        Color(0xFFF45656),
-
-                    uncheckedThumbColor =
-                        Color(0xFFAAAAAA),
-
-                    uncheckedTrackColor =
-                        Color(0xFFE3E3E3),
-
-                    uncheckedBorderColor =
-                        Color.Transparent,
-
-                    checkedBorderColor =
-                        Color.Transparent
-                )
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.scale(0.72f),
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = Color(0xFFF45656),
+                uncheckedThumbColor = Color(0xFFAAAAAA),
+                uncheckedTrackColor = Color(0xFFE3E3E3),
+                uncheckedBorderColor = Color.Transparent,
+                checkedBorderColor = Color.Transparent
+            )
         )
     }
 }
-
-// =============================================================
-// SECURITY QUESTION DIALOG
-// =============================================================
 
 @Composable
 private fun SecurityQuestionSettingsDialog(
@@ -1541,57 +957,44 @@ private fun SecurityQuestionSettingsDialog(
     onCancel: () -> Unit,
     onSave: () -> Unit
 ) {
-
     val questions = listOf(
-
-        stringResource(
-            R.string.security_question_name
-        ),
-
-        stringResource(
-            R.string.security_question_father
-        ),
-
-        stringResource(
-            R.string.security_question_pet
-        ),
-
-        stringResource(
-            R.string.security_question_job
-        )
+        stringResource(R.string.security_question_name),
+        stringResource(R.string.security_question_father),
+        stringResource(R.string.security_question_pet),
+        stringResource(R.string.security_question_job)
     )
 
+    val config = LocalConfiguration.current
+    val dialogWidth =
+        (config.screenWidthDp.dp * 0.90f).coerceAtMost(420.dp)
+    val dialogMaxHeight = config.screenHeightDp.dp * 0.90f
+    val fieldWidth = dialogWidth - 50.dp
+
+    val density = LocalDensity.current
+    val popupOffset = with(density) {
+        IntOffset(0, 44.dp.roundToPx())
+    }
+
     Dialog(
-        onDismissRequest =
-            onCancel,
-
-        properties =
-            DialogProperties(
-                dismissOnBackPress = true,
-                dismissOnClickOutside = true,
-                usePlatformDefaultWidth = false
-            )
+        onDismissRequest = onCancel,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+            usePlatformDefaultWidth = false
+        )
     ) {
-
         Box(
-            modifier = Modifier
+            Modifier
                 .fillMaxSize()
-                .background(
-                    Color.Transparent
-                ),
-
-            contentAlignment =
-                Alignment.Center
+                .background(Color.Transparent),
+            contentAlignment = Alignment.Center
         ) {
-
             Column(
-                modifier = Modifier
-                    .fillMaxWidth(0.90f)
-                    .wrapContentHeight()
-                    .background(
-                        Color.White,
-                        RoundedCornerShape(26.dp)
-                    )
+                Modifier
+                    .width(dialogWidth)
+                    .heightIn(max = dialogMaxHeight)
+                    .background(Color.White, RoundedCornerShape(26.dp))
+                    .verticalScroll(rememberScrollState())
                     .padding(
                         start = 25.dp,
                         end = 25.dp,
@@ -1599,85 +1002,48 @@ private fun SecurityQuestionSettingsDialog(
                         bottom = 30.dp
                     )
             ) {
-
                 Text(
-                    text =
-                        stringResource(
-                            R.string.security_questions
-                        ),
-
-                    color =
-                        Color(0xFF333333),
-
+                    text = stringResource(R.string.security_questions),
+                    color = Color(0xFF333333),
                     fontSize = 19.sp,
-
-                    modifier =
-                        Modifier.fillMaxWidth(),
-
-                    textAlign =
-                        TextAlign.Center,
-
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
                     maxLines = 2,
-
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(
-                    modifier =
-                        Modifier.height(8.dp)
-                )
+                Spacer(Modifier.height(8.dp))
 
                 Text(
-                    text =
-                        stringResource(
-                            R.string.security_question_description
-                        ),
-
-                    color =
-                        Color(0xFFBDBDBD),
-
+                    text = stringResource(
+                        R.string.security_question_description
+                    ),
+                    color = Color(0xFFBDBDBD),
                     fontSize = 11.sp,
-
-                    lineHeight =
-                        18.sp,
-
-                    modifier =
-                        Modifier.fillMaxWidth(),
-
-                    textAlign =
-                        TextAlign.Center
+                    lineHeight = 18.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
 
-                Spacer(
-                    modifier =
-                        Modifier.height(28.dp)
-                )
+                Spacer(Modifier.height(28.dp))
 
                 Text(
-                    text =
-                        stringResource(
-                            R.string.select_security_questions
-                        ),
-
-                    color =
-                        Color(0xFF333333),
-
+                    text = stringResource(
+                        R.string.select_security_questions
+                    ),
+                    color = Color(0xFF333333),
                     fontSize = 14.sp
                 )
 
-                Spacer(
-                    modifier =
-                        Modifier.height(8.dp)
-                )
+                Spacer(Modifier.height(8.dp))
 
                 Box(
-                    modifier = Modifier
+                    Modifier
                         .fillMaxWidth()
                         .height(40.dp)
                 ) {
-
                     Row(
-                        modifier = Modifier
+                        Modifier
                             .fillMaxWidth()
                             .height(40.dp)
                             .background(
@@ -1685,15 +1051,10 @@ private fun SecurityQuestionSettingsDialog(
                                 RoundedCornerShape(15.dp)
                             )
                             .clickable(
-                                indication =
-                                    ripple(
-                                        bounded = true
-                                    ),
-
-                                interactionSource =
-                                    remember {
-                                        MutableInteractionSource()
-                                    }
+                                indication = ripple(bounded = true),
+                                interactionSource = remember {
+                                    MutableInteractionSource()
+                                }
                             ) {
                                 onDropdownClick()
                             }
@@ -1701,193 +1062,111 @@ private fun SecurityQuestionSettingsDialog(
                                 start = 18.dp,
                                 end = 14.dp
                             ),
-
-                        verticalAlignment =
-                            Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-
                         Text(
-                            text =
-                                if (
-                                    selectedQuestion.isEmpty()
-                                ) {
-
-                                    stringResource(
-                                        R.string
-                                            .select_security_question
-                                    )
-
-                                } else {
-                                    selectedQuestion
-                                },
-
-                            color =
-                                if (
-                                    selectedQuestion.isEmpty()
-                                ) {
-                                    Color(0xFFBDBDBD)
-                                } else {
-                                    Color(0xFF333333)
-                                },
-
+                            text = if (selectedQuestion.isEmpty()) {
+                                stringResource(
+                                    R.string.select_security_question
+                                )
+                            } else {
+                                selectedQuestion
+                            },
+                            color = if (selectedQuestion.isEmpty()) {
+                                Color(0xFFBDBDBD)
+                            } else {
+                                Color(0xFF333333)
+                            },
                             fontSize = 14.sp,
-
                             maxLines = 1,
-
                             overflow = TextOverflow.Ellipsis,
-
-                            modifier =
-                                Modifier.weight(1f)
+                            modifier = Modifier.weight(1f)
                         )
 
                         Icon(
-                            imageVector =
-                                Icons.Outlined
-                                    .KeyboardArrowDown,
-
-                            contentDescription =
-                                null,
-
-                            tint =
-                                Color(0xFF8F8F8F),
-
-                            modifier =
-                                Modifier.size(22.dp)
+                            imageVector = Icons.Outlined.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = Color(0xFF8F8F8F),
+                            modifier = Modifier.size(22.dp)
                         )
                     }
 
                     if (dropdownExpanded) {
-
                         Popup(
-                            alignment =
-                                Alignment.TopEnd,
-
-                            onDismissRequest = {
-                                onDropdownClick()
-                            },
-
-                            properties =
-                                PopupProperties(
-                                    focusable = true
-                                )
+                            alignment = Alignment.TopStart,
+                            offset = popupOffset,
+                            onDismissRequest = onDropdownClick,
+                            properties = PopupProperties(
+                                focusable = true
+                            )
                         ) {
-
                             Column(
-                                modifier = Modifier
-                                    .width(210.dp)
+                                Modifier
+                                    .width(fieldWidth)
                                     .background(
                                         Color.White,
                                         RoundedCornerShape(15.dp)
                                     )
                                     .border(
-                                        width = 1.dp,
-                                        color =
-                                            Color(0xFFE5E5E5),
-                                        shape =
-                                            RoundedCornerShape(15.dp)
+                                        1.dp,
+                                        Color(0xFFE5E5E5),
+                                        RoundedCornerShape(15.dp)
                                     )
                             ) {
-
-                                questions
-                                    .forEachIndexed {
-                                            index,
-                                            question ->
-
-                                        Text(
-                                            text =
-                                                question,
-
-                                            color =
-                                                Color(0xFF333333),
-
-                                            fontSize = 13.sp,
-
-                                            // FIX: lamba sawal 2 lines tak
-                                            maxLines = 2,
-
-                                            overflow =
-                                                TextOverflow.Ellipsis,
-
-                                            modifier =
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable(
-                                                        indication =
-                                                            ripple(
-                                                                bounded =
-                                                                    true
-                                                            ),
-
-                                                        interactionSource =
-                                                            remember {
-                                                                MutableInteractionSource()
-                                                            }
-                                                    ) {
-                                                        onQuestionSelected(
-                                                            question
-                                                        )
-                                                    }
-                                                    .padding(
-                                                        horizontal =
-                                                            18.dp,
-
-                                                        vertical =
-                                                            14.dp
-                                                    )
-                                        )
-
-                                        if (
-                                            index <
-                                            questions.lastIndex
-                                        ) {
-
-                                            Box(
-                                                modifier =
-                                                    Modifier
-                                                        .fillMaxWidth()
-                                                        .height(1.dp)
-                                                        .background(
-                                                            Color(
-                                                                0xFFF0F0F0
-                                                            )
-                                                        )
+                                questions.forEachIndexed { index, question ->
+                                    Text(
+                                        text = question,
+                                        color = Color(0xFF333333),
+                                        fontSize = 13.sp,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable(
+                                                indication = ripple(
+                                                    bounded = true
+                                                ),
+                                                interactionSource = remember {
+                                                    MutableInteractionSource()
+                                                }
+                                            ) {
+                                                onQuestionSelected(question)
+                                            }
+                                            .padding(
+                                                horizontal = 18.dp,
+                                                vertical = 14.dp
                                             )
-                                        }
+                                    )
+
+                                    if (index < questions.lastIndex) {
+                                        Box(
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .height(1.dp)
+                                                .background(Color(0xFFF0F0F0))
+                                        )
                                     }
+                                }
                             }
                         }
                     }
                 }
 
-                Spacer(
-                    modifier =
-                        Modifier.height(23.dp)
-                )
+                Spacer(Modifier.height(23.dp))
 
                 Text(
-                    text =
-                        stringResource(
-                            R.string.enter_security_answer
-                        ),
-
-                    color =
-                        Color(0xFF333333),
-
+                    text = stringResource(
+                        R.string.enter_security_answer
+                    ),
+                    color = Color(0xFF333333),
                     fontSize = 14.sp
                 )
 
-                Spacer(
-                    modifier =
-                        Modifier.height(8.dp)
-                )
+                Spacer(Modifier.height(8.dp))
 
                 BasicTextField(
-                    value =
-                        answer,
-
-                    onValueChange =
-                        onAnswerChanged,
-
+                    value = answer,
+                    onValueChange = onAnswerChanged,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(40.dp)
@@ -1895,166 +1174,95 @@ private fun SecurityQuestionSettingsDialog(
                             Color(0xFFF8F8F8),
                             RoundedCornerShape(15.dp)
                         )
-                        .padding(
-                            horizontal = 15.dp
-                        ),
-
+                        .padding(horizontal = 15.dp),
                     singleLine = true,
-
-                    textStyle =
-                        TextStyle(
-                            color =
-                                Color(0xFF333333),
-
-                            fontSize = 12.sp,
-
-                            lineHeight =
-                                16.sp
-                        ),
-
-                    decorationBox =
-                        { innerTextField ->
-
-                            Box(
-                                modifier =
-                                    Modifier.fillMaxSize(),
-
-                                contentAlignment =
-                                    Alignment.CenterStart
-                            ) {
-
-                                if (answer.isEmpty()) {
-
-                                    Text(
-                                        text =
-                                            stringResource(
-                                                R.string
-                                                    .enter_your_answer
-                                            ),
-
-                                        color =
-                                            Color(0xFFBDBDBD),
-
-                                        fontSize = 12.sp,
-
-                                        maxLines = 1,
-
-                                        overflow =
-                                            TextOverflow.Ellipsis
-                                    )
-                                }
-
-                                innerTextField()
+                    textStyle = TextStyle(
+                        color = Color(0xFF333333),
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    ),
+                    decorationBox = { innerTextField ->
+                        Box(
+                            Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            if (answer.isEmpty()) {
+                                Text(
+                                    text = stringResource(
+                                        R.string.enter_your_answer
+                                    ),
+                                    color = Color(0xFFBDBDBD),
+                                    fontSize = 12.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
+
+                            innerTextField()
                         }
+                    }
                 )
 
-                Spacer(
-                    modifier =
-                        Modifier.height(30.dp)
-                )
+                Spacer(Modifier.height(30.dp))
 
                 Row(
-                    modifier =
-                        Modifier.fillMaxWidth(),
-
-                    horizontalArrangement =
-                        Arrangement.End,
-
-                    verticalAlignment =
-                        Alignment.CenterVertically
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     Text(
-                        text =
-                            stringResource(
-                                R.string.cancel
-                            ),
-
-                        color =
-                            Color(0xFF818181),
-
+                        text = stringResource(R.string.cancel),
+                        color = Color(0xFF818181),
                         fontSize = 16.sp,
-
                         maxLines = 1,
-
-                        overflow =
-                            TextOverflow.Ellipsis,
-
-                        modifier =
-                            Modifier
-                                .weight(1f, fill = false)
-                                .clickable(
-                                    indication =
-                                        ripple(
-                                            bounded = true
-                                        ),
-
-                                    interactionSource =
-                                        remember {
-                                            MutableInteractionSource()
-                                        }
-                                ) {
-                                    onCancel()
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .clickable(
+                                indication = ripple(bounded = true),
+                                interactionSource = remember {
+                                    MutableInteractionSource()
                                 }
-                                .padding(
-                                    horizontal = 16.dp,
-                                    vertical = 10.dp
-                                )
+                            ) {
+                                onCancel()
+                            }
+                            .padding(
+                                horizontal = 16.dp,
+                                vertical = 10.dp
+                            )
                     )
 
-                    Spacer(
-                        modifier =
-                            Modifier.width(8.dp)
-                    )
+                    Spacer(Modifier.width(8.dp))
 
                     val saveEnabled =
                         selectedQuestion.isNotEmpty() &&
                                 answer.trim().isNotEmpty()
 
                     Text(
-                        text =
-                            stringResource(
-                                R.string.save
-                            ),
-
-                        color =
-                            if (saveEnabled) {
-                                Color(0xFF2196F3)
-                            } else {
-                                Color(0xFF90CAF9)
-                            },
-
+                        text = stringResource(R.string.save),
+                        color = if (saveEnabled) {
+                            Color(0xFF2196F3)
+                        } else {
+                            Color(0xFF90CAF9)
+                        },
                         fontSize = 16.sp,
-
                         maxLines = 1,
-
-                        overflow =
-                            TextOverflow.Ellipsis,
-
-                        modifier =
-                            Modifier
-                                .weight(1f, fill = false)
-                                .clickable(
-                                    enabled =
-                                        saveEnabled,
-
-                                    indication =
-                                        ripple(
-                                            bounded = true
-                                        ),
-
-                                    interactionSource =
-                                        remember {
-                                            MutableInteractionSource()
-                                        }
-                                ) {
-                                    onSave()
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .clickable(
+                                enabled = saveEnabled,
+                                indication = ripple(bounded = true),
+                                interactionSource = remember {
+                                    MutableInteractionSource()
                                 }
-                                .padding(
-                                    horizontal = 16.dp,
-                                    vertical = 10.dp
-                                )
+                            ) {
+                                onSave()
+                            }
+                            .padding(
+                                horizontal = 16.dp,
+                                vertical = 10.dp
+                            )
                     )
                 }
             }
@@ -2062,90 +1270,45 @@ private fun SecurityQuestionSettingsDialog(
     }
 }
 
-// =============================================================
-// RELOCK TEXT
-// =============================================================
-
 @Composable
-private fun getRelockText(
-    relockOption: String
-): String {
-
+private fun getRelockText(relockOption: String): String {
     return when (relockOption) {
-
         "relock_after_screen_off" ->
-            stringResource(
-                R.string.relock_after_screen_off
-            )
+            stringResource(R.string.relock_after_screen_off)
 
         "relock_after_quitting" ->
-            stringResource(
-                R.string.relock_after_quitting
-            )
+            stringResource(R.string.relock_after_quitting)
 
         else ->
-            stringResource(
-                R.string.relock_after_quitting
-            )
+            stringResource(R.string.relock_after_quitting)
     }
 }
-
-// =============================================================
-// DELAY TEXT
-// =============================================================
 
 @Composable
-private fun getDelayText(
-    key: String
-): String {
-
+private fun getDelayText(key: String): String {
     return when (key) {
-
-        "never" ->
-            stringResource(
-                R.string.never
-            )
-
         "five_seconds" ->
-            stringResource(
-                R.string.five_seconds
-            )
+            stringResource(R.string.five_seconds)
 
         "ten_seconds" ->
-            stringResource(
-                R.string.ten_seconds
-            )
+            stringResource(R.string.ten_seconds)
 
         "thirty_seconds" ->
-            stringResource(
-                R.string.thirty_seconds
-            )
+            stringResource(R.string.thirty_seconds)
 
         "one_minute" ->
-            stringResource(
-                R.string.one_minute
-            )
+            stringResource(R.string.one_minute)
 
         "two_minutes" ->
-            stringResource(
-                R.string.two_minutes
-            )
+            stringResource(R.string.two_minutes)
 
         "five_minutes" ->
-            stringResource(
-                R.string.five_minutes
-            )
+            stringResource(R.string.five_minutes)
 
         else ->
-            stringResource(
-                R.string.never
-            )
+            stringResource(R.string.never)
     }
 }
-
-// =============================================================
-// RELOCK OPTION DIALOG
-// =============================================================
 
 @Composable
 private fun RelockOptionDialog(
@@ -2154,31 +1317,27 @@ private fun RelockOptionDialog(
     onCancel: () -> Unit,
     onConfirm: () -> Unit
 ) {
+    val config = LocalConfiguration.current
+    val dialogWidth =
+        (config.screenWidthDp.dp * 0.88f).coerceAtMost(320.dp)
+    val dialogMaxHeight = config.screenHeightDp.dp * 0.85f
 
     Dialog(
-        onDismissRequest =
-            onCancel,
-
-        properties =
-            DialogProperties(
-                usePlatformDefaultWidth = false
-            )
+        onDismissRequest = onCancel,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        )
     ) {
-
-        // FIX: fixed height (178.dp) hata di, lamba text ho to dialog khud barhe
         Box(
-            modifier = Modifier
-                .width(291.dp)
-                .wrapContentHeight()
-                .background(
-                    Color.White,
-                    RoundedCornerShape(12.dp)
-                )
+            Modifier
+                .width(dialogWidth)
+                .heightIn(max = dialogMaxHeight)
+                .background(Color.White, RoundedCornerShape(12.dp))
         ) {
-
             Column(
-                modifier = Modifier
+                Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(
                         start = 16.dp,
                         end = 16.dp,
@@ -2186,100 +1345,52 @@ private fun RelockOptionDialog(
                         bottom = 8.dp
                     )
             ) {
-
                 Box(
-                    modifier = Modifier
+                    Modifier
                         .fillMaxWidth()
                         .heightIn(min = 22.dp),
-
-                    contentAlignment =
-                        Alignment.Center
+                    contentAlignment = Alignment.Center
                 ) {
-
                     Text(
-                        text =
-                            stringResource(
-                                R.string.relock
-                            ),
-
-                        color =
-                            Color(0xFF333333),
-
+                        text = stringResource(R.string.relock),
+                        color = Color(0xFF333333),
                         fontSize = 14.sp,
-
-                        textAlign =
-                            TextAlign.Center,
-
+                        textAlign = TextAlign.Center,
                         maxLines = 2,
-
-                        overflow =
-                            TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Spacer(
-                    modifier =
-                        Modifier.height(7.dp)
-                )
+                Spacer(Modifier.height(7.dp))
 
                 RelockOptionRow(
-                    text =
-                        stringResource(
-                            R.string
-                                .relock_after_quitting_option
-                        ),
-
-                    selected =
-                        selectedOption ==
-                                "relock_after_quitting",
-
-                    onClick = {
-
-                        onOptionSelected(
-                            "relock_after_quitting"
-                        )
-                    }
-                )
+                    text = stringResource(
+                        R.string.relock_after_quitting_option
+                    ),
+                    selected = selectedOption == "relock_after_quitting"
+                ) {
+                    onOptionSelected("relock_after_quitting")
+                }
 
                 RelockOptionRow(
-                    text =
-                        stringResource(
-                            R.string
-                                .relock_after_screen_off
-                        ),
+                    text = stringResource(
+                        R.string.relock_after_screen_off
+                    ),
+                    selected = selectedOption == "relock_after_screen_off"
+                ) {
+                    onOptionSelected("relock_after_screen_off")
+                }
 
-                    selected =
-                        selectedOption ==
-                                "relock_after_screen_off",
-
-                    onClick = {
-
-                        onOptionSelected(
-                            "relock_after_screen_off"
-                        )
-                    }
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.height(16.dp)
-                )
+                Spacer(Modifier.height(16.dp))
 
                 DialogButtons(
-                    onCancel =
-                        onCancel,
-
-                    onConfirm =
-                        onConfirm
+                    onCancel = onCancel,
+                    onConfirm = onConfirm
                 )
             }
         }
     }
 }
-
-// =============================================================
-// RELOCK OPTION ROW
-// =============================================================
 
 @Composable
 private fun RelockOptionRow(
@@ -2287,69 +1398,37 @@ private fun RelockOptionRow(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-
     Row(
-        modifier = Modifier
+        Modifier
             .fillMaxWidth()
             .heightIn(min = 38.dp)
-            .clickable {
-                onClick()
-            },
-
-        verticalAlignment =
-            Alignment.CenterVertically
+            .clickable { onClick() },
+        verticalAlignment = Alignment.CenterVertically
     ) {
-
         RadioButton(
-            selected =
-                selected,
-
-            onClick =
-                onClick,
-
-            modifier =
-                Modifier.size(28.dp),
-
-            colors =
-                RadioButtonDefaults.colors(
-                    selectedColor =
-                        Color(0xFF0396FF),
-
-                    unselectedColor =
-                        Color(0xFFBDBDBD)
-                )
+            selected = selected,
+            onClick = onClick,
+            modifier = Modifier.size(28.dp),
+            colors = RadioButtonDefaults.colors(
+                selectedColor = Color(0xFF0396FF),
+                unselectedColor = Color(0xFFBDBDBD)
+            )
         )
 
-        Spacer(
-            modifier =
-                Modifier.width(5.dp)
-        )
+        Spacer(Modifier.width(5.dp))
 
         Text(
-            text =
-                text,
-
-            color =
-                Color(0xFF444444),
-
+            text = text,
+            color = Color(0xFF444444),
             fontSize = 13.sp,
-
             maxLines = 2,
-
-            overflow =
-                TextOverflow.Ellipsis,
-
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .padding(vertical = 4.dp)
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f)
+                .padding(vertical = 4.dp)
         )
     }
 }
-
-// =============================================================
-// DELAY DIALOG
-// =============================================================
 
 @Composable
 private fun DelayToRelockDialog(
@@ -2358,42 +1437,37 @@ private fun DelayToRelockDialog(
     onCancel: () -> Unit,
     onConfirm: () -> Unit
 ) {
+    val delayOptions = listOf(
+        "never",
+        "five_seconds",
+        "ten_seconds",
+        "thirty_seconds",
+        "one_minute",
+        "two_minutes",
+        "five_minutes"
+    )
 
-    val delayOptions =
-        listOf(
-            "never",
-            "five_seconds",
-            "ten_seconds",
-            "thirty_seconds",
-            "one_minute",
-            "two_minutes",
-            "five_minutes"
-        )
+    val config = LocalConfiguration.current
+    val dialogWidth =
+        (config.screenWidthDp.dp * 0.88f).coerceAtMost(320.dp)
+    val dialogMaxHeight = config.screenHeightDp.dp * 0.85f
 
     Dialog(
-        onDismissRequest =
-            onCancel,
-
-        properties =
-            DialogProperties(
-                usePlatformDefaultWidth = false
-            )
+        onDismissRequest = onCancel,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        )
     ) {
-
-        // FIX: fixed height (360.dp) hata di
         Box(
-            modifier = Modifier
-                .width(291.dp)
-                .wrapContentHeight()
-                .background(
-                    Color.White,
-                    RoundedCornerShape(12.dp)
-                )
+            Modifier
+                .width(dialogWidth)
+                .heightIn(max = dialogMaxHeight)
+                .background(Color.White, RoundedCornerShape(12.dp))
         ) {
-
             Column(
-                modifier = Modifier
+                Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(
                         start = 16.dp,
                         end = 16.dp,
@@ -2401,82 +1475,43 @@ private fun DelayToRelockDialog(
                         bottom = 8.dp
                     )
             ) {
-
                 Box(
-                    modifier = Modifier
+                    Modifier
                         .fillMaxWidth()
                         .heightIn(min = 22.dp),
-
-                    contentAlignment =
-                        Alignment.Center
+                    contentAlignment = Alignment.Center
                 ) {
-
                     Text(
-                        text =
-                            stringResource(
-                                R.string.delay_to_relock
-                            ),
-
-                        color =
-                            Color(0xFF333333),
-
+                        text = stringResource(R.string.delay_to_relock),
+                        color = Color(0xFF333333),
                         fontSize = 14.sp,
-
-                        textAlign =
-                            TextAlign.Center,
-
+                        textAlign = TextAlign.Center,
                         maxLines = 2,
-
-                        overflow =
-                            TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Spacer(
-                    modifier =
-                        Modifier.height(7.dp)
-                )
+                Spacer(Modifier.height(7.dp))
 
                 delayOptions.forEach { option ->
-
                     DelayOptionRow(
-                        text =
-                            getDelayText(
-                                option
-                            ),
-
-                        selected =
-                            selectedOption ==
-                                    option,
-
-                        onClick = {
-                            onOptionSelected(
-                                option
-                            )
-                        }
-                    )
+                        text = getDelayText(option),
+                        selected = selectedOption == option
+                    ) {
+                        onOptionSelected(option)
+                    }
                 }
 
-                Spacer(
-                    modifier =
-                        Modifier.height(16.dp)
-                )
+                Spacer(Modifier.height(16.dp))
 
                 DialogButtons(
-                    onCancel =
-                        onCancel,
-
-                    onConfirm =
-                        onConfirm
+                    onCancel = onCancel,
+                    onConfirm = onConfirm
                 )
             }
         }
     }
 }
-
-// =============================================================
-// DELAY OPTION ROW
-// =============================================================
 
 @Composable
 private fun DelayOptionRow(
@@ -2484,165 +1519,81 @@ private fun DelayOptionRow(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-
     Row(
-        modifier = Modifier
+        Modifier
             .fillMaxWidth()
             .heightIn(min = 38.dp)
-            .clickable {
-                onClick()
-            },
-
-        verticalAlignment =
-            Alignment.CenterVertically
+            .clickable { onClick() },
+        verticalAlignment = Alignment.CenterVertically
     ) {
-
         RadioButton(
-            selected =
-                selected,
-
-            onClick =
-                onClick,
-
-            modifier =
-                Modifier.size(28.dp),
-
-            colors =
-                RadioButtonDefaults.colors(
-                    selectedColor =
-                        Color(0xFF0396FF),
-
-                    unselectedColor =
-                        Color(0xFFBDBDBD)
-                )
+            selected = selected,
+            onClick = onClick,
+            modifier = Modifier.size(28.dp),
+            colors = RadioButtonDefaults.colors(
+                selectedColor = Color(0xFF0396FF),
+                unselectedColor = Color(0xFFBDBDBD)
+            )
         )
 
-        Spacer(
-            modifier =
-                Modifier.width(5.dp)
-        )
+        Spacer(Modifier.width(5.dp))
 
         Text(
-            text =
-                text,
-
-            color =
-                Color(0xFF444444),
-
+            text = text,
+            color = Color(0xFF444444),
             fontSize = 13.sp,
-
             maxLines = 2,
-
-            overflow =
-                TextOverflow.Ellipsis,
-
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .padding(vertical = 4.dp)
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f)
+                .padding(vertical = 4.dp)
         )
     }
 }
-
-// =============================================================
-// DIALOG BUTTONS
-// =============================================================
 
 @Composable
 private fun DialogButtons(
     onCancel: () -> Unit,
     onConfirm: () -> Unit
 ) {
-
     Row(
-        modifier =
-            Modifier.fillMaxWidth(),
-
-        horizontalArrangement =
-            Arrangement.End,
-
-        verticalAlignment =
-            Alignment.CenterVertically
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-
         Text(
-            text =
-                stringResource(
-                    R.string.cancel
-                ),
-
-            color =
-                Color(0xFF818181),
-
+            text = stringResource(R.string.cancel),
+            color = Color(0xFF818181),
             fontSize = 14.sp,
-
             maxLines = 1,
-
-            overflow =
-                TextOverflow.Ellipsis,
-
-            modifier =
-                Modifier
-                    .weight(1f, fill = false)
-                    .clickable {
-                        onCancel()
-                    }
-                    .padding(
-                        horizontal = 10.dp,
-                        vertical = 6.dp
-                    )
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .clickable { onCancel() }
+                .padding(horizontal = 10.dp, vertical = 6.dp)
         )
 
-        Spacer(
-            modifier =
-                Modifier.width(4.dp)
-        )
+        Spacer(Modifier.width(4.dp))
 
         Text(
-            text =
-                stringResource(
-                    R.string.confirm
-                ),
-
-            color =
-                Color(0xFF0396FF),
-
+            text = stringResource(R.string.confirm),
+            color = Color(0xFF0396FF),
             fontSize = 14.sp,
-
             maxLines = 1,
-
-            overflow =
-                TextOverflow.Ellipsis,
-
-            modifier =
-                Modifier
-                    .weight(1f, fill = false)
-                    .clickable {
-                        onConfirm()
-                    }
-                    .padding(
-                        horizontal = 10.dp,
-                        vertical = 6.dp
-                    )
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .clickable { onConfirm() }
+                .padding(horizontal = 10.dp, vertical = 6.dp)
         )
     }
 }
 
-// =============================================================
-// DIVIDER
-// =============================================================
-
 @Composable
 private fun SettingDivider() {
-
-    Divider(
-        modifier =
-            Modifier.fillMaxWidth(),
-
-        thickness =
-            0.6.dp,
-
-        color =
-            Color(0xFFE8E8E8)
+    HorizontalDivider(
+        modifier = Modifier.fillMaxWidth(),
+        thickness = 0.6.dp,
+        color = Color(0xFFE8E8E8)
     )
 }
