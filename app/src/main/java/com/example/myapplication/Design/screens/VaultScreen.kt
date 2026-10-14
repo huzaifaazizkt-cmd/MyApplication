@@ -1,4 +1,3 @@
-
 package com.example.myapplication.Design.screens
 
 import android.Manifest
@@ -375,8 +374,10 @@ private fun VaultScreenContent(onPreviewStateChange: (Boolean) -> Unit) {
         return
     }
 
+    // MainScreen pehle hi navigation bar ki jagah sambhalta hai,
+    // is liye yahan navigationBarsPadding() nahi lagaya.
     Box(Modifier.fillMaxSize().background(Color.White)) {
-        Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+        Column(Modifier.fillMaxSize().statusBarsPadding()) {
             Text(
                 text = stringResource(R.string.vault),
                 color = Color.Black,
@@ -455,7 +456,7 @@ private fun VaultScreenContent(onPreviewStateChange: (Boolean) -> Unit) {
             val currentHidden = hiddenMedia.filter { it.isVideo == (selectedTab == 1) }
             val allHiddenSelected = currentHidden.isNotEmpty() && currentHidden.all { selectedMedia.contains(it.uri) }
 
-            Box(Modifier.fillMaxWidth().align(Alignment.BottomCenter).navigationBarsPadding()) {
+            Box(Modifier.fillMaxWidth().align(Alignment.BottomCenter)) {
                 VaultSelectionBottomBar(
                     allSelected = allHiddenSelected,
                     selectedCount = selectedMedia.size,
@@ -500,6 +501,7 @@ private fun VaultScreenContent(onPreviewStateChange: (Boolean) -> Unit) {
                 )
             }
         } else if (!isVaultProcessing) {
+            // Plus button: banner ke bilkul upar, navigation bar ka extra gap nahi
             Box(
                 modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
                     .padding(end = 15.dp, bottom = 15.dp).size(50.dp).clip(CircleShape)
@@ -675,12 +677,13 @@ private fun VaultGalleryItem(
         }
 
         if (media.isVideo && !selectionMode) {
+            // Play button: chhota circle (30dp) aur chhota tikona (12dp)
             Box(
-                modifier = Modifier.align(Alignment.Center).size(46.dp).clip(CircleShape)
+                modifier = Modifier.align(Alignment.Center).size(30.dp).clip(CircleShape)
                     .background(Color.Black.copy(alpha = 0.45f)),
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(Modifier.size(18.dp)) {
+                Canvas(Modifier.size(12.dp)) {
                     val playPath = Path().apply {
                         moveTo(size.width * 0.25f, size.height * 0.15f)
                         lineTo(size.width * 0.25f, size.height * 0.85f)
@@ -729,6 +732,8 @@ private fun openVaultVideo(context: Context, media: VaultMediaItem) {
     }
 }
 
+// Preview mein MainScreen ka bottom bar chhup jata hai,
+// is liye yahan navigationBarsPadding() zaroori hai.
 @Composable
 private fun VaultImagePreviewScreen(
     mediaList: List<VaultMediaItem>,
@@ -924,7 +929,8 @@ private fun VaultGalleryScreen(
     val allSelected = filteredMedia.isNotEmpty() && filteredMedia.all { selectedMedia.contains(it.uri) }
 
     Box(Modifier.fillMaxSize().background(Color.White)) {
-        Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+        // MainScreen ka bottom bar yahan bhi dikhta hai, is liye navigationBarsPadding() nahi
+        Column(Modifier.fillMaxSize().statusBarsPadding()) {
             Row(
                 modifier = Modifier.fillMaxWidth().height(70.dp).padding(start = 15.dp, end = 15.dp),
                 verticalAlignment = Alignment.CenterVertically

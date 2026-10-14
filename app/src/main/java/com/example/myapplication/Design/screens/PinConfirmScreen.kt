@@ -116,10 +116,16 @@ fun PinConfirmScreen(
     var securityQuestionLocked by remember { mutableStateOf(false) }
 
     val isPattern = type.equals("pattern", ignoreCase = true)
-    val backgroundColor = Color(0xFF29A0F0)
-    val numberButtonColor = Color(0xFF69B9F3)
-    val patternDotColor = Color(0xFF83CCFF)
+
+    // ---------- Colors (PinCreateScreen jaise) ----------
+    val backgroundColor = Color.White
+    val primaryBlue = Color(0xFF0396FF)
+    val darkText = Color(0xFF555555)
+    val gray = Color(0xFFCCCCCC)
+    val numberButtonColor = primaryBlue
+    val patternDotColor = primaryBlue
     val errorColor = Color.Red
+
     val pinLength = value.length
 
     val passwordNotMatchText = stringResource(R.string.password_not_match)
@@ -653,7 +659,7 @@ fun PinConfirmScreen(
                             } else {
                                 stringResource(R.string.confirm_passcode)
                             },
-                            color = Color.White,
+                            color = darkText,
                             fontSize = titleSize,
                             textAlign = TextAlign.Center,
                             maxLines = 2,
@@ -662,33 +668,37 @@ fun PinConfirmScreen(
 
                         Spacer(Modifier.height(gapAfterTitle))
 
+                        // ---------- STEP INDICATOR ----------
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Step 1 (done)
+
                             Box(
                                 modifier = Modifier
                                     .size(25.dp)
-                                    .border(2.dp, Color.White, CircleShape),
+                                    .border(2.dp, gray, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("1", color = Color.White, fontSize = 12.sp)
+                                Text(text = "1", color = Color(0xFF999999), fontSize = 12.sp)
                             }
 
                             Box(
                                 modifier = Modifier
                                     .width(stepLineWidth)
                                     .height(2.dp)
-                                    .background(Color.White)
+                                    .background(gray)
                             )
 
+                            // Step 2 (current)
                             Box(
                                 modifier = Modifier
                                     .size(31.dp)
                                     .background(
-                                        Color.White.copy(alpha = 0.08f),
+                                        Color(0xFFF2F2F2),
                                         CircleShape
                                     )
                                     .border(
                                         2.dp,
-                                        Color.White.copy(alpha = 0.35f),
+                                        primaryBlue,
                                         CircleShape
                                     ),
                                 contentAlignment = Alignment.Center
@@ -696,12 +706,12 @@ fun PinConfirmScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(21.dp)
-                                        .background(Color.White, CircleShape),
+                                        .background(primaryBlue, CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
                                         "2",
-                                        color = backgroundColor,
+                                        color = Color.White,
                                         fontSize = 15.sp
                                     )
                                 }
@@ -713,7 +723,7 @@ fun PinConfirmScreen(
                         if (isPattern) {
                             Text(
                                 text = stringResource(R.string.draw_pattern_again),
-                                color = Color.White,
+                                color = darkText,
                                 fontSize = subTitleSize,
                                 textAlign = TextAlign.Center,
                                 maxLines = 2,
@@ -794,9 +804,9 @@ fun PinConfirmScreen(
                                 Text(
                                     text = stringResource(R.string.continue_text),
                                     color = if (patternConfirmed) {
-                                        Color.White
+                                        primaryBlue
                                     } else {
-                                        Color.White.copy(alpha = 0.35f)
+                                        Color(0xFFBDBDBD)
                                     },
                                     fontSize = actionSize,
                                     maxLines = 1,
@@ -818,7 +828,7 @@ fun PinConfirmScreen(
                         } else {
                             Text(
                                 text = stringResource(R.string.confirm_passcode),
-                                color = Color.White,
+                                color = darkText,
                                 fontSize = subTitleSize,
                                 textAlign = TextAlign.Center,
                                 maxLines = 2,
@@ -829,17 +839,19 @@ fun PinConfirmScreen(
 
                             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                                 repeat(pinLength) { index ->
+                                    val isFilled = index < confirmPin.length
+
                                     Box(
                                         modifier = Modifier
                                             .size(20.dp)
-                                            .border(1.5.dp, Color.White, CircleShape)
                                             .background(
-                                                if (index < confirmPin.length) {
-                                                    Color.White
-                                                } else {
-                                                    Color.Transparent
-                                                },
-                                                CircleShape
+                                                color = if (isFilled) primaryBlue else Color.Transparent,
+                                                shape = CircleShape
+                                            )
+                                            .border(
+                                                width = 1.5.dp,
+                                                color = if (isFilled) primaryBlue else gray,
+                                                shape = CircleShape
                                             )
                                     )
                                 }
@@ -898,9 +910,9 @@ fun PinConfirmScreen(
                                 Text(
                                     text = stringResource(R.string.reset),
                                     color = if (confirmPin.isEmpty()) {
-                                        Color.White.copy(alpha = 0.35f)
+                                        Color(0xFFBDBDBD)
                                     } else {
-                                        Color.White
+                                        primaryBlue
                                     },
                                     fontSize = actionSize,
                                     maxLines = 1,
@@ -923,9 +935,9 @@ fun PinConfirmScreen(
                                 Text(
                                     text = stringResource(R.string.continue_text),
                                     color = if (confirmPin.length == pinLength) {
-                                        Color.White
+                                        primaryBlue
                                     } else {
-                                        Color.White.copy(alpha = 0.35f)
+                                        Color(0xFFBDBDBD)
                                     },
                                     fontSize = actionSize,
                                     maxLines = 1,
@@ -1654,9 +1666,9 @@ private fun ConfirmPatternGrid(
     isError: Boolean,
     onPatternChanged: (List<Int>) -> Unit,
     onPatternFinished: (List<Int>) -> Unit,
-    dotColor: Color = Color(0xFF83CCFF),
+    dotColor: Color = Color(0xFF0396FF),
     errorColor: Color = Color.Red,
-    backgroundColor: Color = Color(0xFF29A0F0)
+    backgroundColor: Color = Color.White
 ) {
     val latestOnPatternChanged by rememberUpdatedState(onPatternChanged)
     val latestOnPatternFinished by rememberUpdatedState(onPatternFinished)
@@ -1726,7 +1738,7 @@ private fun ConfirmPatternGrid(
             if (selectedDots.size >= 2) {
                 for (i in 0 until selectedDots.size - 1) {
                     drawLine(
-                        color = if (isError) errorColor else Color.White,
+                        color = if (isError) errorColor else dotColor,
                         start = positions[selectedDots[i]],
                         end = positions[selectedDots[i + 1]],
                         strokeWidth = size.minDimension * 0.024f
@@ -1738,7 +1750,7 @@ private fun ConfirmPatternGrid(
                 val selected = selectedDots.contains(index)
 
                 drawCircle(
-                    color = dotColor,
+                    color = Color(0xFF0396FF),
                     radius = size.minDimension * 0.053f,
                     center = position
                 )
@@ -1752,8 +1764,8 @@ private fun ConfirmPatternGrid(
                 drawCircle(
                     color = when {
                         selected && isError -> errorColor
-                        selected -> Color.White
-                        else -> dotColor
+                        selected -> dotColor
+                        else -> Color(0xFF0396FF)
                     },
                     radius = size.minDimension * 0.027f,
                     center = position

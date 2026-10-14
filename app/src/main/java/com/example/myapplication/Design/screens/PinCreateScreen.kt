@@ -41,8 +41,11 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
     var selectedDots by remember { mutableStateOf<List<Int>>(emptyList()) }
 
     val isPattern = authType == "pattern"
-    val backgroundColor = Color(0xFF189FFF)
-    val patternDotColor = Color(0xFF83CCFF)
+    val backgroundColor = Color.White
+    val primaryBlue = Color(0xFF0396FF)
+    val darkText = Color(0xFF555555)
+    val gray = Color(0xFFCCCCCC)
+    val patternDotColor = primaryBlue
 
     LimitFontScale {
 
@@ -107,7 +110,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                                     "pattern" -> stringResource(R.string.pattern)
                                     else -> stringResource(R.string.four_digit_pin)
                                 },
-                                color = Color.White,
+                                color = darkText,
                                 fontSize = subTitleSize,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
@@ -116,7 +119,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                             Icon(
                                 imageVector = Icons.Default.KeyboardArrowDown,
                                 contentDescription = null,
-                                tint = Color.White,
+                                tint = darkText,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -183,17 +186,17 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                     Box(
                         modifier = Modifier
                             .size(31.dp)
-                            .background(Color.White.copy(alpha = 0.08f), CircleShape)
-                            .border(2.dp, Color.White.copy(alpha = 0.35f), CircleShape),
+                            .background(Color(0xFFF2F2F2), CircleShape)
+                            .border(2.dp,    color = Color(0xFF0396FF), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(21.dp)
-                                .background(Color.White, CircleShape),
+                                .background(Color(0xFF0396FF), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "1", color = backgroundColor, fontSize = 15.sp)
+                            Text(text = "1", color = Color.White, fontSize = 15.sp)
                         }
                     }
 
@@ -201,16 +204,16 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         modifier = Modifier
                             .width(stepLineWidth)
                             .height(2.dp)
-                            .background(Color.White)
+                            .background(gray)
                     )
 
                     Box(
                         modifier = Modifier
                             .size(25.dp)
-                            .border(2.dp, Color.White, CircleShape),
+                            .border(2.dp, gray, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "2", color = Color.White, fontSize = 12.sp)
+                        Text(text = "2", color = Color(0xFF999999), fontSize = 12.sp)
                     }
                 }
 
@@ -229,7 +232,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         ) {
                             Text(
                                 text = stringResource(R.string.create_pin, pinLength),
-                                color = Color.White,
+                                color = darkText,
                                 fontSize = titleSize,
                                 textAlign = TextAlign.Center,
                                 maxLines = 2,
@@ -240,13 +243,19 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
 
                             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                                 repeat(pinLength) { index ->
+                                    val isFilled = index < pin.length
+
                                     Box(
                                         modifier = Modifier
                                             .size(20.dp)
-                                            .border(1.5.dp, Color.White, CircleShape)
                                             .background(
-                                                if (index < pin.length) Color.White else Color.Transparent,
-                                                CircleShape
+                                                color = if (isFilled) primaryBlue else Color.Transparent,
+                                                shape = CircleShape
+                                            )
+                                            .border(
+                                                width = 1.5.dp,
+                                                color = if (isFilled) primaryBlue else gray,
+                                                shape = CircleShape
                                             )
                                     )
                                 }
@@ -260,7 +269,8 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                                 },
                                 onDelete = {
                                     if (pin.isNotEmpty()) pin = pin.dropLast(1)
-                                }
+                                },
+                                buttonColor = primaryBlue
                             )
                         }
                     } else {
@@ -272,7 +282,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         ) {
                             Text(
                                 text = stringResource(R.string.create_pattern),
-                                color = Color.White,
+                                color = darkText,
                                 fontSize = titleSize,
                                 textAlign = TextAlign.Center,
                                 maxLines = 2,
@@ -283,7 +293,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
 
                             Text(
                                 text = stringResource(R.string.connect_four_dots),
-                                color = Color.White.copy(alpha = 0.85f),
+                                color = Color(0xFF777777),
                                 fontSize = subTitleSize,
                                 textAlign = TextAlign.Center,
                                 maxLines = 2,
@@ -315,7 +325,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         text = stringResource(R.string.reset),
                         color = if (
                             if (isPattern) selectedDots.isEmpty() else pin.isEmpty()
-                        ) Color.White.copy(alpha = 0.35f) else Color.White,
+                        ) Color(0xFFBDBDBD) else primaryBlue,
                         fontSize = actionSize,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -335,7 +345,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         text = stringResource(R.string.continue_text),
                         color = if (
                             if (isPattern) selectedDots.size >= 4 else pin.length == pinLength
-                        ) Color.White else Color.White.copy(alpha = 0.35f),
+                        ) primaryBlue else Color(0xFFBDBDBD),
                         fontSize = actionSize,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -414,7 +424,7 @@ fun PatternGrid(
             if (selectedDots.size >= 2) {
                 for (i in 0 until selectedDots.size - 1) {
                     drawLine(
-                        color = Color.White,
+                        color = dotColor,
                         start = positions[selectedDots[i]],
                         end = positions[selectedDots[i + 1]],
                         strokeWidth = size.minDimension * 0.024f
@@ -426,7 +436,7 @@ fun PatternGrid(
                 val selected = selectedDots.contains(index)
 
                 drawCircle(
-                    color = dotColor,
+                    color = Color(0xFF0396FF),
                     radius = size.minDimension * 0.053f,
                     center = position
                 )
@@ -438,7 +448,7 @@ fun PatternGrid(
                 )
 
                 drawCircle(
-                    color = if (selected) Color.White else dotColor,
+                    color = if (selected) dotColor else Color(0xFF0396FF),
                     radius = size.minDimension * 0.027f,
                     center = position
                 )

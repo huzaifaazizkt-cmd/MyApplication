@@ -13,12 +13,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
@@ -212,7 +213,10 @@ fun MainScreen(
             when (selectedTab) {
 
                 0 -> {
-                    AppListScreen(context = context)
+                    AppListScreen(
+                        context = context,
+                        navController = navController
+                    )
                 }
 
                 1 -> {
@@ -342,14 +346,14 @@ private fun AppLockBottomNavigation(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(74.dp)
+            .heightIn(min = 70.dp)
             .background(Color.White)
             .padding(
-                horizontal = 12.dp,   // pehle 28.dp tha
+                horizontal = 12.dp,
                 vertical = 10.dp
             ),
 
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.SpaceEvenly,
 
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -378,7 +382,7 @@ private fun AppLockBottomNavigation(
 }
 
 @Composable
-private fun RowScope.BottomNavigationItem(
+private fun BottomNavigationItem(
     selected: Boolean,
     icon: Int,
     text: String,
@@ -391,24 +395,19 @@ private fun RowScope.BottomNavigationItem(
 
     Box(
         modifier = Modifier
-            // selected item ko thodi zyada jagah
-            .weight(if (selected) 1.4f else 1f)
             .height(38.dp)
-
+            .clip(RoundedCornerShape(22.dp))
+            .background(
+                color = if (selected) blueColor else Color.Transparent
+            )
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             ) {
                 onClick()
             }
-
-            .background(
-                color = if (selected) blueColor else Color.Transparent,
-                shape = RoundedCornerShape(22.dp)
-            )
-
             .padding(
-                horizontal = if (selected) 12.dp else 5.dp
+                horizontal = if (selected) 14.dp else 8.dp
             ),
 
         contentAlignment = Alignment.Center
@@ -439,8 +438,7 @@ private fun RowScope.BottomNavigationItem(
                 color = if (selected) Color.White else grayColor,
                 fontSize = 12.sp,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false)
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

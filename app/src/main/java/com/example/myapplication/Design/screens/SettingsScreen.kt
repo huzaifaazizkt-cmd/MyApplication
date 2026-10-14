@@ -144,26 +144,31 @@ private fun SettingsScreenContent(
             R.string.hide_settings,
             R.drawable.hideicon
         ),
+
         SettingsItemData(
-            "rate_us",
-            R.string.rate_us,
-            R.drawable.rateus
+            "privacy_policy",
+            R.string.privacy_policy,
+            R.drawable.privacy
         ),
+
         SettingsItemData(
             "share",
             R.string.share,
             R.drawable.share
         ),
+
         SettingsItemData(
-            "about",
-            R.string.about,
-            R.drawable.feedback
+            "rate_us",
+            R.string.rate_us,
+            R.drawable.rateus
         ),
-        SettingsItemData(
-            "privacy_policy",
-            R.string.privacy_policy,
-            R.drawable.privacy
-        )
+
+//        SettingsItemData(
+//            "about",
+//            R.string.about,
+//            R.drawable.feedback
+//        ),
+
     )
 
     LaunchedEffect(dataStore) {

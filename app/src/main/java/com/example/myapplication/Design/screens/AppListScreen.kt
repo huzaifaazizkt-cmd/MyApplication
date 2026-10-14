@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -39,8 +40,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.core.graphics.drawable.toBitmap
 
 import com.example.myapplication.R
@@ -159,7 +162,10 @@ object AppListCache {
 
 
 @Composable
-fun AppListScreen(context: Context) {
+fun AppListScreen(
+    context: Context,
+    navController: NavController
+) {
 
     val appContext = remember {
         context.applicationContext
@@ -243,10 +249,15 @@ fun AppListScreen(context: Context) {
             .statusBarsPadding()
     ) {
 
+        // App Lock title and PRO card.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 20.dp, top = 15.dp),
+                .padding(
+                    start = 20.dp,
+                    end = 16.dp,
+                    top = 15.dp
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
@@ -263,6 +274,39 @@ fun AppListScreen(context: Context) {
                 color = Color.Black,
                 fontSize = 20.sp
             )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFF0396FF))
+                    .clickable {
+                        navController.navigate("premium")
+                    }
+                    .padding(
+                        horizontal = 12.dp,
+                        vertical = 9.dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+
+                Image(
+                    painter = painterResource(R.drawable.pro),
+                    contentDescription = "Pro",
+                    modifier = Modifier.size(20.dp)
+                )
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                Text(
+                    text = "PRO",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
         TabRow(

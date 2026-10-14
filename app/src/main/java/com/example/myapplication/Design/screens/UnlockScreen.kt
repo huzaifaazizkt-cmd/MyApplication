@@ -1,3 +1,4 @@
+
 package com.example.myapplication.Design.screens
 
 import android.content.Context
@@ -15,6 +16,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -59,19 +61,30 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 fun showCustomToast(context: Context, message: String) {
+    val toastBackground = android.graphics.drawable.GradientDrawable().apply {
+        setColor(AndroidColor.parseColor("#808080"))
+        cornerRadius = 20f * context.resources.displayMetrics.density
+    }
+
     val textView = TextView(context).apply {
         text = message
-        setTextColor(AndroidColor.parseColor("#7B7B7B"))
+        setTextColor(AndroidColor.WHITE)
         textSize = 14f
         gravity = Gravity.CENTER
         setPadding(32, 18, 32, 18)
-        setBackgroundColor(AndroidColor.WHITE)
+        background = toastBackground
     }
+
     val toast = Toast(context)
     toast.duration = Toast.LENGTH_LONG
     toast.view = textView
-    toast.setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 120)
+    toast.setGravity(
+        Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL,
+        0,
+        120
+    )
     toast.show()
+
     Handler(Looper.getMainLooper()).postDelayed({
         try {
             toast.cancel()
@@ -80,24 +93,37 @@ fun showCustomToast(context: Context, message: String) {
     }, 5000L)
 }
 
-private fun performUnlockVibration(context: Context, duration: Long = 70L) {
+private fun performUnlockVibration(
+    context: Context,
+    duration: Long = 70L
+) {
     try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager =
-                context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE)
+                        as VibratorManager
             val vibrator = vibratorManager.defaultVibrator
+
             if (vibrator.hasVibrator()) {
                 vibrator.vibrate(
-                    VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
+                    VibrationEffect.createOneShot(
+                        duration,
+                        VibrationEffect.DEFAULT_AMPLITUDE
+                    )
                 )
             }
         } else {
             @Suppress("DEPRECATION")
-            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            val vibrator =
+                context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+
             if (vibrator.hasVibrator()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     vibrator.vibrate(
-                        VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
+                        VibrationEffect.createOneShot(
+                            duration,
+                            VibrationEffect.DEFAULT_AMPLITUDE
+                        )
                     )
                 } else {
                     @Suppress("DEPRECATION")
@@ -120,10 +146,13 @@ fun UnlockScreen(
     val context = LocalContext.current
     val dataStore = remember { DataStoreManager(context) }
     val scope = rememberCoroutineScope()
+
     val patternNotMatchText = stringResource(R.string.pattern_not_match)
     val correctPasswordText = stringResource(R.string.enter_correct_password)
-    val securityQuestionNotSetText = stringResource(R.string.security_question_not_set)
-    val pleaseEnterYourAnswerText = stringResource(R.string.please_enter_your_answer)
+    val securityQuestionNotSetText =
+        stringResource(R.string.security_question_not_set)
+    val pleaseEnterYourAnswerText =
+        stringResource(R.string.please_enter_your_answer)
     val incorrectAnswerText = stringResource(R.string.incorrect_answer)
 
     var authType by remember { mutableStateOf("pin") }
@@ -151,21 +180,27 @@ fun UnlockScreen(
         fingerprintEnabled = dataStore.getFingerprintEnabled().first()
         vibrationEnabled = dataStore.getVibrationEnabled().first()
         hideTrackEnabled = dataStore.getHideTrackEnabled().first()
-        intruderObservationAttempts = dataStore.getIntruderObservationAttempts().first()
+        intruderObservationAttempts =
+            dataStore.getIntruderObservationAttempts().first()
+
         if (fingerprintEnabled) {
             delay(350)
             onFingerprintRequest()
         }
     }
 
-    val backgroundColor = Color(0xFF29A0F0)
-    val numberButtonColor = Color(0xFF69B9F3)
-    val patternDotColor = Color(0xFF83CCFF)
+    // Updated colors to match PinCreateScreen.
+    val backgroundColor = Color.White
+    val numberButtonColor = Color(0xFF0396FF)
+    val patternDotColor = Color(0xFF0396FF)
+    val primaryBlue = Color(0xFF0396FF)
+    val darkText = Color(0xFF555555)
+    val gray = Color(0xFFCCCCCC)
     val errorColor = Color.Red
 
     fun registerWrongAttempt() {
         if (vibrationEnabled) {
-            performUnlockVibration(context = context, duration = 100L)
+            performUnlockVibration(context, 100L)
         }
 
         (context as? FragmentActivity)?.lifecycleScope?.launch {
@@ -173,27 +208,44 @@ fun UnlockScreen(
                 val enabled = dataStore.getIntruderEnabled().first()
                 if (!enabled) return@launch
 
-                val selectedAttempts = dataStore.getIntruderObservationAttempts().first()
+                val selectedAttempts =
+                    dataStore.getIntruderObservationAttempts().first()
                 intruderObservationAttempts = selectedAttempts
-                Log.d("INTRUDER_DEBUG", "SELECTED ATTEMPTS = $selectedAttempts")
+
+                Log.d(
+                    "INTRUDER_DEBUG",
+                    "SELECTED ATTEMPTS = $selectedAttempts"
+                )
 
                 if (selectedAttempts <= 0) {
                     dataStore.resetIntruderWrongAttempts()
-                    Log.d("INTRUDER_DEBUG", "INTRUDER CAPTURE DISABLED - NEVER")
+                    Log.d(
+                        "INTRUDER_DEBUG",
+                        "INTRUDER CAPTURE DISABLED - NEVER"
+                    )
                     return@launch
                 }
 
-                val currentAttempts = dataStore.getIntruderWrongAttempts().first()
+                val currentAttempts =
+                    dataStore.getIntruderWrongAttempts().first()
                 val newAttempts = currentAttempts + 1
-                Log.d("INTRUDER_DEBUG", "WRONG ATTEMPT = $newAttempts / $selectedAttempts")
+
+                Log.d(
+                    "INTRUDER_DEBUG",
+                    "WRONG ATTEMPT = $newAttempts / $selectedAttempts"
+                )
+
                 dataStore.saveIntruderWrongAttempts(newAttempts)
 
                 if (newAttempts < selectedAttempts) return@launch
 
                 dataStore.resetIntruderWrongAttempts()
 
-                val observationTime = dataStore.getIntruderObservationTime().first()
-                val delayMillis = observationTime.toLong().coerceAtLeast(0L) * 1_000L
+                val observationTime =
+                    dataStore.getIntruderObservationTime().first()
+                val delayMillis =
+                    observationTime.toLong().coerceAtLeast(0L) * 1_000L
+
                 if (delayMillis > 0L) delay(delayMillis)
 
                 val stillEnabled = dataStore.getIntruderEnabled().first()
@@ -210,11 +262,14 @@ fun UnlockScreen(
     fun openForgotPassword() {
         scope.launch {
             try {
-                val question = dataStore.getSecurityQuestion().first()?.trim().orEmpty()
+                val question =
+                    dataStore.getSecurityQuestion().first()?.trim().orEmpty()
+
                 if (question.isEmpty()) {
                     showCustomToast(context, securityQuestionNotSetText)
                     return@launch
                 }
+
                 securityQuestion = question
                 securityAnswer = ""
                 securityQuestionError = ""
@@ -232,9 +287,12 @@ fun UnlockScreen(
         }
 
         checkingSecurityQuestion = true
+
         scope.launch {
             try {
-                val savedAnswer = dataStore.getSecurityAnswer().first()?.trim().orEmpty()
+                val savedAnswer =
+                    dataStore.getSecurityAnswer().first()?.trim().orEmpty()
+
                 if (savedAnswer.isEmpty()) {
                     checkingSecurityQuestion = false
                     showForgotPasswordDialog = false
@@ -261,12 +319,14 @@ fun UnlockScreen(
 
     fun showPatternError() {
         if (vibrationEnabled) {
-            performUnlockVibration(context = context, duration = 100L)
+            performUnlockVibration(context, 100L)
         }
+
         registerWrongAttempt()
         clearErrorJob?.cancel()
         patternError = true
         error = patternNotMatchText
+
         clearErrorJob = scope.launch {
             delay(1500)
             enteredPattern = emptyList()
@@ -280,6 +340,7 @@ fun UnlockScreen(
         if (pin == savedPin) {
             error = ""
             enteredPin = ""
+
             scope.launch {
                 try {
                     dataStore.resetIntruderWrongAttempts()
@@ -287,6 +348,7 @@ fun UnlockScreen(
                     Log.e("INTRUDER_DEBUG", "RESET ERROR", e)
                 }
             }
+
             onUnlockSuccess()
         } else {
             registerWrongAttempt()
@@ -296,13 +358,11 @@ fun UnlockScreen(
     }
 
     LimitFontScale {
-
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .background(backgroundColor)
         ) {
-            // ---------- Responsive values ----------
             val isCompact = maxHeight < 700.dp || maxWidth < 360.dp
 
             val titleSize = if (isCompact) 21.sp else 25.sp
@@ -344,7 +404,7 @@ fun UnlockScreen(
                         } else {
                             stringResource(R.string.enter_passcode)
                         },
-                        color = Color.White,
+                        color = darkText,
                         fontSize = titleSize,
                         fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.Center,
@@ -355,11 +415,15 @@ fun UnlockScreen(
                     Spacer(modifier = Modifier.height(gapAfterTitle))
 
                     if (authType == "pin") {
-                        val pinLength = if (savedPin.isNotEmpty()) savedPin.length else 6
+                        val pinLength =
+                            if (savedPin.isNotEmpty()) savedPin.length else 6
 
                         Text(
-                            text = stringResource(R.string.enter_digit_pin, pinLength),
-                            color = Color.White,
+                            text = stringResource(
+                                R.string.enter_digit_pin,
+                                pinLength
+                            ),
+                            color = darkText,
                             fontSize = subTitleSize,
                             textAlign = TextAlign.Center,
                             maxLines = 2,
@@ -368,26 +432,43 @@ fun UnlockScreen(
 
                         Spacer(modifier = Modifier.height(gapAfterSubTitle))
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
                             repeat(pinLength) { index ->
+                                val isFilled = index < enteredPin.length
+
                                 Box(
                                     modifier = Modifier
                                         .size(14.dp)
                                         .background(
-                                            if (index < enteredPin.length) {
-                                                Color.White
+                                            color = if (isFilled) {
+                                                primaryBlue
                                             } else {
-                                                Color.White.copy(alpha = 0.45f)
+                                                Color.Transparent
                                             },
-                                            CircleShape
+                                            shape = CircleShape
+                                        )
+                                        .border(
+                                            width = 1.5.dp,
+                                            color = if (isFilled) {
+                                                primaryBlue
+                                            } else {
+                                                gray
+                                            },
+                                            shape = CircleShape
                                         )
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(if (isCompact) 10.dp else 20.dp))
+                        Spacer(
+                            modifier = Modifier.height(
+                                if (isCompact) 10.dp else 20.dp
+                            )
+                        )
 
-                        // Error ke liye jagah hamesha reserve, taake layout na uchhle
+                        // Reserve space for error messages to prevent layout jumps.
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -397,7 +478,7 @@ fun UnlockScreen(
                             if (error.isNotEmpty()) {
                                 Text(
                                     text = error,
-                                    color = Color.Red,
+                                    color = errorColor,
                                     fontSize = errorSize,
                                     textAlign = TextAlign.Center,
                                     maxLines = 2,
@@ -414,6 +495,7 @@ fun UnlockScreen(
                                     val newPin = enteredPin + number
                                     enteredPin = newPin
                                     error = ""
+
                                     if (newPin.length == pinLength) {
                                         checkPin(newPin)
                                     }
@@ -438,14 +520,16 @@ fun UnlockScreen(
                         ) {
                             Text(
                                 text = stringResource(R.string.forgot_password),
-                                color = Color.White,
+                                color = primaryBlue,
                                 fontSize = linkSize,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier
                                     .clickable(
                                         indication = null,
-                                        interactionSource = remember { MutableInteractionSource() }
+                                        interactionSource = remember {
+                                            MutableInteractionSource()
+                                        }
                                     ) {
                                         openForgotPassword()
                                     }
@@ -462,7 +546,7 @@ fun UnlockScreen(
                             if (patternError && error.isNotEmpty()) {
                                 Text(
                                     text = error,
-                                    color = Color.Red,
+                                    color = errorColor,
                                     fontSize = if (isCompact) 16.sp else 20.sp,
                                     textAlign = TextAlign.Center,
                                     maxLines = 2,
@@ -471,7 +555,11 @@ fun UnlockScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(if (isCompact) 6.dp else 10.dp))
+                        Spacer(
+                            modifier = Modifier.height(
+                                if (isCompact) 6.dp else 10.dp
+                            )
+                        )
 
                         UnlockPatternGrid(
                             modifier = Modifier.size(gridSize),
@@ -481,6 +569,7 @@ fun UnlockScreen(
                             vibrationEnabled = vibrationEnabled,
                             onPatternChanged = { dots ->
                                 enteredPattern = dots
+
                                 if (patternError) {
                                     clearErrorJob?.cancel()
                                     clearErrorJob = null
@@ -489,8 +578,9 @@ fun UnlockScreen(
                                 }
                             },
                             onPatternFinished = { pattern ->
-                                val originalPattern =
-                                    savedPattern.split("-").mapNotNull { it.toIntOrNull() }
+                                val originalPattern = savedPattern
+                                    .split("-")
+                                    .mapNotNull { it.toIntOrNull() }
 
                                 if (pattern != originalPattern) {
                                     showPatternError()
@@ -507,7 +597,11 @@ fun UnlockScreen(
                                     try {
                                         dataStore.resetIntruderWrongAttempts()
                                     } catch (e: Exception) {
-                                        Log.e("INTRUDER_DEBUG", "RESET ERROR", e)
+                                        Log.e(
+                                            "INTRUDER_DEBUG",
+                                            "RESET ERROR",
+                                            e
+                                        )
                                     }
                                 }
 
@@ -528,14 +622,16 @@ fun UnlockScreen(
                         ) {
                             Text(
                                 text = stringResource(R.string.forgot_password),
-                                color = Color.White,
+                                color = primaryBlue,
                                 fontSize = linkSize,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier
                                     .clickable(
                                         indication = null,
-                                        interactionSource = remember { MutableInteractionSource() }
+                                        interactionSource = remember {
+                                            MutableInteractionSource()
+                                        }
                                     ) {
                                         openForgotPassword()
                                     }
@@ -568,6 +664,7 @@ fun UnlockScreen(
                         dialogWindow?.setSoftInputMode(
                             WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
                         )
+
                         onDispose {
                             dialogWindow?.setSoftInputMode(
                                 WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
@@ -588,6 +685,7 @@ fun UnlockScreen(
                             Text(
                                 text = stringResource(R.string.security_question),
                                 style = MaterialTheme.typography.headlineSmall,
+                                color = darkText,
                                 fontWeight = FontWeight.SemiBold,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis
@@ -597,6 +695,7 @@ fun UnlockScreen(
 
                             Text(
                                 text = securityQuestion,
+                                color = darkText,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -622,13 +721,16 @@ fun UnlockScreen(
                                     focusedContainerColor = Color.Transparent,
                                     unfocusedContainerColor = Color.Transparent,
                                     disabledContainerColor = Color.Transparent,
-                                    errorContainerColor = Color.Transparent
+                                    errorContainerColor = Color.Transparent,
+                                    focusedIndicatorColor = primaryBlue,
+                                    cursorColor = primaryBlue
                                 ),
                                 modifier = Modifier.fillMaxWidth()
                             )
 
                             if (securityQuestionError.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(8.dp))
+
                                 Text(
                                     text = securityQuestionError,
                                     color = Color.Red,
@@ -666,17 +768,19 @@ fun UnlockScreen(
 
                                 Button(
                                     enabled = !checkingSecurityQuestion,
-                                    onClick = { verifySecurityAnswer() },
+                                    onClick = {
+                                        verifySecurityAnswer()
+                                    },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Color.Transparent,
                                         disabledContainerColor = Color.Transparent,
-                                        contentColor = backgroundColor,
-                                        disabledContentColor = backgroundColor
+                                        contentColor = primaryBlue,
+                                        disabledContentColor = primaryBlue
                                     )
                                 ) {
                                     Text(
                                         text = stringResource(R.string.continue_text),
-                                        color = backgroundColor,
+                                        color = primaryBlue,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
@@ -704,6 +808,7 @@ private fun UnlockPatternGrid(
     backgroundColor: Color
 ) {
     val context = LocalContext.current
+
     val latestOnPatternChanged by rememberUpdatedState(onPatternChanged)
     val latestOnPatternFinished by rememberUpdatedState(onPatternFinished)
 
@@ -755,6 +860,7 @@ private fun UnlockPatternGrid(
                         if (!patternFinished) {
                             patternFinished = true
                             val finalPattern = currentDots.toList()
+
                             if (finalPattern.isNotEmpty()) {
                                 latestOnPatternFinished(finalPattern)
                             }
@@ -764,6 +870,7 @@ private fun UnlockPatternGrid(
                         if (!patternFinished) {
                             patternFinished = true
                             val finalPattern = currentDots.toList()
+
                             if (finalPattern.isNotEmpty()) {
                                 latestOnPatternFinished(finalPattern)
                             }
@@ -781,7 +888,7 @@ private fun UnlockPatternGrid(
             if (!hideTrack && selectedDots.size >= 2) {
                 for (i in 0 until selectedDots.size - 1) {
                     drawLine(
-                        color = if (isError) errorColor else Color.White,
+                        color = if (isError) errorColor else dotColor,
                         start = positions[selectedDots[i]],
                         end = positions[selectedDots[i + 1]],
                         strokeWidth = size.minDimension * 0.012f
@@ -792,22 +899,25 @@ private fun UnlockPatternGrid(
             positions.forEachIndexed { index, position ->
                 val selected = selectedDots.contains(index)
 
+                // Blue outer ring.
                 drawCircle(
-                    color = dotColor,
+                    color = if (selected && isError) errorColor else dotColor,
                     radius = size.minDimension * 0.055f,
                     center = position
                 )
 
+                // White inner area.
                 drawCircle(
                     color = backgroundColor,
                     radius = size.minDimension * 0.042f,
                     center = position
                 )
 
+                // Center dot.
                 drawCircle(
                     color = when {
                         selected && isError -> errorColor
-                        selected -> Color.White
+                        selected -> dotColor
                         else -> dotColor
                     },
                     radius = size.minDimension * 0.028f,
@@ -818,10 +928,14 @@ private fun UnlockPatternGrid(
     }
 }
 
-private fun getUnlockPositions(width: Float, height: Float): List<Offset> {
+private fun getUnlockPositions(
+    width: Float,
+    height: Float
+): List<Offset> {
     val x1 = width * 0.1667f
     val x2 = width * 0.5f
     val x3 = width * 0.8333f
+
     val y1 = height * 0.1667f
     val y2 = height * 0.5f
     val y3 = height * 0.8333f
@@ -839,8 +953,16 @@ private fun getUnlockPositions(width: Float, height: Float): List<Offset> {
     )
 }
 
-private fun findUnlockDot(touch: Offset, width: Float, height: Float): Int? {
-    val positions = getUnlockPositions(width = width, height = height)
+private fun findUnlockDot(
+    touch: Offset,
+    width: Float,
+    height: Float
+): Int? {
+    val positions = getUnlockPositions(
+        width = width,
+        height = height
+    )
+
     val touchRadius = min(width, height) * 0.15f
 
     positions.forEachIndexed { index, dot ->
