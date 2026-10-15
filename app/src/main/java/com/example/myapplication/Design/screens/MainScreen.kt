@@ -231,7 +231,14 @@ fun MainScreen(
                     SettingsScreen(
                         onIntruderClick = onIntruderClick,
                         onLanguageClick = onLanguageClick,
-                        onResetPasswordClick = onResetPasswordClick
+                        onResetPasswordClick = onResetPasswordClick,
+                        onPremiumClick = {
+                            navController.currentBackStackEntry
+                                ?.savedStateHandle
+                                ?.set("premiumReturnTab", 2)
+
+                            navController.navigate("premium")
+                        }
                     )
                 }
             }

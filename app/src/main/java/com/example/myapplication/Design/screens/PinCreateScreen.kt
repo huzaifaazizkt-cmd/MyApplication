@@ -342,7 +342,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                     )
 
                     Text(
-                        text = stringResource(R.string.continue_text),
+                        text = stringResource(R.string.confirm_text),
                         color = if (
                             if (isPattern) selectedDots.size >= 4 else pin.length == pinLength
                         ) primaryBlue else Color(0xFFBDBDBD),

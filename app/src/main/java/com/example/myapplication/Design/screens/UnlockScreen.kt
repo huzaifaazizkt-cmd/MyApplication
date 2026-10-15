@@ -440,7 +440,7 @@ fun UnlockScreen(
 
                                 Box(
                                     modifier = Modifier
-                                        .size(14.dp)
+                                        .size(20.dp)
                                         .background(
                                             color = if (isFilled) {
                                                 primaryBlue

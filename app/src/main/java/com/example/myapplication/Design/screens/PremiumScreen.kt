@@ -152,6 +152,7 @@ fun PremiumScreen(
                             top = topPadding
                         )
                 ) {
+                    // CLOSE BUTTON
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -167,9 +168,32 @@ fun PremiumScreen(
                                         MutableInteractionSource()
                                     }
                                 ) {
-                                    navController.navigate("create") {
-                                        popUpTo("premium") {
-                                            inclusive = true
+                                    val previousEntry =
+                                        navController.previousBackStackEntry
+
+                                    val previousRoute =
+                                        previousEntry?.destination?.route
+
+                                    val returnTab = previousEntry
+                                        ?.savedStateHandle
+                                        ?.get<Int>("premiumReturnTab") ?: 0
+
+                                    if (previousRoute == "appList") {
+                                        previousEntry.savedStateHandle[
+                                            "openSettings"
+                                        ] = returnTab == 2
+
+                                        previousEntry.savedStateHandle[
+                                            "forceAppList"
+                                        ] = returnTab == 0
+
+                                        navController.popBackStack()
+                                    } else {
+                                        navController.navigate("create") {
+                                            popUpTo("premium") {
+                                                inclusive = true
+                                            }
+                                            launchSingleTop = true
                                         }
                                     }
                                 },
@@ -588,7 +612,6 @@ fun PremiumScreen(
                     )
 
                     // TERMS OF USE AND PRIVACY POLICY
-                    // Ripple/click indication removed; other code unchanged.
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -611,9 +634,6 @@ fun PremiumScreen(
                                         MutableInteractionSource()
                                     }
                                 ) {}
-
-
-
                         )
 
                         Spacer(modifier = Modifier.width(8.dp))

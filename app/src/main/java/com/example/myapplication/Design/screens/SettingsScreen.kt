@@ -64,13 +64,15 @@ private data class SettingsItemData(
 fun SettingsScreen(
     onIntruderClick: () -> Unit,
     onLanguageClick: () -> Unit,
-    onResetPasswordClick: () -> Unit
+    onResetPasswordClick: () -> Unit,
+    onPremiumClick: () -> Unit = {}
 ) {
     LimitFontScale {
         SettingsScreenContent(
             onIntruderClick = onIntruderClick,
             onLanguageClick = onLanguageClick,
-            onResetPasswordClick = onResetPasswordClick
+            onResetPasswordClick = onResetPasswordClick,
+            onPremiumClick = onPremiumClick
         )
     }
 }
@@ -79,7 +81,8 @@ fun SettingsScreen(
 private fun SettingsScreenContent(
     onIntruderClick: () -> Unit,
     onLanguageClick: () -> Unit,
-    onResetPasswordClick: () -> Unit
+    onResetPasswordClick: () -> Unit,
+    onPremiumClick: () -> Unit
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
@@ -124,51 +127,13 @@ private fun SettingsScreenContent(
     var securityDropdownExpanded by remember { mutableStateOf(false) }
 
     val settingsItems = listOf(
-        SettingsItemData(
-            "languages",
-            R.string.languages,
-            R.drawable.language
-        ),
-        SettingsItemData(
-            "lock_setting",
-            R.string.lock_setting,
-            R.drawable.settingicon
-        ),
-        SettingsItemData(
-            "intruder",
-            R.string.intruder,
-            R.drawable.intruder
-        ),
-        SettingsItemData(
-            "hide_settings",
-            R.string.hide_settings,
-            R.drawable.hideicon
-        ),
-
-        SettingsItemData(
-            "privacy_policy",
-            R.string.privacy_policy,
-            R.drawable.privacy
-        ),
-
-        SettingsItemData(
-            "share",
-            R.string.share,
-            R.drawable.share
-        ),
-
-        SettingsItemData(
-            "rate_us",
-            R.string.rate_us,
-            R.drawable.rateus
-        ),
-
-//        SettingsItemData(
-//            "about",
-//            R.string.about,
-//            R.drawable.feedback
-//        ),
-
+        SettingsItemData("languages", R.string.languages, R.drawable.language),
+        SettingsItemData("lock_setting", R.string.lock_setting, R.drawable.settingicon),
+        SettingsItemData("intruder", R.string.intruder, R.drawable.intruder),
+        SettingsItemData("hide_settings", R.string.hide_settings, R.drawable.hideicon),
+        SettingsItemData("privacy_policy", R.string.privacy_policy, R.drawable.privacy),
+        SettingsItemData("share", R.string.share, R.drawable.share),
+        SettingsItemData("rate_us", R.string.rate_us, R.drawable.rateus)
     )
 
     LaunchedEffect(dataStore) {
@@ -234,6 +199,13 @@ private fun SettingsScreenContent(
                         bottom = 25.dp
                     )
             ) {
+                // Premium card added above App Protection.
+                PremiumPromoCard(
+                    onClick = onPremiumClick
+                )
+
+                Spacer(Modifier.height(12.dp))
+
                 AppProtectionCard(
                     enabled = appProtectionEnabled,
                     onEnabledChange = { enabled ->
@@ -269,10 +241,7 @@ private fun SettingsScreenContent(
                             if (enabled) {
                                 hideRecentJob = scope.launch {
                                     delay(2_000L)
-
-                                    (context as? Activity)
-                                        ?.finishAndRemoveTask()
-
+                                    (context as? Activity)?.finishAndRemoveTask()
                                     hideRecentJob = null
                                 }
                             }
@@ -309,19 +278,13 @@ private fun SettingsScreenContent(
 
                                 "lock_setting", "hide_settings" -> {
                                     expandedItem =
-                                        if (expandedItem == item.key) {
-                                            null
-                                        } else {
-                                            item.key
-                                        }
+                                        if (expandedItem == item.key) null
+                                        else item.key
                                 }
 
                                 "intruder" -> onIntruderClick()
 
-                                "rate_us",
-                                "share",
-
-                                "privacy_policy" -> Unit
+                                "rate_us", "share", "privacy_policy" -> Unit
                             }
                         },
                         onResetPasswordClick = onResetPasswordClick
@@ -335,9 +298,7 @@ private fun SettingsScreenContent(
         if (showRelockDialog) {
             RelockOptionDialog(
                 selectedOption = tempRelockOption,
-                onOptionSelected = {
-                    tempRelockOption = it
-                },
+                onOptionSelected = { tempRelockOption = it },
                 onCancel = {
                     tempRelockOption = relockOption
                     showRelockDialog = false
@@ -356,9 +317,7 @@ private fun SettingsScreenContent(
         if (showDelayDialog) {
             DelayToRelockDialog(
                 selectedOption = tempDelayOption,
-                onOptionSelected = {
-                    tempDelayOption = it
-                },
+                onOptionSelected = { tempDelayOption = it },
                 onCancel = {
                     tempDelayOption = delayOption
                     showDelayDialog = false
@@ -386,9 +345,7 @@ private fun SettingsScreenContent(
                     securityQuestion = it
                     securityDropdownExpanded = false
                 },
-                onAnswerChanged = {
-                    securityAnswer = it
-                },
+                onAnswerChanged = { securityAnswer = it },
                 onCancel = {
                     securityDropdownExpanded = false
                     showSecurityQuestionDialog = false
@@ -411,6 +368,118 @@ private fun SettingsScreenContent(
         }
     }
 }
+
+
+@Composable
+private fun PremiumPromoCard(
+    onClick: () -> Unit
+) {
+    val blue = Color(0xFF0396FF)
+    val outerShape = RoundedCornerShape(14.dp)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 4.dp,
+                shape = outerShape,
+                clip = false
+            )
+            .clip(outerShape)
+            .clickable(
+                interactionSource = remember {
+                    MutableInteractionSource()
+                },
+                indication = ripple(bounded = true)
+            ) {
+                onClick()
+            },
+        shape = outerShape,
+        colors = CardDefaults.cardColors(
+            containerColor = blue
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 0.dp
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = 14.dp,
+                    end = 14.dp,
+                    top = 13.dp,
+                    bottom = 12.dp
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "Unlock All Features",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(Modifier.height(5.dp))
+
+                Text(
+                    text = "Remove ads & unlock all features",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(Modifier.height(13.dp))
+                Row(
+                    modifier = Modifier
+                        .width(145.dp)
+                        .height(29.dp)
+                        .background(
+                            Color.White,
+                            RoundedCornerShape(25.dp)
+                        )
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.kingblue),
+                        contentDescription = "Get Premium",
+                        modifier = Modifier.size(22.dp),
+                        contentScale = ContentScale.Fit
+                    )
+
+                    Spacer(Modifier.width(8.dp))
+
+                    Text(
+                        text = "Get Premium",
+                        color = blue,
+                        fontSize = 14.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            Image(
+                painter = painterResource(
+                    R.drawable.king
+                ),
+                contentDescription = "Premium King",
+                modifier = Modifier.size(128.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
+    }
+}
+
 
 @Composable
 private fun AppProtectionCard(
@@ -592,11 +661,8 @@ private fun SettingsItem(
                 Image(
                     painter = painterResource(
                         if (expandable) {
-                            if (expanded) {
-                                R.drawable.uparrow
-                            } else {
-                                R.drawable.downicon
-                            }
+                            if (expanded) R.drawable.uparrow
+                            else R.drawable.downicon
                         } else {
                             R.drawable.sidearrow
                         }
@@ -693,7 +759,6 @@ private fun LockSettingExpandedContent(
     onResetPasswordClick: () -> Unit,
     onSecurityQuestionClick: () -> Unit
 ) {
-    // FIX: Read LocalContext.current in the composable scope.
     val context = LocalContext.current
     val dataStore = remember(context) {
         DataStoreManager(context)
@@ -1292,26 +1357,13 @@ private fun getRelockText(relockOption: String): String {
 @Composable
 private fun getDelayText(key: String): String {
     return when (key) {
-        "five_seconds" ->
-            stringResource(R.string.five_seconds)
-
-        "ten_seconds" ->
-            stringResource(R.string.ten_seconds)
-
-        "thirty_seconds" ->
-            stringResource(R.string.thirty_seconds)
-
-        "one_minute" ->
-            stringResource(R.string.one_minute)
-
-        "two_minutes" ->
-            stringResource(R.string.two_minutes)
-
-        "five_minutes" ->
-            stringResource(R.string.five_minutes)
-
-        else ->
-            stringResource(R.string.never)
+        "five_seconds" -> stringResource(R.string.five_seconds)
+        "ten_seconds" -> stringResource(R.string.ten_seconds)
+        "thirty_seconds" -> stringResource(R.string.thirty_seconds)
+        "one_minute" -> stringResource(R.string.one_minute)
+        "two_minutes" -> stringResource(R.string.two_minutes)
+        "five_minutes" -> stringResource(R.string.five_minutes)
+        else -> stringResource(R.string.never)
     }
 }
 

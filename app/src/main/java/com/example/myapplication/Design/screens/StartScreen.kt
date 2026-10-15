@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -28,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -68,49 +71,37 @@ fun StartScreen(
         LottieCompositionSpec.RawRes(R.raw.loadingbar)
     )
 
-    var splashFinished by remember {
-        mutableStateOf(false)
-    }
-
-    var navigationDone by remember {
-        mutableStateOf(false)
-    }
-
-    var isAdFlowActive by remember {
-        mutableStateOf(false)
-    }
-
-    var interstitialAd by remember {
-        mutableStateOf<InterstitialAd?>(null)
-    }
-
-    var adLoaded by remember {
-        mutableStateOf(false)
-    }
-
-    var adFailed by remember {
-        mutableStateOf(false)
-    }
-
-    var remoteConfigLoaded by remember {
-        mutableStateOf(false)
-    }
-
-    var showInterstitialAd by remember {
-        mutableStateOf(false)
-    }
+    var splashFinished by remember { mutableStateOf(false) }
+    var navigationDone by remember { mutableStateOf(false) }
+    var isAdFlowActive by remember { mutableStateOf(false) }
+    var interstitialAd by remember { mutableStateOf<InterstitialAd?>(null) }
+    var adLoaded by remember { mutableStateOf(false) }
+    var adFailed by remember { mutableStateOf(false) }
+    var remoteConfigLoaded by remember { mutableStateOf(false) }
+    var showInterstitialAd by remember { mutableStateOf(false) }
 
     val progress by animateLottieCompositionAsState(
         composition = composition,
         iterations = 1
     )
 
+    // Unlock screen par jane ka common function (sirf ek dafa chalta hai)
+    fun goToUnlock() {
+        if (navigationDone) return
+        navigationDone = true
+        isAdFlowActive = false
+
+        navController.navigate("unlockScreen") {
+            popUpTo("startScreen") { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
     // -------------------------------------------------------------------------
     // REMOTE CONFIG
     // -------------------------------------------------------------------------
 
     LaunchedEffect(appInitialized) {
-
         if (!appInitialized) {
             remoteConfigLoaded = true
             return@LaunchedEffect
@@ -118,29 +109,15 @@ fun StartScreen(
     }
 
     LaunchedEffect(appInitialized) {
+        if (!appInitialized) return@LaunchedEffect
 
-        if (!appInitialized) {
-            return@LaunchedEffect
-        }
+        Log.d(TAG, "Fetching Remote Config...")
 
-        Log.d(
-            TAG,
-            "Fetching Remote Config..."
-        )
-
-        val remoteConfigManager =
-            RemoteConfigManager()
+        val remoteConfigManager = RemoteConfigManager()
 
         remoteConfigManager.fetchConfig { remoteInterstitial, _ ->
-
-            Log.d(
-                TAG,
-                "Remote Config interstitial = $remoteInterstitial"
-            )
-
-            showInterstitialAd =
-                remoteInterstitial
-
+            Log.d(TAG, "Remote Config interstitial = $remoteInterstitial")
+            showInterstitialAd = remoteInterstitial
             remoteConfigLoaded = true
         }
     }
@@ -155,53 +132,25 @@ fun StartScreen(
         appInitialized
     ) {
 
-        if (!appInitialized) {
-            return@LaunchedEffect
-        }
-
-        if (!remoteConfigLoaded) {
-            return@LaunchedEffect
-        }
+        if (!appInitialized) return@LaunchedEffect
+        if (!remoteConfigLoaded) return@LaunchedEffect
 
         if (!showInterstitialAd) {
-
-            Log.d(
-                TAG,
-                "REMOTE CONFIG = FALSE"
-            )
-
-            Log.d(
-                TAG,
-                "INTERSTITIAL WILL NOT BE SHOWN"
-            )
-
+            Log.d(TAG, "REMOTE CONFIG = FALSE")
+            Log.d(TAG, "INTERSTITIAL WILL NOT BE SHOWN")
             return@LaunchedEffect
         }
 
         if (activity == null) {
-
-            Log.e(
-                TAG,
-                "Activity is not available"
-            )
-
+            Log.e(TAG, "Activity is not available")
             adFailed = true
-
             return@LaunchedEffect
         }
 
-        Log.d(
-            TAG,
-            "REMOTE CONFIG = TRUE"
-        )
+        Log.d(TAG, "REMOTE CONFIG = TRUE")
+        Log.d(TAG, "Loading interstitial...")
 
-        Log.d(
-            TAG,
-            "Loading interstitial..."
-        )
-
-        val adRequest =
-            AdRequest.Builder().build()
+        val adRequest = AdRequest.Builder().build()
 
         InterstitialAd.load(
             context,
@@ -209,130 +158,46 @@ fun StartScreen(
             adRequest,
             object : InterstitialAdLoadCallback() {
 
-                override fun onAdLoaded(
-                    ad: InterstitialAd
-                ) {
+                override fun onAdLoaded(ad: InterstitialAd) {
 
-                    Log.d(
-                        TAG,
-                        "INTERSTITIAL AD LOADED"
-                    )
+                    Log.d(TAG, "INTERSTITIAL AD LOADED")
 
                     interstitialAd = ad
-
                     adLoaded = true
 
                     ad.fullScreenContentCallback =
                         object : FullScreenContentCallback() {
 
                             override fun onAdShowedFullScreenContent() {
-
-                                Log.d(
-                                    TAG,
-                                    "INTERSTITIAL AD SHOWN"
-                                )
+                                Log.d(TAG, "INTERSTITIAL AD SHOWN")
                             }
 
                             override fun onAdDismissedFullScreenContent() {
-
-                                Log.d(
-                                    TAG,
-                                    "INTERSTITIAL AD CLOSED"
-                                )
-
+                                Log.d(TAG, "INTERSTITIAL AD CLOSED")
                                 interstitialAd = null
-
-                                if (!navigationDone) {
-
-                                    navigationDone = true
-
-                                    isAdFlowActive = false
-
-                                    navController.navigate(
-                                        "unlockScreen"
-                                    ) {
-
-                                        popUpTo(
-                                            "startScreen"
-                                        ) {
-                                            inclusive = true
-                                        }
-
-                                        launchSingleTop = true
-                                    }
-                                }
+                                goToUnlock()
                             }
 
                             override fun onAdFailedToShowFullScreenContent(
                                 adError: AdError
                             ) {
-
-                                Log.e(
-                                    TAG,
-                                    "INTERSTITIAL SHOW FAILED"
-                                )
-
-                                Log.e(
-                                    TAG,
-                                    "Code = ${adError.code}"
-                                )
-
-                                Log.e(
-                                    TAG,
-                                    "Message = ${adError.message}"
-                                )
-
+                                Log.e(TAG, "INTERSTITIAL SHOW FAILED")
+                                Log.e(TAG, "Code = ${adError.code}")
+                                Log.e(TAG, "Message = ${adError.message}")
                                 interstitialAd = null
-
-                                if (!navigationDone) {
-
-                                    navigationDone = true
-
-                                    isAdFlowActive = false
-
-                                    navController.navigate(
-                                        "unlockScreen"
-                                    ) {
-
-                                        popUpTo(
-                                            "startScreen"
-                                        ) {
-                                            inclusive = true
-                                        }
-
-                                        launchSingleTop = true
-                                    }
-                                }
+                                goToUnlock()
                             }
                         }
                 }
 
-                override fun onAdFailedToLoad(
-                    loadAdError: LoadAdError
-                ) {
+                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
 
-                    Log.e(
-                        TAG,
-                        "INTERSTITIAL LOAD FAILED"
-                    )
-
-                    Log.e(
-                        TAG,
-                        "Code = ${loadAdError.code}"
-                    )
-
-                    Log.e(
-                        TAG,
-                        "Message = ${loadAdError.message}"
-                    )
-
-                    Log.e(
-                        TAG,
-                        "Domain = ${loadAdError.domain}"
-                    )
+                    Log.e(TAG, "INTERSTITIAL LOAD FAILED")
+                    Log.e(TAG, "Code = ${loadAdError.code}")
+                    Log.e(TAG, "Message = ${loadAdError.message}")
+                    Log.e(TAG, "Domain = ${loadAdError.domain}")
 
                     interstitialAd = null
-
                     adFailed = true
                 }
             }
@@ -343,22 +208,10 @@ fun StartScreen(
     // SPLASH ANIMATION
     // -------------------------------------------------------------------------
 
-    LaunchedEffect(
-        composition,
-        progress
-    ) {
-
-        if (
-            composition != null &&
-            progress >= 1f
-        ) {
-
+    LaunchedEffect(composition, progress) {
+        if (composition != null && progress >= 1f) {
             splashFinished = true
-
-            Log.d(
-                TAG,
-                "SPLASH FINISHED"
-            )
+            Log.d(TAG, "SPLASH FINISHED")
         }
     }
 
@@ -375,159 +228,49 @@ fun StartScreen(
         appInitialized
     ) {
 
-        if (
-            !splashFinished ||
-            navigationDone
-        ) {
-            return@LaunchedEffect
-        }
+        if (!splashFinished || navigationDone) return@LaunchedEffect
 
-        // ---------------------------------------------------------------------
         // FIRST LAUNCH
-        // ---------------------------------------------------------------------
-
         if (!appInitialized) {
-
             navigationDone = true
+            Log.d(TAG, "FIRST LAUNCH -> WELCOME")
 
-            Log.d(
-                TAG,
-                "FIRST LAUNCH -> WELCOME"
-            )
-
-            navController.navigate(
-                "welcomeScreen"
-            ) {
-
-                popUpTo(
-                    "startScreen"
-                ) {
-                    inclusive = true
-                }
+            navController.navigate("welcomeScreen") {
+                popUpTo("startScreen") { inclusive = true }
             }
-
             return@LaunchedEffect
         }
 
-        if (!remoteConfigLoaded) {
-            return@LaunchedEffect
-        }
+        if (!remoteConfigLoaded) return@LaunchedEffect
 
-        // ---------------------------------------------------------------------
         // REMOTE CONFIG OFF
-        // ---------------------------------------------------------------------
-
         if (!showInterstitialAd) {
-
-            navigationDone = true
-
-            Log.d(
-                TAG,
-                "REMOTE CONFIG FALSE -> NO AD"
-            )
-
-            Log.d(
-                TAG,
-                "GOING DIRECTLY TO UNLOCK"
-            )
-
-            navController.navigate(
-                "unlockScreen"
-            ) {
-
-                popUpTo(
-                    "startScreen"
-                ) {
-                    inclusive = true
-                }
-
-                launchSingleTop = true
-            }
-
+            Log.d(TAG, "REMOTE CONFIG FALSE -> NO AD")
+            Log.d(TAG, "GOING DIRECTLY TO UNLOCK")
+            goToUnlock()
             return@LaunchedEffect
         }
 
-        // ---------------------------------------------------------------------
         // AD FAILED
-        // ---------------------------------------------------------------------
-
         if (adFailed) {
-
-            navigationDone = true
-
-            Log.d(
-                TAG,
-                "AD FAILED -> UNLOCK"
-            )
-
-            navController.navigate(
-                "unlockScreen"
-            ) {
-
-                popUpTo(
-                    "startScreen"
-                ) {
-                    inclusive = true
-                }
-
-                launchSingleTop = true
-            }
-
+            Log.d(TAG, "AD FAILED -> UNLOCK")
+            goToUnlock()
             return@LaunchedEffect
         }
 
-        // ---------------------------------------------------------------------
         // SHOW AD
-        // ---------------------------------------------------------------------
+        if (adLoaded && interstitialAd != null && activity != null) {
 
-        if (
-            adLoaded &&
-            interstitialAd != null &&
-            activity != null
-        ) {
-
-            Log.d(
-                TAG,
-                "STARTING AD FLOW"
-            )
+            Log.d(TAG, "STARTING AD FLOW")
 
             isAdFlowActive = true
 
             try {
-
-                interstitialAd?.show(
-                    activity
-                )
-
+                interstitialAd?.show(activity)
             } catch (e: Exception) {
-
-                Log.e(
-                    TAG,
-                    "Exception while showing ad",
-                    e
-                )
-
+                Log.e(TAG, "Exception while showing ad", e)
                 interstitialAd = null
-
-                if (!navigationDone) {
-
-                    navigationDone = true
-
-                    isAdFlowActive = false
-
-                    navController.navigate(
-                        "unlockScreen"
-                    ) {
-
-                        popUpTo(
-                            "startScreen"
-                        ) {
-                            inclusive = true
-                        }
-
-                        launchSingleTop = true
-                    }
-                }
+                goToUnlock()
             }
         }
     }
@@ -538,39 +281,13 @@ fun StartScreen(
 
     LaunchedEffect(appInitialized) {
 
-        if (!appInitialized) {
-            return@LaunchedEffect
-        }
+        if (!appInitialized) return@LaunchedEffect
 
         delay(20_000L)
 
-        if (
-            !navigationDone &&
-            !adLoaded &&
-            remoteConfigLoaded
-        ) {
-
-            Log.e(
-                TAG,
-                "INTERSTITIAL TIMEOUT"
-            )
-
-            navigationDone = true
-
-            isAdFlowActive = false
-
-            navController.navigate(
-                "unlockScreen"
-            ) {
-
-                popUpTo(
-                    "startScreen"
-                ) {
-                    inclusive = true
-                }
-
-                launchSingleTop = true
-            }
+        if (!navigationDone && !adLoaded && remoteConfigLoaded) {
+            Log.e(TAG, "INTERSTITIAL TIMEOUT")
+            goToUnlock()
         }
     }
 
@@ -583,234 +300,92 @@ fun StartScreen(
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Color.White.copy(
-                        alpha = 0.9f
-                    )
-                )
-        ) {
 
-            /*
-             * We use the actual available Compose size here.
-             *
-             * No screen-width calculations.
-             * No hardcoded 100.dp left/right margins.
-             *
-             * This makes the layout work consistently on:
-             * Samsung
-             * Infinix
-             * itel
-             * small phones
-             * large phones
-             * different DPI
-             * different aspect ratios
-             */
+                .background(Color(0xFFEEF1F6))
+        ) {
 
             val screenWidth = maxWidth
             val screenHeight = maxHeight
 
-            /*
-             * Responsive logo size.
-             *
-             * Normal phones:
-             * approximately 240-270dp
-             *
-             * Small phones:
-             * automatically smaller
-             *
-             * Large phones:
-             * limited to 270dp so it does not become huge.
-             */
-            val logoSize =
-                when {
+            val logoSize = when {
+                screenHeight < 620.dp -> 205.dp
+                screenHeight < 700.dp -> 230.dp
+                else -> 270.dp
+            }
 
-                    screenHeight < 620.dp ->
-                        205.dp
+            val titleSize = when {
+                screenWidth < 340.dp -> 30.sp
+                screenWidth < 380.dp -> 32.sp
+                else -> 34.sp
+            }
 
-                    screenHeight < 700.dp ->
-                        230.dp
-
-                    else ->
-                        270.dp
-                }
-
-            /*
-             * Responsive title size.
-             */
-            val titleSize =
-                when {
-
-                    screenWidth < 340.dp ->
-                        30.sp
-
-                    screenWidth < 380.dp ->
-                        32.sp
-
-                    else ->
-                        34.sp
-                }
-
-            /*
-             * Responsive description size.
-             */
-            val descriptionSize =
-                when {
-
-                    screenWidth < 340.dp ->
-                        12.sp
-
-                    else ->
-                        13.sp
-                }
+            val descriptionSize = when {
+                screenWidth < 340.dp -> 12.sp
+                else -> 13.sp
+            }
 
             // -----------------------------------------------------------------
-            // TOP / CENTER CONTENT
+            // CENTER CONTENT (logo + title + description)
             // -----------------------------------------------------------------
 
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .statusBarsPadding()
                     .padding(
                         start = 24.dp,
-                        end = 24.dp
-                    )
-                    .align(
-                        Alignment.TopCenter
+                        end = 24.dp,
+                        bottom = 300.dp
                     ),
-
-                horizontalAlignment =
-                    Alignment.CenterHorizontally,
-
-                verticalArrangement =
-                    Arrangement.Top
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
 
-                Spacer(
-                    modifier = Modifier
-                        .height(
-                            when {
-                                screenHeight < 620.dp ->
-                                    16.dp
-
-                                screenHeight < 700.dp ->
-                                    26.dp
-
-                                else ->
-                                    38.dp
-                            }
-                        )
-                )
-
-                // -------------------------------------------------------------
-                // LOGO
-                // -------------------------------------------------------------
-
                 Image(
-                    painter = painterResource(
-                        id = R.drawable.startscreen
-                    ),
-
-                    contentDescription =
-                        "App Lock",
-
-                    modifier = Modifier
-                        .sizeIn(
-                            minWidth = 160.dp,
-                            minHeight = 160.dp,
-                            maxWidth = logoSize,
-                            maxHeight = logoSize
-                        )
+                    painter = painterResource(id = R.drawable.startscreen),
+                    contentDescription = "App Lock",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(logoSize)
                 )
 
-                Spacer(
-                    modifier = Modifier
-                        .height(
-                            when {
-                                screenHeight < 620.dp ->
-                                    4.dp
+                // Title + description ek saath upar uthaye gaye hain
+                Column(
+                    modifier = Modifier.offset(y = (-34).dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
 
-                                else ->
-                                    8.dp
-                            }
-                        )
-                )
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(
+                                SpanStyle(
+                                    color = Color(0xFF333333),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            ) { append("App ") }
 
-                // -------------------------------------------------------------
-                // APP NAME
-                // -------------------------------------------------------------
+                            withStyle(
+                                SpanStyle(
+                                    color = Color(0xFF2196F3),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            ) { append("Lock") }
+                        },
+                        fontSize = titleSize,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1
+                    )
 
-                Text(
-                    text = buildAnnotatedString {
+                    Spacer(modifier = Modifier.height(9.dp))
 
-                        withStyle(
-                            style = SpanStyle(
-                                color =
-                                    Color(0xFF333333),
-
-                                fontWeight =
-                                    FontWeight.Bold
-                            )
-                        ) {
-                            append("App ")
-                        }
-
-                        withStyle(
-                            style = SpanStyle(
-                                color =
-                                    Color(0xFF2196F3),
-
-                                fontWeight =
-                                    FontWeight.Bold
-                            )
-                        ) {
-                            append("Lock")
-                        }
-                    },
-
-                    fontSize = titleSize,
-
-                    textAlign =
-                        TextAlign.Center,
-
-                    maxLines = 1
-                )
-
-                Spacer(
-                    modifier = Modifier
-                        .height(
-                            when {
-                                screenHeight < 620.dp ->
-                                    6.dp
-
-                                else ->
-                                    9.dp
-                            }
-                        )
-                )
-
-                // -------------------------------------------------------------
-                // DESCRIPTION
-                // -------------------------------------------------------------
-
-                Text(
-                    text =
-                        "Secure your apps. Protect your privacy.",
-
-                    fontSize =
-                        descriptionSize,
-
-                    color =
-                        Color.Gray,
-
-                    textAlign =
-                        TextAlign.Center,
-
-                    maxLines = 1,
-
-                    modifier = Modifier
-                        .fillMaxWidth()
-                )
+                    Text(
+                        text = "Secure your apps. Protect your privacy.",
+                        fontSize = descriptionSize,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
             // -----------------------------------------------------------------
@@ -819,74 +394,41 @@ fun StartScreen(
 
             Column(
                 modifier = Modifier
-                    .align(
-                        Alignment.BottomCenter
-                    )
+                    .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .windowInsetsPadding(
-                        WindowInsets.navigationBars
-                    )
+                    .windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(
                         start = 32.dp,
                         end = 32.dp,
                         bottom = 20.dp
                     ),
-
-                horizontalAlignment =
-                    Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                /*
-                 * Loading animation does NOT use the full screen width.
-                 *
-                 * It uses a maximum width so it remains visually
-                 * identical on wide and narrow phones.
-                 */
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .sizeIn(
-                            maxWidth = 260.dp
-                        ),
-                    contentAlignment =
-                        Alignment.Center
+                        .sizeIn(maxWidth = 260.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-
                     LottieAnimation(
                         composition = composition,
-
-                        progress = {
-                            progress
-                        },
-
+                        progress = { progress },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(25.dp)
                     )
                 }
 
-                Spacer(
-                    modifier = Modifier
-                        .height(10.dp)
-                )
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text =
-                        "This action may contain ads",
-
-                    fontSize =
-                        14.sp,
-
-                    color =
-                        Color.Gray,
-
-                    textAlign =
-                        TextAlign.Center,
-
+                    text = "This action may contain ads",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
                     maxLines = 1,
-
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

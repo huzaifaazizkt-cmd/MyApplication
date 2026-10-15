@@ -279,9 +279,14 @@ fun AppListScreen(
 
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(30.dp))
                     .background(Color(0xFF0396FF))
+
                     .clickable {
+                        navController.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("premiumReturnTab", 0)
+
                         navController.navigate("premium")
                     }
                     .padding(

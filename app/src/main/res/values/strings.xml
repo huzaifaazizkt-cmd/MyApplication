@@ -18,7 +18,7 @@
     <string name="confirm">Confirm</string>
 
     <!-- Bottom Navigation -->
-    <string name="apps_lock">Apps Lock</string>
+    <string name="apps_lock">App Lock</string>
     <string name="vault">Vault</string>
 
     <!-- Intruder -->
@@ -103,7 +103,7 @@
     <string name="pattern">Pattern</string>
     <string name="create_pin">Create %1$d - Digit pin</string>
     <string name="reset">Reset</string>
-    <string name="continue_text">Confirm</string>
+    <string name="confirm_text">Confirm</string>
     <string name="create_pattern">Create Pattern</string>
     <string name="connect_four_dots">Connect at least 4 dots</string>
 
@@ -113,6 +113,7 @@
     <string name="draw_pattern_again">Draw pattern again</string>
     <string name="confirm_pin">Confirm %1$d - Digit pin</string>
     <string name="password_not_match">Password does not match. Please try again</string>
+    <string name="continue_text">Continue</string>
 <!--    <string name="enter_correct_password">Enter your correct password</string>-->
 
     <!-- Permission -->
@@ -217,12 +218,12 @@
     <string name="premium_no_ads">No Ads</string>
     <string name="premium_priority_support">Priority Support</string>
     <string name="premium_best_value">Best Value</string>
-    <string name="premium_one_time_purchase">One-time purchase</string>
-    <string name="premium_lifetime_access">Lifetime access</string>
-    <string name="premium_one_time_payment">One-time Payment</string>
+    <string name="premium_one_time_purchase">One-Time Purchase</string>
+    <string name="premium_lifetime_access">Lifetime Access</string>
+    <string name="premium_one_time_payment">One-Time Payment</string>
     <string name="premium_shield_description">shield</string>
     <string name="premium_no_subscription">No subscription. Pay once and it’s yours forever.</string>
-    <string name="premium_unlock_button">Unlock Premium - One-time Purchase</string>
+    <string name="premium_unlock_button">Unlock Premium - One-Time Purchase</string>
     <string name="premium_terms_of_use">Terms of Use</string>
     <string name="premium_privacy_policy">Privacy Policy</string>
 

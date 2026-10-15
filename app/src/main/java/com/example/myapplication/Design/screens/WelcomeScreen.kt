@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -32,11 +34,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,6 +60,8 @@ import com.google.firebase.analytics.logEvent
 import kotlinx.coroutines.delay
 
 private const val TAG = "AppLockAdMob"
+
+private val ScreenBackground = Color(0xFFEEF1F6)
 
 @Composable
 fun WelcomeScreen(
@@ -83,7 +89,7 @@ fun WelcomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(ScreenBackground)
         )
         return
     }
@@ -199,7 +205,7 @@ fun WelcomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White),
+                .background(ScreenBackground),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -223,57 +229,104 @@ fun WelcomeScreen(
             }
         }
     } else {
-        Box(
+
+        // =====================================================================
+        // WELCOME UI (StartScreen jaisi hi position, responsive)
+        // =====================================================================
+
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White.copy(alpha = 0.9f))
+                .background(ScreenBackground)
         ) {
+
+            val screenWidth = maxWidth
+            val screenHeight = maxHeight
+
+            val logoSize = when {
+                screenHeight < 620.dp -> 205.dp
+                screenHeight < 700.dp -> 230.dp
+                else -> 270.dp
+            }
+
+            val titleSize = when {
+                screenWidth < 340.dp -> 30.sp
+                screenWidth < 380.dp -> 32.sp
+                else -> 34.sp
+            }
+
+            val descriptionSize = when {
+                screenWidth < 340.dp -> 12.sp
+                else -> 13.sp
+            }
+
+            // -----------------------------------------------------------------
+            // CENTER CONTENT (logo + title + description)
+            // -----------------------------------------------------------------
+
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .statusBarsPadding()
-                    .padding(horizontal = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(
+                        start = 24.dp,
+                        end = 24.dp,
+                        bottom = 300.dp
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
+
                 Image(
                     painter = painterResource(id = R.drawable.startscreen),
                     contentDescription = "App Lock",
-                    modifier = Modifier.size(270.dp)
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(logoSize)
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                // Title + description ek saath upar uthaye gaye hain
+                Column(
+                    modifier = Modifier.offset(y = (-34).dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
 
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(
-                            style = SpanStyle(
-                                color = Color(0xFF333333),
-                                fontWeight = FontWeight.Bold
-                            )
-                        ) {
-                            append("App ")
-                        }
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(
+                                SpanStyle(
+                                    color = Color(0xFF333333),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            ) { append("App ") }
 
-                        withStyle(
-                            style = SpanStyle(
-                                color = Color(0xFF2196F3),
-                                fontWeight = FontWeight.Bold
-                            )
-                        ) {
-                            append("Lock")
-                        }
-                    },
-                    fontSize = 34.sp
-                )
+                            withStyle(
+                                SpanStyle(
+                                    color = Color(0xFF2196F3),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            ) { append("Lock") }
+                        },
+                        fontSize = titleSize,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1
+                    )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(9.dp))
 
-                Text(
-                    text = "Secure your apps. Protect your privacy.",
-                    fontSize = 13.sp,
-                    color = Color.Gray
-                )
+                    Text(
+                        text = "Secure your apps. Protect your privacy.",
+                        fontSize = descriptionSize,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
+
+            // -----------------------------------------------------------------
+            // GET STARTED BUTTON
+            // -----------------------------------------------------------------
 
             Button(
                 onClick = {
