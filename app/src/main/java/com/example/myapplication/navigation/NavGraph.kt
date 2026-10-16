@@ -3,10 +3,17 @@ package com.example.myapplication.navigation
 import android.content.Context
 import android.net.Uri
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 
 import androidx.fragment.app.FragmentActivity
 
@@ -54,7 +61,13 @@ fun NavGraph(
         .getAppInitialized()
         .collectAsState(initial = null)
 
+    // DataStore load hone tak splash jaisa background dikhayen (white/black flash na aaye)
     if (appInitialized == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFEEF1F6))
+        )
         return
     }
 
@@ -62,7 +75,11 @@ fun NavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None }
     ) {
 
         composable("startScreen") {

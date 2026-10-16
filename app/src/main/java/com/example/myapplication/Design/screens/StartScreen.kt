@@ -86,10 +86,10 @@ fun StartScreen(
     )
 
     // Unlock screen par jane ka common function (sirf ek dafa chalta hai)
+    // NOTE: yahan isAdFlowActive = false nahi karna, warna splash UI wapas draw hoti ha.
     fun goToUnlock() {
         if (navigationDone) return
         navigationDone = true
-        isAdFlowActive = false
 
         navController.navigate("unlockScreen") {
             popUpTo("startScreen") { inclusive = true }
@@ -293,16 +293,16 @@ fun StartScreen(
 
     // =========================================================================
     // RESPONSIVE UI
+    // Background hamesha draw hota ha, sirf content ad ka dauran chupta ha.
     // =========================================================================
 
-    if (!isAdFlowActive) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFEEF1F6))
+    ) {
 
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-
-                .background(Color(0xFFEEF1F6))
-        ) {
+        if (!isAdFlowActive) {
 
             val screenWidth = maxWidth
             val screenHeight = maxHeight
@@ -348,7 +348,6 @@ fun StartScreen(
                     modifier = Modifier.size(logoSize)
                 )
 
-                // Title + description ek saath upar uthaye gaye hain
                 Column(
                     modifier = Modifier.offset(y = (-34).dp),
                     horizontalAlignment = Alignment.CenterHorizontally

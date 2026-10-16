@@ -181,7 +181,7 @@ class LockScreenActivity : FragmentActivity() {
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle("Fingerprint Lock")
             .setSubtitle("Use your fingerprint to unlock")
-            .setAllowedAuthenticators(authenticators)   // <-- yeh line missing thi
+            .setAllowedAuthenticators(authenticators)
             .setConfirmationRequired(false)
             .setNegativeButtonText("Use PIN / Pattern")
             .build()

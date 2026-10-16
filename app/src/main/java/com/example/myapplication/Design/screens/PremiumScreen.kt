@@ -2,6 +2,8 @@
 package com.example.myapplication.Design.screens
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -633,7 +635,10 @@ fun PremiumScreen(
                                     interactionSource = remember {
                                         MutableInteractionSource()
                                     }
-                                ) {}
+                                ) {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com"))
+                                    context.startActivity(intent)
+                                }
                         )
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -654,7 +659,10 @@ fun PremiumScreen(
                                     interactionSource = remember {
                                         MutableInteractionSource()
                                     }
-                                ) {}
+                                ) {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com"))
+                                    context.startActivity(intent)
+                                }
                         )
                     }
 
