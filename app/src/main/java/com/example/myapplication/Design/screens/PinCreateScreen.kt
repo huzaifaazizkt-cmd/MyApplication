@@ -25,12 +25,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.Design.components.NumberPad
 import com.example.myapplication.R
 import kotlin.math.min
 import kotlin.math.sqrt
+
 
 @Composable
 fun PinCreateScreen(onNext: (String, String) -> Unit) {
@@ -187,7 +189,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         modifier = Modifier
                             .size(31.dp)
                             .background(Color(0xFFF2F2F2), CircleShape)
-                            .border(2.dp,    color = Color(0xFF0396FF), CircleShape),
+                            .border(2.dp, color = Color(0xFF0396FF), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
@@ -216,6 +218,8 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         Text(text = "2", color = Color(0xFF999999), fontSize = 12.sp)
                     }
                 }
+                Spacer(modifier = Modifier.height(if (isCompact) 14.dp else 22.dp))
+
 
                 // ---------- MIDDLE CONTENT (center + scroll agar jagah kam ho) ----------
                 Box(
@@ -223,7 +227,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                         .fillMaxWidth()
                         .weight(1f)
                         .verticalScroll(rememberScrollState()),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.TopCenter
                 ) {
                     if (!isPattern) {
                         Column(
@@ -261,7 +265,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(if (isCompact) 18.dp else 32.dp))
+                            Spacer(modifier = Modifier.height(if (isCompact) 18.dp else 50.dp))
 
                             NumberPad(
                                 onNumberClick = { number ->
@@ -317,7 +321,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 4.dp),
+                        .padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 170.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -437,7 +441,7 @@ fun PatternGrid(
 
                 drawCircle(
                     color = Color(0xFF0396FF),
-                    radius = size.minDimension * 0.053f,
+                    radius = size.minDimension * 0.048f,
                     center = position
                 )
 
@@ -449,7 +453,7 @@ fun PatternGrid(
 
                 drawCircle(
                     color = if (selected) dotColor else Color(0xFF0396FF),
-                    radius = size.minDimension * 0.027f,
+                    radius = size.minDimension * 0.022f,
                     center = position
                 )
             }
@@ -491,4 +495,15 @@ private fun findDot(touch: Offset, width: Float, height: Float): Int? {
     }
 
     return null
+}
+
+
+@Preview(
+    showBackground = true,
+    showSystemUi = true,
+    device = "spec:width=393dp,height=873dp,dpi=440"
+)
+@Composable
+private fun PinCreateScreenPreview() {
+    PinCreateScreen(onNext = { _, _ -> })
 }

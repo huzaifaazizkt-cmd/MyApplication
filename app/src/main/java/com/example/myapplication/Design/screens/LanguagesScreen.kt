@@ -71,7 +71,7 @@ fun LanguagesScreen(
 
     val languages = listOf(
         LanguageItem(name = "English", flagRes = R.drawable.english, code = "en"),
-        LanguageItem(name = "Portagual", flagRes = R.drawable.portagual, code = "pt"),
+        LanguageItem(name = "Portugal", flagRes = R.drawable.portagual, code = "pt"),
         LanguageItem(name = "France", flagRes = R.drawable.france1, code = "fr"),
         LanguageItem(name = "Spain", flagRes = R.drawable.spain1, code = "es"),
         LanguageItem(name = "Turkey", flagRes = R.drawable.turkey, code = "tr"),
@@ -80,7 +80,7 @@ fun LanguagesScreen(
         LanguageItem(name = "Indonesia", flagRes = R.drawable.indonesia, code = "id"),
         LanguageItem(name = "India", flagRes = R.drawable.india, code = "hi"),
         LanguageItem(name = "Norway", flagRes = R.drawable.norway, code = "se"),
-        LanguageItem(name = "Arabic", flagRes = R.drawable.sudia, code = "ar")
+        LanguageItem(name = "Arabic", flagRes = R.drawable.image1, code = "ar")
     )
 
     val savedLanguageCode by dataStoreManager

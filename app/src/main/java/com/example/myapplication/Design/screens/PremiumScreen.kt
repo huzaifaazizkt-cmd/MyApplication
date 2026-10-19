@@ -694,6 +694,8 @@ private fun PremiumBenefitRow(
                 .background(
                     color = Color(0xFFF2F7FF),
                     shape = CircleShape
+
+
                 ),
             contentAlignment = Alignment.Center
         ) {

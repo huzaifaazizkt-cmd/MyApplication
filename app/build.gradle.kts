@@ -144,6 +144,9 @@ dependencies {
         "com.airbnb.android:lottie-compose:6.6.7"
     )
 
+    debugImplementation("androidx.compose.ui:ui-tooling-preview")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+
     // Google Play Billing
     implementation(
         "com.android.billingclient:billing-ktx:9.1.0"

@@ -195,7 +195,7 @@
     <string name="onboarding_quick_secure_access">Quick &amp; Secure Access</string>
     <string name="onboarding_privacy_protected">Your Privacy, Protected</string>
 
-    <string name="onboarding_secure_your_apps_description">keep your apps private with a secure passcode and extra layer of privacy</string>
+    <string name="onboarding_secure_your_apps_description">Keep your apps private with a secure passcode and extra layer of privacy</string>
     <string name="onboarding_quick_secure_access_description">Unlock your protected apps instantly with your passcode or fingerprint</string>
     <string name="onboarding_privacy_protected_description">Choose the apps you want to lock and keep your personal content safe from unwanted access</string>
 

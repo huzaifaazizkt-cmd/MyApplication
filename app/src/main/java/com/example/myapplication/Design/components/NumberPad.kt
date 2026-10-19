@@ -30,7 +30,7 @@ fun NumberPad(
 
     Column(
         verticalArrangement =
-            Arrangement.spacedBy(10.dp)
+            Arrangement.spacedBy(20.dp)
     ) {
 
         numbers
@@ -62,7 +62,7 @@ fun NumberPad(
 
                             Box(
                                 modifier = Modifier
-                                    .size(70.dp)
+                                    .size(64.dp)
                                     .clip(CircleShape)
                                     .background(
                                         color =
@@ -95,7 +95,7 @@ fun NumberPad(
 
                                 Box(
                                     modifier = Modifier
-                                        .size(58.dp)
+                                        .size(52.dp)
                                         .background(
                                             color =
                                                 buttonColor.copy(
@@ -121,7 +121,7 @@ fun NumberPad(
                                     Text(
                                         text = number,
                                         color = Color.White,
-                                        fontSize = 40.sp
+                                        fontSize =34.sp
                                     )
                                 }
                             }
