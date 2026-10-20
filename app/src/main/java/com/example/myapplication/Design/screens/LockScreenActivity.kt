@@ -1,7 +1,4 @@
-
-
 package com.example.myapplication.Design.screens
-import com.example.myapplication.Design.screens.UnlockScreen
 
 import android.Manifest
 import android.content.ContentValues
@@ -50,6 +47,7 @@ class LockScreenActivity : FragmentActivity() {
     private var biometricStarted = false
     private var unlockHandled = false
     private var leavingLockScreen = false
+    private var capturing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +57,13 @@ class LockScreenActivity : FragmentActivity() {
 
         activeInstance = this
         dataStore = DataStoreManager(this)
+
+        // Lock screen foran, bina slide/fade animation ke, aur window ka background white
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
+        window.setBackgroundDrawable(
+            android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE)
+        )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
@@ -112,9 +117,55 @@ class LockScreenActivity : FragmentActivity() {
                 },
                 onForgotPasswordSuccess = {
                     openResetPassword()
+                },
+                onReady = {
+                    // Unlock UI draw ho gayi: service ko batao ke cover hata de
+                    AppLockServiceHolder.onLockScreenReady?.invoke()
                 }
             )
         }
+
+        // Camera ko pehle se ready rakho taake intruder photo foran aaye
+        prewarmCamera()
+    }
+
+    // =========================================================
+    // CAMERA PREWARM
+    // =========================================================
+
+    private fun prewarmCamera() {
+        val granted = ContextCompat.checkSelfPermission(
+            this, CAMERA_PERMISSION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!granted || imageCapture != null) return
+
+        val future = ProcessCameraProvider.getInstance(this)
+        future.addListener({
+            try {
+                if (isFinishing || isDestroyed) return@addListener
+                if (imageCapture != null) return@addListener
+
+                val provider = future.get()
+                cameraProvider = provider
+                provider.unbindAll()
+
+                val capture = ImageCapture.Builder()
+                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    .build()
+
+                provider.bindToLifecycle(
+                    this,
+                    CameraSelector.DEFAULT_FRONT_CAMERA,
+                    capture
+                )
+
+                imageCapture = capture
+                Log.d(TAG, "CAMERA PRE-WARMED")
+            } catch (e: Exception) {
+                Log.e(TAG, "PREWARM ERROR", e)
+            }
+        }, ContextCompat.getMainExecutor(this))
     }
 
     private fun openResetPassword() {
@@ -226,6 +277,10 @@ class LockScreenActivity : FragmentActivity() {
         }
     }
 
+    // =========================================================
+    // INTRUDER CAPTURE
+    // =========================================================
+
     private fun captureIntruderPhoto() {
         Log.d(TAG, "INTRUDER CAPTURE REQUESTED")
 
@@ -245,7 +300,15 @@ class LockScreenActivity : FragmentActivity() {
         }
 
         Log.d(TAG, "CAMERA PERMISSION GRANTED")
-        startCameraAndCapture()
+
+        val ready = imageCapture
+        if (ready != null) {
+            // Camera pehle se ready hai -> foran photo
+            takeIntruderPhoto(ready)
+        } else {
+            // Fallback: camera start karke photo lo
+            startCameraAndCapture()
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -298,10 +361,7 @@ class LockScreenActivity : FragmentActivity() {
                         capture
                     )
 
-                    Log.d(
-                        TAG,
-                        "FRONT CAMERA BOUND SUCCESSFULLY"
-                    )
+                    Log.d(TAG, "FRONT CAMERA BOUND SUCCESSFULLY")
 
                     takeIntruderPhoto(capture)
                 } catch (e: Exception) {
@@ -313,6 +373,12 @@ class LockScreenActivity : FragmentActivity() {
     }
 
     private fun takeIntruderPhoto(capture: ImageCapture) {
+        if (capturing) {
+            Log.d(TAG, "CAPTURE SKIPPED -> ALREADY CAPTURING")
+            return
+        }
+        capturing = true
+
         Log.d(TAG, "TAKING INTRUDER PHOTO")
 
         val fileName =
@@ -324,24 +390,15 @@ class LockScreenActivity : FragmentActivity() {
                     ".jpg"
 
         val contentValues = ContentValues().apply {
-            put(
-                MediaStore.Images.Media.DISPLAY_NAME,
-                fileName
-            )
-            put(
-                MediaStore.Images.Media.MIME_TYPE,
-                "image/jpeg"
-            )
+            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 put(
                     MediaStore.Images.Media.RELATIVE_PATH,
                     "Pictures/AppLock/Intruder"
                 )
-                put(
-                    MediaStore.Images.Media.IS_PENDING,
-                    1
-                )
+                put(MediaStore.Images.Media.IS_PENDING, 1)
             }
         }
 
@@ -359,70 +416,40 @@ class LockScreenActivity : FragmentActivity() {
                 override fun onImageSaved(
                     outputFileResults: ImageCapture.OutputFileResults
                 ) {
-                    val savedUri =
-                        outputFileResults.savedUri
+                    val savedUri = outputFileResults.savedUri
 
-                    Log.d(
-                        TAG,
-                        "INTRUDER PHOTO SAVED = $savedUri"
-                    )
+                    Log.d(TAG, "INTRUDER PHOTO SAVED = $savedUri")
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         savedUri?.let { uri ->
                             val values = ContentValues().apply {
-                                put(
-                                    MediaStore.Images.Media.IS_PENDING,
-                                    0
-                                )
+                                put(MediaStore.Images.Media.IS_PENDING, 0)
                             }
 
-                            contentResolver.update(
-                                uri,
-                                values,
-                                null,
-                                null
-                            )
+                            contentResolver.update(uri, values, null, null)
                         }
                     }
 
                     if (savedUri != null) {
                         CoroutineScope(Dispatchers.IO).launch {
                             try {
-                                dataStore.saveIntruderPhoto(
-                                    savedUri.toString()
-                                )
-
-                                Log.d(
-                                    TAG,
-                                    "INTRUDER URI SAVED TO DATASTORE"
-                                )
+                                dataStore.saveIntruderPhoto(savedUri.toString())
+                                Log.d(TAG, "INTRUDER URI SAVED TO DATASTORE")
                             } catch (e: Exception) {
-                                Log.e(
-                                    TAG,
-                                    "INTRUDER URI ERROR",
-                                    e
-                                )
+                                Log.e(TAG, "INTRUDER URI ERROR", e)
                             }
                         }
                     } else {
-                        Log.e(
-                            TAG,
-                            "INTRUDER PHOTO URI IS NULL"
-                        )
+                        Log.e(TAG, "INTRUDER PHOTO URI IS NULL")
                     }
 
-                    releaseCamera()
+                    // Camera on rehne do (agli photo foran aaye)
+                    capturing = false
                 }
 
-                override fun onError(
-                    exception: ImageCaptureException
-                ) {
-                    Log.e(
-                        TAG,
-                        "INTRUDER PHOTO ERROR",
-                        exception
-                    )
-                    releaseCamera()
+                override fun onError(exception: ImageCaptureException) {
+                    Log.e(TAG, "INTRUDER PHOTO ERROR", exception)
+                    capturing = false
                 }
             }
         )
@@ -437,14 +464,14 @@ class LockScreenActivity : FragmentActivity() {
 
         imageCapture = null
         cameraProvider = null
+        capturing = false
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
 
-        val newPackage =
-            intent.getStringExtra("packageName")
+        val newPackage = intent.getStringExtra("packageName")
 
         if (!newPackage.isNullOrEmpty()) {
             activeInstance = this
@@ -453,10 +480,11 @@ class LockScreenActivity : FragmentActivity() {
             leavingLockScreen = false
             AppLockServiceHolder.isLockScreenOpen = true
 
-            Log.d(
-                TAG,
-                "NEW LOCK TARGET = $newPackage"
-            )
+            Log.d(TAG, "NEW LOCK TARGET = $newPackage")
+
+            // Unlock UI pehle se draw hai (onReady dobara nahi chalega),
+            // is liye service ko yahin batao ke cover hata de.
+            AppLockServiceHolder.onLockScreenReady?.invoke()
         }
     }
 
@@ -510,10 +538,7 @@ class LockScreenActivity : FragmentActivity() {
                 packageManager.getLaunchIntentForPackage(packageName)
 
             if (appIntent == null) {
-                Log.e(
-                    TAG,
-                    "LAUNCH INTENT NULL = $packageName"
-                )
+                Log.e(TAG, "LAUNCH INTENT NULL = $packageName")
                 clearUnlockState()
                 goHome()
                 return
@@ -524,10 +549,7 @@ class LockScreenActivity : FragmentActivity() {
                         Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
             )
 
-            Log.d(
-                TAG,
-                "OPENING UNLOCKED APP = $packageName"
-            )
+            Log.d(TAG, "OPENING UNLOCKED APP = $packageName")
 
             startActivity(appIntent)
             AppLockServiceHolder.isLockScreenOpen = false
@@ -553,4 +575,3 @@ class LockScreenActivity : FragmentActivity() {
         super.onDestroy()
     }
 }
-

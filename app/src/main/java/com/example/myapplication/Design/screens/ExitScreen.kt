@@ -1,6 +1,11 @@
+
 package com.example.myapplication.Design.screens
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -33,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -53,19 +59,87 @@ import androidx.navigation.NavController
 import com.example.myapplication.R
 
 @Composable
-fun ExitScreen(
-    navController: NavController
-) {
+fun ExitScreen(navController: NavController) {
     val context = LocalContext.current
     val activity = context as? Activity
 
     var selectedRating by remember { mutableIntStateOf(0) }
+    var stayProtectedClicked by remember { mutableStateOf(false) }
+    var exitAnywayClicked by remember { mutableStateOf(false) }
+    var ratingActionStarted by remember { mutableStateOf(false) }
 
-    BackHandler {
-        navController.popBackStack()
+    fun openFeedbackOrReview(rating: Int) {
+        if (ratingActionStarted) return
+        ratingActionStarted = true
+
+        try {
+            if (rating in 1..3) {
+                val emailIntent = Intent(
+                    Intent.ACTION_SENDTO,
+                    Uri.parse("mailto:YOUR_SUPPORT_EMAIL@gmail.com")
+                ).apply {
+                    putExtra(Intent.EXTRA_SUBJECT, "AppLock Feedback")
+                    putExtra(
+                        Intent.EXTRA_TEXT,
+                        "My AppLock rating: $rating out of 5 stars.\n\nFeedback:"
+                    )
+                }
+
+                try {
+                    context.startActivity(emailIntent)
+                } catch (e: ActivityNotFoundException) {
+                    ratingActionStarted = false
+                    Toast.makeText(
+                        context,
+                        "No email app is installed.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            } else {
+                val packageName = context.packageName
+                val marketIntent = Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("market://details?id=$packageName")
+                )
+
+                try {
+                    context.startActivity(marketIntent)
+                } catch (e: ActivityNotFoundException) {
+                    val webIntent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse(
+                            "https://play.google.com/store/apps/details?id=$packageName"
+                        )
+                    )
+
+                    try {
+                        context.startActivity(webIntent)
+                    } catch (e: ActivityNotFoundException) {
+                        ratingActionStarted = false
+                        Toast.makeText(
+                            context,
+                            "Unable to open the Play Store.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            ratingActionStarted = false
+            Toast.makeText(
+                context,
+                "Unable to open the selected app.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
-    // System font size bara ho tab bhi screen na toote
+    BackHandler {
+        if (!stayProtectedClicked && !exitAnywayClicked) {
+            navController.popBackStack()
+        }
+    }
+
     val density = LocalDensity.current
     val limitedDensity = Density(
         density = density.density,
@@ -73,15 +147,12 @@ fun ExitScreen(
     )
 
     CompositionLocalProvider(LocalDensity provides limitedDensity) {
-
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
         ) {
-            // ---------- Responsive values ----------
             val isCompact = maxWidth < 360.dp || maxHeight < 640.dp
-
             val imageSize = (maxHeight * 0.25f).coerceIn(120.dp, 220.dp)
             val topBarHeight = if (isCompact) 60.dp else 72.dp
             val screenTitleSize = if (isCompact) 20.sp else 24.sp
@@ -98,12 +169,8 @@ fun ExitScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding() // status bar ke neeche se shuru
+                    .statusBarsPadding()
             ) {
-
-                // =====================================================
-                // TOP BAR
-                // =====================================================
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -118,8 +185,12 @@ fun ExitScreen(
                         modifier = Modifier
                             .size(28.dp)
                             .clickable(
+                                enabled = !stayProtectedClicked &&
+                                        !exitAnywayClicked,
                                 indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
+                                interactionSource = remember {
+                                    MutableInteractionSource()
+                                }
                             ) {
                                 navController.popBackStack()
                             }
@@ -138,9 +209,6 @@ fun ExitScreen(
                     )
                 }
 
-                // =====================================================
-                // CONTENT (scrollable + tablet par center)
-                // =====================================================
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -152,23 +220,26 @@ fun ExitScreen(
                             .widthIn(max = 480.dp)
                             .fillMaxWidth()
                             .verticalScroll(rememberScrollState())
-                            .navigationBarsPadding() // navigation bar ke upar
+                            .navigationBarsPadding()
                             .padding(horizontal = sidePadding),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-
                         Spacer(modifier = Modifier.height(topSpace))
 
-                        // ---------- EXIT IMAGE ----------
                         Image(
                             painter = painterResource(id = R.drawable.exitlock),
-                            contentDescription = stringResource(R.string.exit_image_description),
+                            contentDescription = stringResource(
+                                R.string.exit_image_description
+                            ),
                             modifier = Modifier.size(imageSize)
                         )
 
-                        Spacer(modifier = Modifier.height(if (isCompact) 16.dp else 25.dp))
+                        Spacer(
+                            modifier = Modifier.height(
+                                if (isCompact) 16.dp else 25.dp
+                            )
+                        )
 
-                        // ---------- EXIT TITLE ----------
                         Text(
                             text = stringResource(R.string.exit_app_lock_title),
                             fontSize = titleSize,
@@ -179,9 +250,10 @@ fun ExitScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // ---------- EXIT DESCRIPTION ----------
                         Text(
-                            text = stringResource(R.string.exit_app_lock_description),
+                            text = stringResource(
+                                R.string.exit_app_lock_description
+                            ),
                             fontSize = bodySize,
                             lineHeight = bodyLineHeight,
                             color = Color(0xFF555555),
@@ -190,7 +262,6 @@ fun ExitScreen(
 
                         Spacer(modifier = Modifier.height(gapLarge))
 
-                        // ---------- RATING ----------
                         Row(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
@@ -206,13 +277,14 @@ fun ExitScreen(
                                     },
                                     modifier = Modifier
                                         .clickable(
+                                            enabled = !ratingActionStarted,
                                             indication = null,
                                             interactionSource = remember {
                                                 MutableInteractionSource()
                                             }
                                         ) {
-                                            selectedRating =
-                                                if (selectedRating == index) 0 else index
+                                            selectedRating = index
+                                            openFeedbackOrReview(index)
                                         }
                                         .padding(horizontal = 3.dp)
                                 )
@@ -221,9 +293,10 @@ fun ExitScreen(
 
                         Spacer(modifier = Modifier.height(15.dp))
 
-                        // ---------- RATING DESCRIPTION ----------
                         Text(
-                            text = stringResource(R.string.exit_rating_description),
+                            text = stringResource(
+                                R.string.exit_rating_description
+                            ),
                             fontSize = bodySize,
                             lineHeight = bodyLineHeight,
                             color = Color(0xFF555555),
@@ -232,15 +305,31 @@ fun ExitScreen(
 
                         Spacer(modifier = Modifier.height(gapMedium))
 
-                        // ---------- STAY PROTECTED ----------
+                        // STAY PROTECTED
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 51.dp)
                                 .clip(RoundedCornerShape(14.dp))
                                 .background(Color(0xFF2196F3))
-                                .clickable { navController.popBackStack() }
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                                .clickable(
+                                    enabled = !stayProtectedClicked &&
+                                            !exitAnywayClicked,
+                                    indication = null,
+                                    interactionSource = remember {
+                                        MutableInteractionSource()
+                                    }
+                                ) {
+                                    stayProtectedClicked = true
+                                    val navigated = navController.popBackStack()
+                                    if (!navigated) {
+                                        stayProtectedClicked = false
+                                    }
+                                }
+                                .padding(
+                                    horizontal = 12.dp,
+                                    vertical = 10.dp
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(
@@ -258,21 +347,30 @@ fun ExitScreen(
                                 Spacer(modifier = Modifier.size(10.dp))
 
                                 Text(
-                                    text = stringResource(R.string.exit_stay_protected),
+                                    text = stringResource(
+                                        R.string.exit_stay_protected
+                                    ),
                                     fontSize = buttonTextSize,
                                     fontWeight = FontWeight.SemiBold,
                                     color = Color.White,
                                     textAlign = TextAlign.Center,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f, fill = false)
+                                    modifier = Modifier.weight(
+                                        1f,
+                                        fill = false
+                                    )
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(if (isCompact) 12.dp else 17.dp))
+                        Spacer(
+                            modifier = Modifier.height(
+                                if (isCompact) 12.dp else 17.dp
+                            )
+                        )
 
-                        // ---------- EXIT ANYWAY ----------
+                        // EXIT ANYWAY
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -284,8 +382,25 @@ fun ExitScreen(
                                     color = Color(0xFF2196F3),
                                     shape = RoundedCornerShape(14.dp)
                                 )
-                                .clickable { activity?.finishAffinity() }
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                                .clickable(
+                                    enabled = !stayProtectedClicked &&
+                                            !exitAnywayClicked,
+                                    indication = null,
+                                    interactionSource = remember {
+                                        MutableInteractionSource()
+                                    }
+                                ) {
+                                    exitAnywayClicked = true
+                                    if (activity != null) {
+                                        activity.finishAffinity()
+                                    } else {
+                                        exitAnywayClicked = false
+                                    }
+                                }
+                                .padding(
+                                    horizontal = 12.dp,
+                                    vertical = 10.dp
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(
@@ -293,7 +408,9 @@ fun ExitScreen(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Image(
-                                    painter = painterResource(id = R.drawable.anyway),
+                                    painter = painterResource(
+                                        id = R.drawable.anyway
+                                    ),
                                     contentDescription = stringResource(
                                         R.string.exit_anyway_description
                                     ),
@@ -310,7 +427,10 @@ fun ExitScreen(
                                     textAlign = TextAlign.Center,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f, fill = false)
+                                    modifier = Modifier.weight(
+                                        1f,
+                                        fill = false
+                                    )
                                 )
                             }
                         }

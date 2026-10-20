@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.Handler
@@ -46,9 +47,16 @@ class AppLockService : AccessibilityService() {
         private const val FOREGROUND_VERIFY_DELAY_MS = 0L
 
         // Cover overlay: lock screen ready hone tak locked app ko chhupata hai
-        private const val COVER_TIMEOUT_MS = 2000L   // safety: cover kabhi atka na rahe
+        private const val COVER_TIMEOUT_MS = 3500L   // safety: cover kabhi atka na rahe (slow phones ke liye zyada)
+        private const val CLICK_COVER_TIMEOUT_MS = 1500L // icon tap par lagne wale cover ka chhota timeout
+
+        // Cover (white parda) band hai. Dobara chahiye to true kar dein.
+        private const val USE_COVER = false
         private const val COVER_HIDE_DELAY_MS = 150L // lock screen ka pehla frame draw hone ka waqt
-        private const val COVER_COLOR = 0xFF101418.toInt() // apni lock screen ke background ke barabar rakhein
+
+        // FIX: Unlock screen ka background ab WHITE hai, to cover bhi WHITE hona chahiye.
+        // Pehle yahan dark colour tha, isi wajah se pehli dafa "black screen" nazar aati thi.
+        private val COVER_COLOR = Color.WHITE
     }
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -84,6 +92,9 @@ class AppLockService : AccessibilityService() {
     private var verifyRetries = 0
     private var launchingPackage: String? = null
     private var coverView: View? = null
+    @Volatile
+    private var lockedLabelToPackage: Map<String, String> = emptyMap()
+    private var clickCoverUntil = 0L
     private val windowManager by lazy { getSystemService(Context.WINDOW_SERVICE) as WindowManager }
     private val hideCoverRunnable = Runnable { hideCover("LOCK SCREEN READY") }
     private val coverTimeoutRunnable = Runnable { hideCover("TIMEOUT") }
@@ -124,16 +135,20 @@ class AppLockService : AccessibilityService() {
 
         serviceInfo = AccessibilityServiceInfo().apply {
             eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or
-                    AccessibilityEvent.TYPE_WINDOWS_CHANGED
+                    AccessibilityEvent.TYPE_WINDOWS_CHANGED or
+                    AccessibilityEvent.TYPE_VIEW_CLICKED
             feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
             notificationTimeout = 0
             flags = AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or
                     AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
         }
 
+        // LockScreenActivity jab UnlockScreen draw kar leti hai to ye callback chalta hai
         AppLockServiceHolder.onLockScreenReady = {
             handler.post {
-                launchingPackage = null
+                Log.d(TAG, "UNLOCK UI READY CALLBACK")
+                // launchingPackage jaan bujh kar null nahi kiya: locked app ke baad ke
+                // events (jo lock screen ke peeche aate hain) guard se rukte rahen.
                 hideCover("ACTIVITY READY")
             }
         }
@@ -208,6 +223,7 @@ class AppLockService : AccessibilityService() {
             try {
                 dataStore.lockedAppsFlow.collectLatest { apps ->
                     lockedAppsCache = apps.toSet()
+                    refreshLockedLabels()
                     Log.d(TAG, "LOCKED APPS = $lockedAppsCache")
                     updateSettingsLoaded()
                 }
@@ -254,6 +270,7 @@ class AppLockService : AccessibilityService() {
 
                 appProtectionEnabled = dataStore.getAppProtectionEnabled().first()
                 lockedAppsCache = dataStore.lockedAppsFlow.first().toSet()
+                refreshLockedLabels()
                 relockOption = dataStore.getRelockOption().first()
                 relockDelay = normalizeRelockDelay(dataStore.getRelockDelay().first())
                 settingsLoaded = true
@@ -360,6 +377,68 @@ class AppLockService : AccessibilityService() {
         }
     }
 
+    // Locked apps ke naam (label) -> package, taake launcher click pehchana ja sake
+    private fun refreshLockedLabels() {
+        try {
+            val map = HashMap<String, String>()
+            for (pkg in lockedAppsCache) {
+                try {
+                    val info = packageManager.getApplicationInfo(pkg, 0)
+                    val label = packageManager.getApplicationLabel(info).toString()
+                        .trim().lowercase()
+                    if (label.isNotEmpty()) map[label] = pkg
+                } catch (_: Exception) {
+                }
+            }
+            lockedLabelToPackage = map
+            Log.d(TAG, "LOCKED LABELS = ${map.keys}")
+        } catch (e: Exception) {
+            Log.e(TAG, "LOCKED LABELS ERROR", e)
+        }
+    }
+
+    private fun handleLauncherClick(event: AccessibilityEvent, packageName: String) {
+        if (!serviceConnected || !settingsLoaded || !appProtectionEnabled) return
+        if (!isLauncherPackage(packageName)) return
+        if (lockedLabelToPackage.isEmpty()) return
+
+        val candidates = mutableListOf<String>()
+        try {
+            event.text?.forEach { candidates.add(it.toString()) }
+            event.contentDescription?.let { candidates.add(it.toString()) }
+            event.source?.let { src ->
+                src.text?.let { candidates.add(it.toString()) }
+                src.contentDescription?.let { candidates.add(it.toString()) }
+            }
+        } catch (_: Exception) {
+        }
+
+        for (candidate in candidates) {
+            val pkg = lockedLabelToPackage[candidate.trim().lowercase()] ?: continue
+            if (AppLockServiceHolder.currentUnlockedApp == pkg) return
+
+            Log.d(TAG, "LAUNCHER CLICK ON LOCKED APP -> $pkg")
+            if (USE_COVER) {
+                clickCoverUntil = SystemClock.elapsedRealtime() + CLICK_COVER_TIMEOUT_MS
+                showCover(CLICK_COVER_TIMEOUT_MS)
+            }
+            // Icon tap par hi lock screen kholo (app ki window aane ka intezar nahi)
+            checkingPackage = pkg
+            openLockScreen(pkg)
+            return
+        }
+    }
+
+    // Kya is package ki window abhi screen par maujood hai?
+    // (App khul rahi ho to window list mein hoti hai, band ho rahi ho to nahi.)
+    private fun isPackageWindowPresent(packageName: String): Boolean {
+        return try {
+            windows.any { it.root?.packageName?.toString() == packageName }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     // ------------------------------------------------------------------
     // Events
     // ------------------------------------------------------------------
@@ -368,6 +447,13 @@ class AppLockService : AccessibilityService() {
         if (event == null || !serviceConnected || !settingsLoaded || !appProtectionEnabled) return
 
         val packageName = getEventPackage(event) ?: return
+
+        // Launcher mein locked app ke icon par tap: launch animation shuru hone se pehle cover lagao
+        if (event.eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+            handleLauncherClick(event, packageName)
+            return
+        }
+
         // Lock screen launch ho rahi hai: usi app ke baar baar aane wale events skip karo
         if (!isOwnPackage(packageName) &&
             packageName == launchingPackage &&
@@ -386,10 +472,23 @@ class AppLockService : AccessibilityService() {
         }
         if (isIgnorablePackage(packageName)) return
 
+        // FIX (preview band): locked app ka window event aate hi sab se pehle cover lagao.
+        // Pehle cover verify ke baad lagta tha, aur verify mein jitna waqt lagta tha utni
+        // der app ka content nazar aata tha. Agar baad mein pata chale ke ye app
+        // asal mein foreground par nahi, to cover khud hat jata hai.
+        if ((event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
+                    event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) &&
+            lockedAppsCache.contains(packageName) &&
+            !AppLockServiceHolder.isLockScreenOpen &&
+            AppLockServiceHolder.currentUnlockedApp != packageName
+        ) {
+            showCover()
+        }
+
         pendingPackage = packageName
         verifyRetries = 0
         handler.removeCallbacks(foregroundVerifyRunnable)
-        // FIX: foran verify + cover, handler ke tick ka intezar nahi
+        // foran verify, handler ke tick ka intezar nahi
         verifyForegroundPackage()
     }
 
@@ -410,7 +509,8 @@ class AppLockService : AccessibilityService() {
             eventPackage != verifiedPackage &&
             lockedAppsCache.contains(eventPackage) &&
             AppLockServiceHolder.currentUnlockedApp != eventPackage &&
-            verifyRetries < 3
+            verifyRetries < 5 &&
+            isPackageWindowPresent(eventPackage)
         ) {
             verifyRetries++
             pendingPackage = eventPackage
@@ -434,11 +534,15 @@ class AppLockService : AccessibilityService() {
 
         if (isLauncherPackage(packageName)) {
             Log.d(TAG, "CONFIRMED HOME / LAUNCHER")
-            hideCover("HOME")
+            // Agar locked app ka retry pending hai (window abhi focus nahi hui),
+            // to cover mat hatao, warna app ka content nazar aa jata hai.
+            if (pendingPackage == null &&
+                SystemClock.elapsedRealtime() > clickCoverUntil
+            ) hideCover("HOME")
             foregroundPackage = packageName
             checkingPackage = null
 
-            // FIX: user Home par aa gaya hai, to koi lock screen samne nahi hai.
+            // User Home par aa gaya hai, to koi lock screen samne nahi hai.
             // Stale flag reset karo, warna agli dafa lock screen nahi aati.
             AppLockServiceHolder.isLockScreenOpen = false
 
@@ -503,11 +607,13 @@ class AppLockService : AccessibilityService() {
         }
 
         if (!lockedAppsCache.contains(packageName)) {
+            // Cover galti se laga ho (foreground kisi aur app ka tha) to hata do
+            hideCover("APP NOT LOCKED")
             Log.d(TAG, "LOCK SKIPPED -> APP NOT LOCKED: $packageName")
             return
         }
 
-        // FIX: stale isLockScreenOpen flag.
+        // Stale isLockScreenOpen flag.
         // Yahan tak sirf third-party app ka package aata hai (own app / launcher upar
         // filter ho chuke). Yani lock screen asal mein samne nahi hai.
         if (AppLockServiceHolder.isLockScreenOpen) {
@@ -559,7 +665,8 @@ class AppLockService : AccessibilityService() {
                     addFlags(
                         Intent.FLAG_ACTIVITY_NEW_TASK or
                                 Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or
-                                Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                Intent.FLAG_ACTIVITY_NO_ANIMATION
                     )
                 }
 
@@ -583,10 +690,11 @@ class AppLockService : AccessibilityService() {
     // Cover overlay
     // ------------------------------------------------------------------
 
-    private fun showCover() {
+    private fun showCover(timeoutMs: Long = COVER_TIMEOUT_MS) {
+        if (!USE_COVER) return
         handler.removeCallbacks(hideCoverRunnable)
         handler.removeCallbacks(coverTimeoutRunnable)
-        handler.postDelayed(coverTimeoutRunnable, COVER_TIMEOUT_MS)
+        handler.postDelayed(coverTimeoutRunnable, timeoutMs)
         if (coverView != null) return
 
         try {

@@ -1,4 +1,3 @@
-
 package com.example.myapplication.Design.screens
 
 import android.content.Context
@@ -11,6 +10,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -37,14 +37,22 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.core.graphics.drawable.toBitmap
+import androidx.navigation.compose.rememberNavController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 
 import com.example.myapplication.R
 import com.example.myapplication.data.DataStoreManager
@@ -172,6 +180,8 @@ fun AppListScreen(
     }
 
     val scope = rememberCoroutineScope()
+    val proComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.pro))
+    val proProgress by animateLottieCompositionAsState(proComposition, iterations = LottieConstants.IterateForever)
 
     val dataStore = remember {
         DataStoreManager(appContext)
@@ -277,39 +287,24 @@ fun AppListScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Row(
+            Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(30.dp))
-                    .background(Color(0xFF0396FF))
-
-                    .clickable {
+                    .size(width = 72.dp, height = 30.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
                         navController.currentBackStackEntry
                             ?.savedStateHandle
                             ?.set("premiumReturnTab", 0)
-
                         navController.navigate("premium")
-                    }
-                    .padding(
-                        horizontal = 12.dp,
-                        vertical = 9.dp
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                    },
+                contentAlignment = Alignment.Center
             ) {
-
-                Image(
-                    painter = painterResource(R.drawable.pro),
-                    contentDescription = "Pro",
-                    modifier = Modifier.size(20.dp)
-                )
-
-                Spacer(modifier = Modifier.width(6.dp))
-
-                Text(
-                    text = "PRO",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+                LottieAnimation(
+                    composition = proComposition,
+                    progress = { proProgress },
+                    modifier = Modifier.size(60.dp)
                 )
             }
         }
@@ -678,3 +673,19 @@ fun AppListScreen(
         }
     }
 }
+@Preview(
+    showBackground = true,
+    showSystemUi = true,
+    device = "spec:width=393dp,height=873dp,dpi=440"
+)
+@Composable
+private fun AppListScreenPreview() {
+    val context = LocalContext.current
+    val navController = rememberNavController()
+
+    AppListScreen(
+        context = context,
+        navController = navController
+    )
+}
+

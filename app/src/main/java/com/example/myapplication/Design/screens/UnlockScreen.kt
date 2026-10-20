@@ -1,4 +1,3 @@
-
 package com.example.myapplication.Design.screens
 
 import android.content.Context
@@ -141,7 +140,8 @@ fun UnlockScreen(
     onUnlockSuccess: () -> Unit,
     onIntruderCapture: (Long) -> Unit = {},
     onFingerprintRequest: () -> Unit = {},
-    onForgotPasswordSuccess: () -> Unit = {}
+    onForgotPasswordSuccess: () -> Unit = {},
+    onReady: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val dataStore = remember { DataStoreManager(context) }
@@ -173,15 +173,25 @@ fun UnlockScreen(
     var securityQuestionError by remember { mutableStateOf("") }
     var checkingSecurityQuestion by remember { mutableStateOf(false) }
 
+    // Jab tak settings load na hon, sirf white screen dikhao
+    // (PIN pad ka flash aur galat layout nazar na aaye)
+    var loaded by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
-        authType = dataStore.getAuthType().first().orEmpty().lowercase()
-        savedPin = dataStore.getPin().first().orEmpty()
-        savedPattern = dataStore.getPattern().first().orEmpty()
-        fingerprintEnabled = dataStore.getFingerprintEnabled().first()
-        vibrationEnabled = dataStore.getVibrationEnabled().first()
-        hideTrackEnabled = dataStore.getHideTrackEnabled().first()
-        intruderObservationAttempts =
-            dataStore.getIntruderObservationAttempts().first()
+        try {
+            authType = dataStore.getAuthType().first().orEmpty().lowercase()
+            savedPin = dataStore.getPin().first().orEmpty()
+            savedPattern = dataStore.getPattern().first().orEmpty()
+            fingerprintEnabled = dataStore.getFingerprintEnabled().first()
+            vibrationEnabled = dataStore.getVibrationEnabled().first()
+            hideTrackEnabled = dataStore.getHideTrackEnabled().first()
+            intruderObservationAttempts =
+                dataStore.getIntruderObservationAttempts().first()
+        } catch (e: Exception) {
+            Log.e("UNLOCK_SCREEN", "LOAD SETTINGS ERROR", e)
+        } finally {
+            loaded = true
+        }
 
         if (fingerprintEnabled) {
             delay(350)
@@ -189,7 +199,15 @@ fun UnlockScreen(
         }
     }
 
-    // Updated colors to match PinCreateScreen.
+    // Unlock UI ka pehla frame draw hone ke baad hi parda (overlay) hatao
+    LaunchedEffect(loaded) {
+        if (loaded) {
+            withFrameNanos { }
+            onReady()
+        }
+    }
+
+    // Colors match PinCreateScreen.
     val backgroundColor = Color.White
     val numberButtonColor = Color(0xFF0396FF)
     val patternDotColor = Color(0xFF0396FF)
@@ -241,13 +259,8 @@ fun UnlockScreen(
 
                 dataStore.resetIntruderWrongAttempts()
 
-                val observationTime =
-                    dataStore.getIntruderObservationTime().first()
-                val delayMillis =
-                    observationTime.toLong().coerceAtLeast(0L) * 1_000L
-
-                if (delayMillis > 0L) delay(delayMillis)
-
+                // NOTE: pehle yahan observation time ka delay tha (5 sec).
+                // Ab foran capture hota hai.
                 val stillEnabled = dataStore.getIntruderEnabled().first()
                 if (!stillEnabled) return@launch
 
@@ -318,10 +331,7 @@ fun UnlockScreen(
     }
 
     fun showPatternError() {
-        if (vibrationEnabled) {
-            performUnlockVibration(context, 100L)
-        }
-
+        // Vibration registerWrongAttempt() ke andar pehle se hai
         registerWrongAttempt()
         clearErrorJob?.cancel()
         patternError = true
@@ -363,7 +373,10 @@ fun UnlockScreen(
                 .fillMaxSize()
                 .background(backgroundColor)
         ) {
-            val isCompact = maxHeight < 700.dp || maxWidth < 360.dp
+            // Settings load hone tak sirf white background
+            if (!loaded) return@BoxWithConstraints
+
+            val isCompact = maxHeight < 720.dp || maxWidth < 360.dp
 
             val titleSize = if (isCompact) 21.sp else 25.sp
             val subTitleSize = if (isCompact) 14.sp else 16.sp
@@ -374,6 +387,18 @@ fun UnlockScreen(
             val gapBeforePad = if (isCompact) 14.dp else 35.dp
             val gapBeforeLink = if (isCompact) 14.dp else 30.dp
             val linkEndPadding = if (isCompact) 8.dp else 30.dp
+
+            // NumberPad responsive size
+            val padButtonSize = when {
+                maxHeight < 600.dp -> 50.dp
+                maxHeight < 720.dp -> 56.dp
+                else -> 64.dp
+            }
+            val padRowSpacing = when {
+                maxHeight < 600.dp -> 10.dp
+                maxHeight < 720.dp -> 14.dp
+                else -> 20.dp
+            }
 
             val gridSize = minOf(
                 maxWidth - 60.dp,
@@ -507,7 +532,9 @@ fun UnlockScreen(
                                     error = ""
                                 }
                             },
-                            buttonColor = numberButtonColor
+                            buttonColor = numberButtonColor,
+                            buttonSize = padButtonSize,
+                            rowSpacing = padRowSpacing
                         )
 
                         Spacer(modifier = Modifier.height(gapBeforeLink))

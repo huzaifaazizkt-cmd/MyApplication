@@ -2,6 +2,11 @@
 package com.example.myapplication.Design.screens
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -53,6 +58,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+
+private const val PRIVACY_POLICY_URL = "https://YOUR_PRIVACY_POLICY_URL"
 
 private data class SettingsItemData(
     val key: String,
@@ -199,7 +206,6 @@ private fun SettingsScreenContent(
                         bottom = 25.dp
                     )
             ) {
-                // Premium card added above App Protection.
                 PremiumPromoCard(
                     onClick = onPremiumClick
                 )
@@ -210,7 +216,6 @@ private fun SettingsScreenContent(
                     enabled = appProtectionEnabled,
                     onEnabledChange = { enabled ->
                         appProtectionEnabled = enabled
-
                         scope.launch {
                             dataStore.saveAppProtectionEnabled(enabled)
                         }
@@ -284,7 +289,11 @@ private fun SettingsScreenContent(
 
                                 "intruder" -> onIntruderClick()
 
-                                "rate_us", "share", "privacy_policy" -> Unit
+                                "rate_us" -> openPlayStore(context)
+
+                                "share" -> shareApp(context)
+
+                                "privacy_policy" -> openPrivacyPolicy(context)
                             }
                         },
                         onResetPasswordClick = onResetPasswordClick
@@ -369,6 +378,86 @@ private fun SettingsScreenContent(
     }
 }
 
+private fun openPlayStore(context: Context) {
+    val packageName = context.packageName
+
+    try {
+        context.startActivity(
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("market://details?id=$packageName")
+            )
+        )
+    } catch (e: ActivityNotFoundException) {
+        try {
+            context.startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
+                )
+            )
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(
+                context,
+                "Unable to open Play Store.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+}
+
+private fun shareApp(context: Context) {
+    val packageName = context.packageName
+    val playStoreUrl =
+        "https://play.google.com/store/apps/details?id=$packageName"
+
+    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_SUBJECT, "AppLock")
+        putExtra(
+            Intent.EXTRA_TEXT,
+            "Check out AppLock!\n$playStoreUrl"
+        )
+    }
+
+    try {
+        context.startActivity(
+            Intent.createChooser(shareIntent, "Share AppLock")
+        )
+    } catch (e: ActivityNotFoundException) {
+        Toast.makeText(
+            context,
+            "Unable to share the app.",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+}
+
+private fun openPrivacyPolicy(context: Context) {
+    if (PRIVACY_POLICY_URL.contains("YOUR_PRIVACY_POLICY_URL")) {
+        Toast.makeText(
+            context,
+            "Please add your Privacy Policy URL.",
+            Toast.LENGTH_LONG
+        ).show()
+        return
+    }
+
+    try {
+        context.startActivity(
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse(PRIVACY_POLICY_URL)
+            )
+        )
+    } catch (e: Exception) {
+        Toast.makeText(
+            context,
+            "Unable to open Privacy Policy.",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+}
 
 @Composable
 private fun PremiumPromoCard(
@@ -435,6 +524,7 @@ private fun PremiumPromoCard(
                 )
 
                 Spacer(Modifier.height(13.dp))
+
                 Row(
                     modifier = Modifier
                         .width(145.dp)
@@ -469,9 +559,7 @@ private fun PremiumPromoCard(
             Spacer(Modifier.width(8.dp))
 
             Image(
-                painter = painterResource(
-                    R.drawable.king
-                ),
+                painter = painterResource(R.drawable.king),
                 contentDescription = "Premium King",
                 modifier = Modifier.size(128.dp),
                 contentScale = ContentScale.Fit
@@ -479,7 +567,6 @@ private fun PremiumPromoCard(
         }
     }
 }
-
 
 @Composable
 private fun AppProtectionCard(

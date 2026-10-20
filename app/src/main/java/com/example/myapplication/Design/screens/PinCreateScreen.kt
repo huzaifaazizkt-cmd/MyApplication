@@ -59,13 +59,29 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                 .navigationBarsPadding()
         ) {
             // ---------- Responsive values ----------
-            val isCompact = maxHeight < 640.dp || maxWidth < 360.dp
+            val isCompact = maxHeight < 720.dp || maxWidth < 360.dp
 
             val sidePadding = if (isCompact) 20.dp else 26.dp
             val titleSize = if (isCompact) 16.sp else 18.sp
             val subTitleSize = if (isCompact) 13.sp else 14.sp
             val actionSize = if (isCompact) 17.sp else 20.sp
             val stepLineWidth = if (isCompact) 70.dp else 100.dp
+
+            val padButtonSize = when {
+                maxHeight < 600.dp -> 50.dp
+                maxHeight < 720.dp -> 56.dp
+                else -> 64.dp
+            }
+            val padRowSpacing = when {
+                maxHeight < 600.dp -> 10.dp
+                maxHeight < 720.dp -> 14.dp
+                else -> 20.dp
+            }
+            val bottomActionPadding = when {
+                maxHeight < 600.dp -> 8.dp
+                maxHeight < 720.dp -> 30.dp
+                else -> 100.dp
+            }
 
             val gridSize = minOf(
                 maxWidth - sidePadding * 2,
@@ -221,7 +237,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                 Spacer(modifier = Modifier.height(if (isCompact) 14.dp else 22.dp))
 
 
-                // ---------- MIDDLE CONTENT (center + scroll agar jagah kam ho) ----------
+                // ---------- MIDDLE CONTENT (scroll agar jagah kam ho) ----------
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -265,7 +281,7 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(if (isCompact) 18.dp else 50.dp))
+                            Spacer(modifier = Modifier.height(if (isCompact) 18.dp else 30.dp))
 
                             NumberPad(
                                 onNumberClick = { number ->
@@ -274,7 +290,9 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                                 onDelete = {
                                     if (pin.isNotEmpty()) pin = pin.dropLast(1)
                                 },
-                                buttonColor = primaryBlue
+                                buttonColor = primaryBlue,
+                                buttonSize = padButtonSize,
+                                rowSpacing = padRowSpacing
                             )
                         }
                     } else {
@@ -321,7 +339,12 @@ fun PinCreateScreen(onNext: (String, String) -> Unit) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 170.dp),
+                        .padding(
+                            start = 8.dp,
+                            end = 8.dp,
+                            top = 6.dp,
+                            bottom = bottomActionPadding
+                        ),
                     horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
                     verticalAlignment = Alignment.CenterVertically
                 ) {

@@ -60,6 +60,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.myapplication.Billing
 import com.example.myapplication.R
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun PremiumScreen(
@@ -736,3 +738,15 @@ private fun PremiumLimitFontScale(
         content()
     }
 }
+
+@Preview(
+    showBackground = true,
+    showSystemUi = true,
+    device = "spec:width=393dp,height=873dp,dpi=440"
+)
+@Composable
+private fun PremiumScreenPreview() {
+    val navController = rememberNavController()
+    PremiumScreen(navController = navController)
+}
+

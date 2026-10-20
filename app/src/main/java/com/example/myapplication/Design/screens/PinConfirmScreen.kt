@@ -56,6 +56,7 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.AppPermissionFlow
 import com.example.myapplication.XiaomiPermissionHelper
 import com.example.myapplication.Design.components.NumberPad
@@ -1819,5 +1820,25 @@ private fun findConfirmDot(
     return null
 }
 
+
+@Preview(
+    showBackground = true,
+    showSystemUi = true,
+    device = "spec:width=393dp,height=873dp,dpi=440"
+)
+@Composable
+private fun PinConfirmScreenPreview() {
+    val navController = rememberNavController()
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    PinConfirmScreen(
+        navController = navController,
+        context = context,
+        type = "pin",
+        value = "1234",
+        isReset = false,
+        permissionOnly = false
+    )
+}
 
 

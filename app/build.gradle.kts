@@ -152,6 +152,8 @@ dependencies {
         "com.android.billingclient:billing-ktx:9.1.0"
     )
 
+    implementation("com.airbnb.android:lottie-compose:6.6.7")
+
     // Unit tests
     testImplementation(libs.junit)
 
