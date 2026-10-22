@@ -434,22 +434,12 @@ private fun shareApp(context: Context) {
 }
 
 private fun openPrivacyPolicy(context: Context) {
-    if (PRIVACY_POLICY_URL.contains("YOUR_PRIVACY_POLICY_URL")) {
-        Toast.makeText(
-            context,
-            "Please add your Privacy Policy URL.",
-            Toast.LENGTH_LONG
-        ).show()
-        return
-    }
-
     try {
-        context.startActivity(
-            Intent(
-                Intent.ACTION_VIEW,
-                Uri.parse(PRIVACY_POLICY_URL)
-            )
+        val intent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://www.google.com")
         )
+        context.startActivity(intent)
     } catch (e: Exception) {
         Toast.makeText(
             context,
@@ -458,7 +448,6 @@ private fun openPrivacyPolicy(context: Context) {
         ).show()
     }
 }
-
 @Composable
 private fun PremiumPromoCard(
     onClick: () -> Unit

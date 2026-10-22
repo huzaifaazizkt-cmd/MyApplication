@@ -308,6 +308,11 @@ private fun IntruderScreenContent(
         mutableStateOf(false)
     }
 
+    // Prevent a rapid double tap from invoking the screen navigation twice.
+    var isNavigatingBack by remember {
+        mutableStateOf(false)
+    }
+
     var selectedImages by remember {
         mutableStateOf<Set<Uri>>(emptySet())
     }
@@ -443,11 +448,13 @@ private fun IntruderScreenContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
+                    enabled = selectionMode || !isNavigatingBack,
                     onClick = {
                         if (selectionMode) {
                             selectionMode = false
                             selectedImages = emptySet()
-                        } else {
+                        } else if (!isNavigatingBack) {
+                            isNavigatingBack = true
                             onBackClick()
                         }
                     }

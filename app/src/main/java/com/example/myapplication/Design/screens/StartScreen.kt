@@ -46,6 +46,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.myapplication.Ads.AdConfig
+import com.example.myapplication.ConsentManager
 import com.example.myapplication.Firebase.RemoteConfigManager
 import com.example.myapplication.R
 import com.google.android.gms.ads.AdError
@@ -80,6 +81,11 @@ fun StartScreen(
     var remoteConfigLoaded by remember { mutableStateOf(false) }
     var showInterstitialAd by remember { mutableStateOf(false) }
 
+    // CONSENT
+    val consentManager = remember { ConsentManager(context) }
+    var consentDone by remember { mutableStateOf(false) }
+    var canRequestAds by remember { mutableStateOf(false) }
+
     val progress by animateLottieCompositionAsState(
         composition = composition,
         iterations = 1
@@ -94,6 +100,38 @@ fun StartScreen(
         navController.navigate("unlockScreen") {
             popUpTo("startScreen") { inclusive = true }
             launchSingleTop = true
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // CONSENT (UMP) - runs once when the splash opens
+    // -------------------------------------------------------------------------
+
+    LaunchedEffect(Unit) {
+        if (activity == null) {
+            Log.e(TAG, "Activity not available, skipping consent")
+            consentDone = true
+            return@LaunchedEffect
+        }
+
+        Log.d(TAG, "Gathering consent...")
+
+        consentManager.gatherConsent(activity) { error ->
+            error?.let { Log.w(TAG, "Consent error: $it") }
+
+            canRequestAds = consentManager.canRequestAds
+            Log.d(TAG, "Consent done. canRequestAds = $canRequestAds")
+
+            // Initialize AdMob only after consent allows it
+            consentManager.initializeAdsIfAllowed(context)
+
+            consentDone = true
+        }
+
+        // Consent saved from a previous session may already allow ads
+        if (consentManager.canRequestAds) {
+            canRequestAds = true
+            consentManager.initializeAdsIfAllowed(context)
         }
     }
 
@@ -129,7 +167,9 @@ fun StartScreen(
     LaunchedEffect(
         remoteConfigLoaded,
         showInterstitialAd,
-        appInitialized
+        appInitialized,
+        consentDone,    // CONSENT
+        canRequestAds   // CONSENT
     ) {
 
         if (!appInitialized) return@LaunchedEffect
@@ -138,6 +178,19 @@ fun StartScreen(
         if (!showInterstitialAd) {
             Log.d(TAG, "REMOTE CONFIG = FALSE")
             Log.d(TAG, "INTERSTITIAL WILL NOT BE SHOWN")
+            return@LaunchedEffect
+        }
+
+        // CONSENT: wait for the consent flow to finish
+        if (!consentDone) {
+            Log.d(TAG, "Waiting for consent...")
+            return@LaunchedEffect
+        }
+
+        // CONSENT: user did not give consent (or ads not allowed) -> skip ad
+        if (!canRequestAds) {
+            Log.d(TAG, "CONSENT: ads not allowed -> skipping interstitial")
+            adFailed = true
             return@LaunchedEffect
         }
 
@@ -225,10 +278,14 @@ fun StartScreen(
         showInterstitialAd,
         adLoaded,
         adFailed,
-        appInitialized
+        appInitialized,
+        consentDone // CONSENT
     ) {
 
         if (!splashFinished || navigationDone) return@LaunchedEffect
+
+        // CONSENT: never navigate while the consent form may still be showing
+        if (!consentDone) return@LaunchedEffect
 
         // FIRST LAUNCH
         if (!appInitialized) {
@@ -251,7 +308,7 @@ fun StartScreen(
             return@LaunchedEffect
         }
 
-        // AD FAILED
+        // AD FAILED (also covers "no consent")
         if (adFailed) {
             Log.d(TAG, "AD FAILED -> UNLOCK")
             goToUnlock()
@@ -276,12 +333,13 @@ fun StartScreen(
     }
 
     // -------------------------------------------------------------------------
-    // AD TIMEOUT
+    // AD TIMEOUT (starts only after consent is finished)
     // -------------------------------------------------------------------------
 
-    LaunchedEffect(appInitialized) {
+    LaunchedEffect(appInitialized, consentDone) { // CONSENT
 
         if (!appInitialized) return@LaunchedEffect
+        if (!consentDone) return@LaunchedEffect // CONSENT
 
         delay(20_000L)
 

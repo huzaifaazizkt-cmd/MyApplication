@@ -1,4 +1,3 @@
-
 package com.example.myapplication.Design.screens
 
 import android.app.Activity
@@ -36,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -55,18 +55,38 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.example.myapplication.R
+import kotlinx.coroutines.awaitCancellation
 
 @Composable
 fun ExitScreen(navController: NavController) {
     val context = LocalContext.current
     val activity = context as? Activity
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     var selectedRating by remember { mutableIntStateOf(0) }
     var stayProtectedClicked by remember { mutableStateOf(false) }
     var exitAnywayClicked by remember { mutableStateOf(false) }
     var ratingActionStarted by remember { mutableStateOf(false) }
+    var isNavigatingBack by remember { mutableStateOf(false) }
+
+    LaunchedEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                ratingActionStarted = false
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        try {
+            awaitCancellation()
+        } finally {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     fun openFeedbackOrReview(rating: Int) {
         if (ratingActionStarted) return
@@ -107,9 +127,7 @@ fun ExitScreen(navController: NavController) {
                 } catch (e: ActivityNotFoundException) {
                     val webIntent = Intent(
                         Intent.ACTION_VIEW,
-                        Uri.parse(
-                            "https://play.google.com/store/apps/details?id=$packageName"
-                        )
+                        Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
                     )
 
                     try {
@@ -134,9 +152,12 @@ fun ExitScreen(navController: NavController) {
         }
     }
 
-    BackHandler {
+    BackHandler(enabled = !isNavigatingBack) {
         if (!stayProtectedClicked && !exitAnywayClicked) {
-            navController.popBackStack()
+            isNavigatingBack = true
+            if (!navController.popBackStack()) {
+                isNavigatingBack = false
+            }
         }
     }
 
@@ -185,14 +206,18 @@ fun ExitScreen(navController: NavController) {
                         modifier = Modifier
                             .size(28.dp)
                             .clickable(
-                                enabled = !stayProtectedClicked &&
+                                enabled = !isNavigatingBack &&
+                                        !stayProtectedClicked &&
                                         !exitAnywayClicked,
                                 indication = null,
                                 interactionSource = remember {
                                     MutableInteractionSource()
                                 }
                             ) {
-                                navController.popBackStack()
+                                isNavigatingBack = true
+                                if (!navController.popBackStack()) {
+                                    isNavigatingBack = false
+                                }
                             }
                     )
 
@@ -228,9 +253,7 @@ fun ExitScreen(navController: NavController) {
 
                         Image(
                             painter = painterResource(id = R.drawable.exitlock),
-                            contentDescription = stringResource(
-                                R.string.exit_image_description
-                            ),
+                            contentDescription = stringResource(R.string.exit_image_description),
                             modifier = Modifier.size(imageSize)
                         )
 
@@ -251,9 +274,7 @@ fun ExitScreen(navController: NavController) {
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = stringResource(
-                                R.string.exit_app_lock_description
-                            ),
+                            text = stringResource(R.string.exit_app_lock_description),
                             fontSize = bodySize,
                             lineHeight = bodyLineHeight,
                             color = Color(0xFF555555),
@@ -294,9 +315,7 @@ fun ExitScreen(navController: NavController) {
                         Spacer(modifier = Modifier.height(15.dp))
 
                         Text(
-                            text = stringResource(
-                                R.string.exit_rating_description
-                            ),
+                            text = stringResource(R.string.exit_rating_description),
                             fontSize = bodySize,
                             lineHeight = bodyLineHeight,
                             color = Color(0xFF555555),
@@ -305,7 +324,6 @@ fun ExitScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(gapMedium))
 
-                        // STAY PROTECTED
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -314,22 +332,21 @@ fun ExitScreen(navController: NavController) {
                                 .background(Color(0xFF2196F3))
                                 .clickable(
                                     enabled = !stayProtectedClicked &&
-                                            !exitAnywayClicked,
+                                            !exitAnywayClicked &&
+                                            !isNavigatingBack,
                                     indication = null,
                                     interactionSource = remember {
                                         MutableInteractionSource()
                                     }
                                 ) {
                                     stayProtectedClicked = true
-                                    val navigated = navController.popBackStack()
-                                    if (!navigated) {
+                                    isNavigatingBack = true
+                                    if (!navController.popBackStack()) {
                                         stayProtectedClicked = false
+                                        isNavigatingBack = false
                                     }
                                 }
-                                .padding(
-                                    horizontal = 12.dp,
-                                    vertical = 10.dp
-                                ),
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(
@@ -338,28 +355,21 @@ fun ExitScreen(navController: NavController) {
                             ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.stay),
-                                    contentDescription = stringResource(
-                                        R.string.exit_stay_protected_description
-                                    ),
+                                    contentDescription = stringResource(R.string.exit_stay_protected_description),
                                     modifier = Modifier.size(19.dp)
                                 )
 
                                 Spacer(modifier = Modifier.size(10.dp))
 
                                 Text(
-                                    text = stringResource(
-                                        R.string.exit_stay_protected
-                                    ),
+                                    text = stringResource(R.string.exit_stay_protected),
                                     fontSize = buttonTextSize,
                                     fontWeight = FontWeight.SemiBold,
                                     color = Color.White,
                                     textAlign = TextAlign.Center,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(
-                                        1f,
-                                        fill = false
-                                    )
+                                    modifier = Modifier.weight(1f, fill = false)
                                 )
                             }
                         }
@@ -370,7 +380,6 @@ fun ExitScreen(navController: NavController) {
                             )
                         )
 
-                        // EXIT ANYWAY
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -384,7 +393,8 @@ fun ExitScreen(navController: NavController) {
                                 )
                                 .clickable(
                                     enabled = !stayProtectedClicked &&
-                                            !exitAnywayClicked,
+                                            !exitAnywayClicked &&
+                                            !isNavigatingBack,
                                     indication = null,
                                     interactionSource = remember {
                                         MutableInteractionSource()
@@ -397,10 +407,7 @@ fun ExitScreen(navController: NavController) {
                                         exitAnywayClicked = false
                                     }
                                 }
-                                .padding(
-                                    horizontal = 12.dp,
-                                    vertical = 10.dp
-                                ),
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(
@@ -408,12 +415,8 @@ fun ExitScreen(navController: NavController) {
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Image(
-                                    painter = painterResource(
-                                        id = R.drawable.anyway
-                                    ),
-                                    contentDescription = stringResource(
-                                        R.string.exit_anyway_description
-                                    ),
+                                    painter = painterResource(id = R.drawable.anyway),
+                                    contentDescription = stringResource(R.string.exit_anyway_description),
                                     modifier = Modifier.size(19.dp)
                                 )
 
@@ -427,10 +430,7 @@ fun ExitScreen(navController: NavController) {
                                     textAlign = TextAlign.Center,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(
-                                        1f,
-                                        fill = false
-                                    )
+                                    modifier = Modifier.weight(1f, fill = false)
                                 )
                             }
                         }

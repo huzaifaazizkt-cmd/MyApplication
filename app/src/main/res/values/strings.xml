@@ -2,7 +2,7 @@
 
 <resources>
 
-    <string name="app_name" translatable="false">My Application</string>
+    <string name="app_name" translatable="false">App Lock</string>
     <string name="lifetime" translatable="false">lifetime</string>
 
     <!-- Common -->

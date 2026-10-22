@@ -173,6 +173,9 @@ fun UnlockScreen(
     var securityQuestionError by remember { mutableStateOf("") }
     var checkingSecurityQuestion by remember { mutableStateOf(false) }
 
+    // FIX: PIN check hone ke dauran naye digits block karne ke liye
+    var isChecking by remember { mutableStateOf(false) }
+
     // Jab tak settings load na hon, sirf white screen dikhao
     // (PIN pad ka flash aur galat layout nazar na aaye)
     var loaded by remember { mutableStateOf(false) }
@@ -516,18 +519,25 @@ fun UnlockScreen(
 
                         NumberPad(
                             onNumberClick = { number ->
-                                if (enteredPin.length < pinLength) {
+                                if (!isChecking && enteredPin.length < pinLength) {
                                     val newPin = enteredPin + number
                                     enteredPin = newPin
                                     error = ""
 
                                     if (newPin.length == pinLength) {
-                                        checkPin(newPin)
+                                        // FIX: thora delay do taka last circle
+                                        // fill hokar nazar aaye, phir PIN check ho
+                                        isChecking = true
+                                        scope.launch {
+                                            delay(150)
+                                            checkPin(newPin)
+                                            isChecking = false
+                                        }
                                     }
                                 }
                             },
                             onDelete = {
-                                if (enteredPin.isNotEmpty()) {
+                                if (!isChecking && enteredPin.isNotEmpty()) {
                                     enteredPin = enteredPin.dropLast(1)
                                     error = ""
                                 }
