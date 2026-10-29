@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="billing_restore">Restore</string>
+    <string name="billing_restoring">Restoring…</string>
+    <string name="billing_loading">Connecting to Google Play…</string>
+    <string name="billing_checking">Checking Premium…</string>
+    <string name="billing_processing">Processing purchase…</string>
+    <string name="billing_pending_short">Payment pending</string>
+    <string name="billing_pending">Payment is pending. Premium will activate when payment completes.</string>
+    <string name="billing_retry">Try again</string>
+    <string name="billing_unavailable">Google Play is unavailable. Please try again.</string>
+    <string name="billing_product_unavailable">This purchase is currently unavailable.</string>
+    <string name="billing_purchase_failed">Purchase could not be completed. Please try again.</string>
+    <string name="billing_cancelled">Purchase cancelled.</string>
+    <string name="billing_nothing_to_restore">No previous purchase was found for this Google Play account.</string>
+    <string name="billing_restore_failed">Purchases could not be restored. Please try again.</string>
+    <string name="billing_save_failed">Premium could not be activated yet. Please try Restore.</string>
+    <string name="billing_congratulations">Congratulations!</string>
+    <string name="billing_premium_activated">Premium is now active. Enjoy Intruder and an ad-free app.</string>
+    <string name="billing_restored_title">Premium restored</string>
+    <string name="billing_restored_message">Your Premium access is ready.</string>
+    <string name="billing_owned">Premium active</string>
+    <string name="billing_continue">Continue</string>
+    <string name="billing_intruder_locked">Intruder requires Premium.</string>
+    <string name="billing_price_unavailable">Price unavailable</string>
+    <string name="terms_of_use_url" translatable="false">https://example.com/terms</string>
+</resources>

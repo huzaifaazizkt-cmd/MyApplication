@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="protection_active">AppLock koruması etkin</string>
+    <string name="protection_service_required">Uygulamaları korumak için kullanım erişimine ve diğer uygulamaların üzerinde gösterime izin verin.</string>
+    <string name="biometric_unavailable">Önce cihaz ayarlarında desteklenen bir biyometrik yöntem ayarlayın.</string>
+    <string name="retry_biometric">Biyometri kullan</string>
+    <string name="vault_operation_failed">Bazı dosyalar işlenemedi. Kasa kopyaları korundu; bazı özgün dosyalar hâlâ görünür olabilir. Tekrar deneyin.</string>
+    <string name="video_playback_failed">Bu video bu cihazda oynatılamıyor. Yine de gizliliğini kaldırabilirsiniz.</string>
+    <string name="external_action_failed">Bu bağlantıyı açabilecek bir uygulama yok.</string>
+    <string name="hide_applock_from_recents">AppLock uygulamasını son uygulamalar ekranından gizle</string>
+    <string name="share_app_message">AppLock uygulamasını deneyin: %1$s</string>
+    <string name="secure_settings_unavailable">Güvenli ayarlar kullanılamıyor. Tekrar deneyin.</string>
+    <string name="protection_paused">AppLock koruması duraklatıldı</string>
+    <string name="checking_password">Kontrol ediliyor…</string>
+    <string name="video_play">Oynat</string>
+    <string name="video_pause">Duraklat</string>
+    <string name="protection_connecting">Uygulama korumasına bağlanılıyor…</string>
+    <string name="protection_notifications_required">Bildirimler kapalı. Koruma durumunu görmek için açın.</string>
+    <string name="protection_popup_required">Uygulamaları korumak için AppLock uygulamasının arka planda pencere göstermesine izin verin.</string>
+    <string name="intruder_camera_unavailable">Kamera kullanılamıyor. Cihaz ayarlarından kamera erişimini kontrol edin.</string>
+    <string name="intruder_camera_permission_required">İzinsiz giriş fotoğrafları çekmek için kamera erişimine izin verin.</string>
+    <string name="intruder_select_attempts">İzinsiz giriş fotoğrafları için deneme sayısını seçin.</string>
+    <string name="vault_waiting_permission">Seçilen dosyalara erişimi onaylayın…</string>
+    <string name="usage_access_title">Kullanım erişimi</string>
+    <string name="usage_access_description">AppLock uygulamasının kullanılan uygulamayı algılamasına izin verin.</string>
+    <string name="protection_monitor_unavailable">Uygulama etkinliği kullanılamıyor. Kullanım erişimini kontrol edip tekrar deneyin.</string>
+    <string name="protection_start_retry">Uygulama koruması duraklatıldı. Başlatmak için dokunun.</string>
+    <string name="protection_reliability_tip">Güvenilir koruma için arka plan uygulama ayarlarını gözden geçirin.</string>
+    <string name="apps_load_failed">Uygulamalar yüklenemedi. Yeniden denemek için dokunun.</string>
+    <string name="apps_empty">Uygulama bulunamadı.</string>
+    <string name="app_locked_success">Uygulama kilitlendi.</string>
+    <string name="app_lock_update_failed">Uygulama koruması güncellenemedi. Tekrar deneyin.</string>
+</resources>

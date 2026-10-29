@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="protection_active">AppLockの保護が有効です</string>
+    <string name="protection_service_required">アプリを保護するには、使用状況へのアクセスと他のアプリの上への表示を許可してください。</string>
+    <string name="biometric_unavailable">まずデバイスの設定で対応する生体認証を設定してください。</string>
+    <string name="retry_biometric">生体認証を使用</string>
+    <string name="vault_operation_failed">一部のファイルを処理できませんでした。保管庫のコピーは保持されていますが、元のファイルが表示されたままの場合があります。再試行してください。</string>
+    <string name="video_playback_failed">このデバイスでは動画を再生できません。非表示は解除できます。</string>
+    <string name="external_action_failed">このリンクを開くアプリがありません。</string>
+    <string name="hide_applock_from_recents">最近使ったアプリの画面からAppLockを非表示にする</string>
+    <string name="share_app_message">AppLockをお試しください: %1$s</string>
+    <string name="secure_settings_unavailable">安全な設定を利用できません。再試行してください。</string>
+    <string name="protection_paused">AppLockの保護は一時停止中です</string>
+    <string name="checking_password">確認中…</string>
+    <string name="video_play">再生</string>
+    <string name="video_pause">一時停止</string>
+    <string name="protection_connecting">アプリ保護に接続中…</string>
+    <string name="protection_notifications_required">通知はオフです。保護の状態を表示するにはオンにしてください。</string>
+    <string name="protection_popup_required">アプリを保護するため、AppLockのバックグラウンドでのウィンドウ表示を許可してください。</string>
+    <string name="intruder_camera_unavailable">カメラを利用できません。端末設定でカメラへのアクセスを確認してください。</string>
+    <string name="intruder_camera_permission_required">侵入者を撮影するにはカメラへのアクセスを許可してください。</string>
+    <string name="intruder_select_attempts">侵入者を撮影する試行回数を選択してください。</string>
+    <string name="vault_waiting_permission">選択したファイルへのアクセスを確認してください…</string>
+    <string name="usage_access_title">使用状況へのアクセス</string>
+    <string name="usage_access_description">AppLock に使用中のアプリの検出を許可します。</string>
+    <string name="protection_monitor_unavailable">アプリの動作を確認できません。使用状況へのアクセスを確認して再試行してください。</string>
+    <string name="protection_start_retry">アプリの保護は一時停止中です。タップして開始します。</string>
+    <string name="protection_reliability_tip">安定した保護のため、バックグラウンドアプリの設定を確認してください。</string>
+    <string name="apps_load_failed">アプリを読み込めませんでした。タップして再試行します。</string>
+    <string name="apps_empty">アプリが見つかりません。</string>
+    <string name="app_locked_success">アプリをロックしました。</string>
+    <string name="app_lock_update_failed">アプリの保護を更新できませんでした。再試行してください。</string>
+</resources>

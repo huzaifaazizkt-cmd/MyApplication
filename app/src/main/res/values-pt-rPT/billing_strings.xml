@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="billing_restore">Restaurar</string>
+    <string name="billing_restoring">A restaurar…</string>
+    <string name="billing_loading">A ligar ao Google Play…</string>
+    <string name="billing_checking">A verificar Premium…</string>
+    <string name="billing_processing">A processar compra…</string>
+    <string name="billing_pending_short">Pagamento pendente</string>
+    <string name="billing_pending">O pagamento está pendente. Premium será ativado quando o pagamento terminar.</string>
+    <string name="billing_retry">Tentar novamente</string>
+    <string name="billing_unavailable">O Google Play está indisponível. Tente novamente.</string>
+    <string name="billing_product_unavailable">Esta compra está indisponível de momento.</string>
+    <string name="billing_purchase_failed">Não foi possível concluir a compra. Tente novamente.</string>
+    <string name="billing_cancelled">Compra cancelada.</string>
+    <string name="billing_nothing_to_restore">Não foi encontrada nenhuma compra anterior para esta conta Google Play.</string>
+    <string name="billing_restore_failed">Não foi possível restaurar as compras. Tente novamente.</string>
+    <string name="billing_save_failed">Ainda não foi possível ativar Premium. Experimente Restaurar.</string>
+    <string name="billing_congratulations">Parabéns!</string>
+    <string name="billing_premium_activated">Premium está ativo. Desfrute da função Intruso e da aplicação sem anúncios.</string>
+    <string name="billing_restored_title">Premium restaurado</string>
+    <string name="billing_restored_message">O seu acesso Premium está pronto.</string>
+    <string name="billing_owned">Premium ativo</string>
+    <string name="billing_continue">Continuar</string>
+    <string name="billing_intruder_locked">A função Intruso requer Premium.</string>
+    <string name="billing_price_unavailable">Preço indisponível</string>
+</resources>

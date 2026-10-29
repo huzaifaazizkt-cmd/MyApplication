@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="billing_restore">復元</string>
+    <string name="billing_restoring">復元中…</string>
+    <string name="billing_loading">Google Play に接続中…</string>
+    <string name="billing_checking">Premium を確認中…</string>
+    <string name="billing_processing">購入を処理中…</string>
+    <string name="billing_pending_short">お支払い待ち</string>
+    <string name="billing_pending">お支払い待ちです。お支払い完了後に Premium が有効になります。</string>
+    <string name="billing_retry">再試行</string>
+    <string name="billing_unavailable">Google Play を利用できません。もう一度お試しください。</string>
+    <string name="billing_product_unavailable">現在、この商品は購入できません。</string>
+    <string name="billing_purchase_failed">購入を完了できませんでした。もう一度お試しください。</string>
+    <string name="billing_cancelled">購入をキャンセルしました。</string>
+    <string name="billing_nothing_to_restore">この Google Play アカウントの購入履歴が見つかりませんでした。</string>
+    <string name="billing_restore_failed">購入を復元できませんでした。もう一度お試しください。</string>
+    <string name="billing_save_failed">Premium をまだ有効にできませんでした。「復元」をお試しください。</string>
+    <string name="billing_congratulations">おめでとうございます！</string>
+    <string name="billing_premium_activated">Premium が有効になりました。侵入者機能と広告なしのアプリをお楽しみください。</string>
+    <string name="billing_restored_title">Premium を復元しました</string>
+    <string name="billing_restored_message">Premium をご利用いただけます。</string>
+    <string name="billing_owned">Premium 有効</string>
+    <string name="billing_continue">続ける</string>
+    <string name="billing_intruder_locked">侵入者機能には Premium が必要です。</string>
+    <string name="billing_price_unavailable">価格を取得できません</string>
+</resources>

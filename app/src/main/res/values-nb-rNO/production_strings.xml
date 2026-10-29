@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="protection_active">AppLock-beskyttelsen er aktiv</string>
+    <string name="protection_service_required">Tillat brukstilgang og visning over andre apper for å beskytte apper.</string>
+    <string name="biometric_unavailable">Konfigurer støttet biometri i enhetsinnstillingene først.</string>
+    <string name="retry_biometric">Bruk biometri</string>
+    <string name="vault_operation_failed">Noen filer kunne ikke behandles. Kopiene i hvelvet er beholdt; noen originaler kan fortsatt være synlige. Prøv igjen.</string>
+    <string name="video_playback_failed">Denne videoen kan ikke spilles av på enheten. Du kan fortsatt gjøre den synlig igjen.</string>
+    <string name="external_action_failed">Ingen app kan åpne denne lenken.</string>
+    <string name="hide_applock_from_recents">Skjul AppLock fra skjermen med nylige apper</string>
+    <string name="share_app_message">Prøv AppLock: %1$s</string>
+    <string name="secure_settings_unavailable">Sikre innstillinger er utilgjengelige. Prøv igjen.</string>
+    <string name="protection_paused">AppLock-beskyttelsen er satt på pause</string>
+    <string name="checking_password">Kontrollerer…</string>
+    <string name="video_play">Spill av</string>
+    <string name="video_pause">Pause</string>
+    <string name="protection_connecting">Kobler til appbeskyttelse…</string>
+    <string name="protection_notifications_required">Varsler er av. Slå dem på for å se beskyttelsesstatus.</string>
+    <string name="protection_popup_required">Tillat AppLock å vise vinduer i bakgrunnen for å beskytte apper.</string>
+    <string name="intruder_camera_unavailable">Kameraet er utilgjengelig. Kontroller kameratilgang i enhetsinnstillingene.</string>
+    <string name="intruder_camera_permission_required">Tillat kameratilgang for å ta bilder av inntrengere.</string>
+    <string name="intruder_select_attempts">Velg antall forsøk for å ta bilder av inntrengere.</string>
+    <string name="vault_waiting_permission">Bekreft tilgang til de valgte filene…</string>
+    <string name="usage_access_title">Brukstilgang</string>
+    <string name="usage_access_description">La AppLock oppdage appen som er i bruk.</string>
+    <string name="protection_monitor_unavailable">Appaktivitet er utilgjengelig. Sjekk brukstilgang og prøv igjen.</string>
+    <string name="protection_start_retry">Appbeskyttelsen er satt på pause. Trykk for å starte den.</string>
+    <string name="protection_reliability_tip">For pålitelig beskyttelse bør du se over innstillingene for bakgrunnsapper.</string>
+    <string name="apps_load_failed">Kunne ikke laste apper. Trykk for å prøve igjen.</string>
+    <string name="apps_empty">Fant ingen apper.</string>
+    <string name="app_locked_success">Appen er låst.</string>
+    <string name="app_lock_update_failed">Kunne ikke oppdatere appbeskyttelsen. Prøv igjen.</string>
+</resources>

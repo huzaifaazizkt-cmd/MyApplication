@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="billing_restore">Pulihkan</string>
+    <string name="billing_restoring">Memulihkan…</string>
+    <string name="billing_loading">Menghubungkan ke Google Play…</string>
+    <string name="billing_checking">Memeriksa Premium…</string>
+    <string name="billing_processing">Memproses pembelian…</string>
+    <string name="billing_pending_short">Pembayaran tertunda</string>
+    <string name="billing_pending">Pembayaran tertunda. Premium akan aktif setelah pembayaran selesai.</string>
+    <string name="billing_retry">Coba lagi</string>
+    <string name="billing_unavailable">Google Play tidak tersedia. Silakan coba lagi.</string>
+    <string name="billing_product_unavailable">Pembelian ini sedang tidak tersedia.</string>
+    <string name="billing_purchase_failed">Pembelian tidak dapat diselesaikan. Silakan coba lagi.</string>
+    <string name="billing_cancelled">Pembelian dibatalkan.</string>
+    <string name="billing_nothing_to_restore">Tidak ditemukan pembelian sebelumnya untuk akun Google Play ini.</string>
+    <string name="billing_restore_failed">Pembelian tidak dapat dipulihkan. Silakan coba lagi.</string>
+    <string name="billing_save_failed">Premium belum dapat diaktifkan. Coba Pulihkan.</string>
+    <string name="billing_congratulations">Selamat!</string>
+    <string name="billing_premium_activated">Premium kini aktif. Nikmati Penyusup dan aplikasi tanpa iklan.</string>
+    <string name="billing_restored_title">Premium dipulihkan</string>
+    <string name="billing_restored_message">Akses Premium Anda sudah siap.</string>
+    <string name="billing_owned">Premium aktif</string>
+    <string name="billing_continue">Lanjutkan</string>
+    <string name="billing_intruder_locked">Penyusup memerlukan Premium.</string>
+    <string name="billing_price_unavailable">Harga tidak tersedia</string>
+</resources>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="protection_active">AppLock सुरक्षा सक्रिय है</string>
+    <string name="protection_service_required">ऐप सुरक्षित रखने के लिए उपयोग की ऐक्सेस और अन्य ऐप के ऊपर दिखाने की अनुमति दें।</string>
+    <string name="biometric_unavailable">पहले अपने डिवाइस की सेटिंग में समर्थित बायोमेट्रिक सेट करें।</string>
+    <string name="retry_biometric">बायोमेट्रिक उपयोग करें</string>
+    <string name="vault_operation_failed">कुछ फ़ाइलें संसाधित नहीं हो सकीं। तिजोरी की प्रतियाँ सुरक्षित हैं; कुछ मूल फ़ाइलें अभी भी दिखाई दे सकती हैं। फिर से कोशिश करें।</string>
+    <string name="video_playback_failed">यह वीडियो इस डिवाइस पर नहीं चल सकता। आप इसे फिर भी तिजोरी से बाहर निकाल सकते हैं।</string>
+    <string name="external_action_failed">इस लिंक को खोलने वाला कोई ऐप उपलब्ध नहीं है।</string>
+    <string name="hide_applock_from_recents">हाल के ऐप्स की स्क्रीन से AppLock छिपाएँ</string>
+    <string name="share_app_message">AppLock आज़माएँ: %1$s</string>
+    <string name="secure_settings_unavailable">सुरक्षित सेटिंग उपलब्ध नहीं हैं। फिर से कोशिश करें।</string>
+    <string name="protection_paused">AppLock सुरक्षा रुकी हुई है</string>
+    <string name="checking_password">जाँच हो रही है…</string>
+    <string name="video_play">चलाएँ</string>
+    <string name="video_pause">रोकें</string>
+    <string name="protection_connecting">ऐप सुरक्षा कनेक्ट हो रही है…</string>
+    <string name="protection_notifications_required">सूचनाएँ बंद हैं। सुरक्षा की स्थिति देखने के लिए उन्हें चालू करें।</string>
+    <string name="protection_popup_required">ऐप्स की सुरक्षा के लिए AppLock को बैकग्राउंड में विंडो दिखाने दें।</string>
+    <string name="intruder_camera_unavailable">कैमरा उपलब्ध नहीं है। डिवाइस सेटिंग में कैमरे का ऐक्सेस जाँचें।</string>
+    <string name="intruder_camera_permission_required">घुसपैठिए की फ़ोटो लेने के लिए कैमरे का ऐक्सेस दें।</string>
+    <string name="intruder_select_attempts">घुसपैठिए की फ़ोटो लेने के लिए प्रयासों की संख्या चुनें।</string>
+    <string name="vault_waiting_permission">चुनी गई फ़ाइलों के ऐक्सेस की पुष्टि करें…</string>
+    <string name="usage_access_title">उपयोग की ऐक्सेस</string>
+    <string name="usage_access_description">AppLock को इस्तेमाल हो रहे ऐप का पता लगाने दें।</string>
+    <string name="protection_monitor_unavailable">ऐप गतिविधि उपलब्ध नहीं है। उपयोग की ऐक्सेस जाँचें और फिर कोशिश करें।</string>
+    <string name="protection_start_retry">ऐप सुरक्षा रुकी हुई है। शुरू करने के लिए टैप करें।</string>
+    <string name="protection_reliability_tip">भरोसेमंद सुरक्षा के लिए बैकग्राउंड ऐप सेटिंग जाँचें।</string>
+    <string name="apps_load_failed">ऐप लोड नहीं हुए। फिर कोशिश करने के लिए टैप करें।</string>
+    <string name="apps_empty">कोई ऐप नहीं मिला।</string>
+    <string name="app_locked_success">ऐप लॉक हो गया।</string>
+    <string name="app_lock_update_failed">ऐप सुरक्षा अपडेट नहीं हुई। फिर कोशिश करें।</string>
+</resources>

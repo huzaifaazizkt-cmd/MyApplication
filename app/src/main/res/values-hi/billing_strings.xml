@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="billing_restore">बहाल करें</string>
+    <string name="billing_restoring">बहाल किया जा रहा है…</string>
+    <string name="billing_loading">Google Play से कनेक्ट हो रहा है…</string>
+    <string name="billing_checking">Premium की जाँच हो रही है…</string>
+    <string name="billing_processing">खरीद संसाधित हो रही है…</string>
+    <string name="billing_pending_short">भुगतान लंबित है</string>
+    <string name="billing_pending">भुगतान लंबित है। भुगतान पूरा होने पर Premium सक्रिय हो जाएगा।</string>
+    <string name="billing_retry">फिर कोशिश करें</string>
+    <string name="billing_unavailable">Google Play उपलब्ध नहीं है। फिर कोशिश करें।</string>
+    <string name="billing_product_unavailable">यह खरीद अभी उपलब्ध नहीं है।</string>
+    <string name="billing_purchase_failed">खरीद पूरी नहीं हो सकी। फिर कोशिश करें।</string>
+    <string name="billing_cancelled">खरीद रद्द कर दी गई।</string>
+    <string name="billing_nothing_to_restore">इस Google Play खाते की कोई पिछली खरीद नहीं मिली।</string>
+    <string name="billing_restore_failed">खरीद बहाल नहीं हो सकी। फिर कोशिश करें।</string>
+    <string name="billing_save_failed">Premium अभी सक्रिय नहीं हो सका। बहाल करें का उपयोग करें।</string>
+    <string name="billing_congratulations">बधाई हो!</string>
+    <string name="billing_premium_activated">Premium सक्रिय है। Intruder और विज्ञापन-मुक्त ऐप का आनंद लें।</string>
+    <string name="billing_restored_title">Premium बहाल हो गया</string>
+    <string name="billing_restored_message">आपका Premium एक्सेस तैयार है।</string>
+    <string name="billing_owned">Premium सक्रिय है</string>
+    <string name="billing_continue">जारी रखें</string>
+    <string name="billing_intruder_locked">Intruder के लिए Premium आवश्यक है।</string>
+    <string name="billing_price_unavailable">कीमत उपलब्ध नहीं है</string>
+</resources>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="billing_restore">Gjenopprett</string>
+    <string name="billing_restoring">Gjenoppretter…</string>
+    <string name="billing_loading">Kobler til Google Play…</string>
+    <string name="billing_checking">Sjekker Premium…</string>
+    <string name="billing_processing">Behandler kjøp…</string>
+    <string name="billing_pending_short">Betaling venter</string>
+    <string name="billing_pending">Betalingen venter. Premium aktiveres når betalingen er fullført.</string>
+    <string name="billing_retry">Prøv igjen</string>
+    <string name="billing_unavailable">Google Play er utilgjengelig. Prøv igjen.</string>
+    <string name="billing_product_unavailable">Dette kjøpet er ikke tilgjengelig nå.</string>
+    <string name="billing_purchase_failed">Kjøpet kunne ikke fullføres. Prøv igjen.</string>
+    <string name="billing_cancelled">Kjøpet ble avbrutt.</string>
+    <string name="billing_nothing_to_restore">Fant ingen tidligere kjøp for denne Google Play-kontoen.</string>
+    <string name="billing_restore_failed">Kjøpene kunne ikke gjenopprettes. Prøv igjen.</string>
+    <string name="billing_save_failed">Premium kunne ikke aktiveres ennå. Prøv Gjenopprett.</string>
+    <string name="billing_congratulations">Gratulerer!</string>
+    <string name="billing_premium_activated">Premium er aktivt. Bruk Inntrenger og appen uten annonser.</string>
+    <string name="billing_restored_title">Premium gjenopprettet</string>
+    <string name="billing_restored_message">Premium-tilgangen din er klar.</string>
+    <string name="billing_owned">Premium aktivt</string>
+    <string name="billing_continue">Fortsett</string>
+    <string name="billing_intruder_locked">Inntrenger krever Premium.</string>
+    <string name="billing_price_unavailable">Pris utilgjengelig</string>
+</resources>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="protection_active">Perlindungan AppLock aktif</string>
+    <string name="protection_service_required">Izinkan akses penggunaan dan tampil di atas aplikasi lain untuk melindungi aplikasi.</string>
+    <string name="biometric_unavailable">Siapkan biometrik yang didukung di setelan perangkat terlebih dahulu.</string>
+    <string name="retry_biometric">Gunakan biometrik</string>
+    <string name="vault_operation_failed">Beberapa file tidak dapat diproses. Salinan brankas tetap disimpan; beberapa file asli mungkin masih terlihat. Coba lagi.</string>
+    <string name="video_playback_failed">Video ini tidak dapat diputar di perangkat ini. Anda tetap dapat membatalkan penyembunyiannya.</string>
+    <string name="external_action_failed">Tidak ada aplikasi yang dapat membuka tautan ini.</string>
+    <string name="hide_applock_from_recents">Sembunyikan AppLock dari layar aplikasi terbaru</string>
+    <string name="share_app_message">Coba AppLock: %1$s</string>
+    <string name="secure_settings_unavailable">Setelan aman tidak tersedia. Coba lagi.</string>
+    <string name="protection_paused">Perlindungan AppLock dijeda</string>
+    <string name="checking_password">Memeriksa…</string>
+    <string name="video_play">Putar</string>
+    <string name="video_pause">Jeda</string>
+    <string name="protection_connecting">Menghubungkan perlindungan aplikasi…</string>
+    <string name="protection_notifications_required">Notifikasi nonaktif. Aktifkan untuk melihat status perlindungan.</string>
+    <string name="protection_popup_required">Izinkan AppLock menampilkan jendela di latar belakang untuk melindungi aplikasi.</string>
+    <string name="intruder_camera_unavailable">Kamera tidak tersedia. Periksa akses kamera di setelan perangkat.</string>
+    <string name="intruder_camera_permission_required">Izinkan akses kamera untuk mengambil foto penyusup.</string>
+    <string name="intruder_select_attempts">Pilih jumlah percobaan untuk mengambil foto penyusup.</string>
+    <string name="vault_waiting_permission">Konfirmasikan akses ke file yang dipilih…</string>
+    <string name="usage_access_title">Akses penggunaan</string>
+    <string name="usage_access_description">Izinkan AppLock mendeteksi aplikasi yang digunakan.</string>
+    <string name="protection_monitor_unavailable">Aktivitas aplikasi tidak tersedia. Periksa akses penggunaan dan coba lagi.</string>
+    <string name="protection_start_retry">Perlindungan aplikasi dijeda. Ketuk untuk memulai.</string>
+    <string name="protection_reliability_tip">Untuk perlindungan yang andal, periksa setelan aplikasi latar belakang.</string>
+    <string name="apps_load_failed">Aplikasi tidak dapat dimuat. Ketuk untuk mencoba lagi.</string>
+    <string name="apps_empty">Tidak ada aplikasi ditemukan.</string>
+    <string name="app_locked_success">Aplikasi berhasil dikunci.</string>
+    <string name="app_lock_update_failed">Perlindungan aplikasi tidak dapat diperbarui. Coba lagi.</string>
+</resources>

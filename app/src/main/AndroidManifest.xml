@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <queries>
+        <intent><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent>
+        <intent><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.HOME" /></intent>
+        <intent><action android:name="android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS" /></intent>
+        <package android:name="com.miui.securitycenter" />
+        <package android:name="com.vivo.permissionmanager" />
+        <package android:name="com.iqoo.secure" />
+        <package android:name="com.coloros.safecenter" />
+        <package android:name="com.oplus.safecenter" />
+        <package android:name="com.huawei.systemmanager" />
+    </queries>
+
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@drawable/applock"
+        android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
+        android:roundIcon="@drawable/applock"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MyApplication">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustNothing">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
+        <activity
+            android:name=".Design.screens.LockScreenActivity"
+            android:theme="@style/Theme.MyApplication.Lock"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="com.example.myapplication.Design.screens"
+            android:excludeFromRecents="true"
+            android:noHistory="false" />
+
+        <service android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false" android:exported="false">
+            <meta-data android:name="autoStoreLocales" android:value="true" />
+        </service>
+
+        <!-- Usage Access foreground monitor; no Accessibility service is registered. -->
+        <service
+            android:name=".service.AppLockService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Monitors foreground app usage to present the user-configured lock screen for selected apps." />
+
+        </service>
+
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+        </receiver>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+
+        </provider>
+
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
+    </application>
+
+</manifest>
+

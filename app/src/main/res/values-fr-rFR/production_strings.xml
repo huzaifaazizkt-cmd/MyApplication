@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="protection_active">La protection AppLock est active</string>
+    <string name="protection_service_required">Autorisez l’accès aux données d’utilisation et la superposition pour protéger les applications.</string>
+    <string name="biometric_unavailable">Configurez d’abord une méthode biométrique compatible dans les paramètres de votre appareil.</string>
+    <string name="retry_biometric">Utiliser la biométrie</string>
+    <string name="vault_operation_failed">Certains fichiers n’ont pas pu être traités. Les copies du coffre sont conservées ; certains originaux peuvent rester visibles. Réessayez.</string>
+    <string name="video_playback_failed">Cette vidéo ne peut pas être lue sur cet appareil. Vous pouvez toujours la rendre visible.</string>
+    <string name="external_action_failed">Aucune application ne permet d’ouvrir ce lien.</string>
+    <string name="hide_applock_from_recents">Masquer AppLock dans les applications récentes</string>
+    <string name="share_app_message">Essayez AppLock : %1$s</string>
+    <string name="secure_settings_unavailable">Les paramètres sécurisés sont indisponibles. Réessayez.</string>
+    <string name="protection_paused">La protection AppLock est en pause</string>
+    <string name="checking_password">Vérification…</string>
+    <string name="video_play">Lire</string>
+    <string name="video_pause">Pause</string>
+    <string name="protection_connecting">Connexion de la protection des applications…</string>
+    <string name="protection_notifications_required">Les notifications sont désactivées. Activez-les pour voir l’état de la protection.</string>
+    <string name="protection_popup_required">Autorisez AppLock à afficher des fenêtres en arrière-plan pour protéger les applications.</string>
+    <string name="intruder_camera_unavailable">Caméra indisponible. Vérifiez son accès dans les paramètres de l’appareil.</string>
+    <string name="intruder_camera_permission_required">Autorisez la caméra pour photographier les intrus.</string>
+    <string name="intruder_select_attempts">Choisissez un nombre de tentatives pour photographier les intrus.</string>
+    <string name="vault_waiting_permission">Confirmez l’accès aux fichiers sélectionnés…</string>
+    <string name="usage_access_title">Accès aux données d’utilisation</string>
+    <string name="usage_access_description">Autorisez AppLock à détecter l’application utilisée.</string>
+    <string name="protection_monitor_unavailable">L’activité des applications est indisponible. Vérifiez l’accès aux données d’utilisation et réessayez.</string>
+    <string name="protection_start_retry">La protection est en pause. Appuyez pour la démarrer.</string>
+    <string name="protection_reliability_tip">Pour une protection fiable, vérifiez les paramètres des applications en arrière-plan.</string>
+    <string name="apps_load_failed">Impossible de charger les applications. Appuyez pour réessayer.</string>
+    <string name="apps_empty">Aucune application trouvée.</string>
+    <string name="app_locked_success">Application verrouillée.</string>
+    <string name="app_lock_update_failed">Impossible de mettre à jour la protection. Réessayez.</string>
+</resources>

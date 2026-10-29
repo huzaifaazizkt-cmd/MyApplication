@@ -1,0 +1,456 @@
+package com.example.myapplication.Design.screens
+
+import com.example.myapplication.billing.PremiumRepository
+
+import android.content.Context
+import android.util.Log
+
+import androidx.activity.compose.BackHandler
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+
+import com.example.myapplication.R
+import com.example.myapplication.navigation.openPremium
+import com.example.myapplication.viewmodel.RemoteConfigViewModel
+
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
+
+
+private const val TAG = "AppLockAdMob"
+
+private const val TEST_BANNER_AD_UNIT_ID =
+    "ca-app-pub-3940256099942544/9214589741"
+
+
+@Composable
+fun MainScreen(
+    context: Context,
+    onIntruderClick: () -> Unit,
+    onLanguageClick: () -> Unit,
+    onResetPasswordClick: () -> Unit,
+    openSettings: Boolean = false,
+    navController: NavController
+) {
+
+    // ---------------- REMOTE CONFIG ----------------
+
+    val remoteConfigViewModel: RemoteConfigViewModel = viewModel()
+
+    val showBannerAd = remoteConfigViewModel.showBannerAd
+    val premium by remember(context) { PremiumRepository.get(context) }.state.collectAsState()
+    val authenticated by com.example.myapplication.security.AuthSession.isAuthenticated.collectAsState()
+
+    LaunchedEffect(authenticated) {
+        if (!authenticated) return@LaunchedEffect
+        Log.d(TAG, "Loading Remote Config for banner")
+        remoteConfigViewModel.loadConfigWithBanner()
+    }
+
+    // ---------------- SAVED STATE ----------------
+
+    val savedStateHandle =
+        navController.currentBackStackEntry?.savedStateHandle
+
+    // ---------------- SELECTED TAB ----------------
+    // 0 = Apps Lock, 1 = Vault, 2 = Settings
+
+    var selectedTab by rememberSaveable {
+        mutableIntStateOf(if (openSettings) 2 else 0)
+    }
+
+    // ---------------- VAULT PREVIEW STATE ----------------
+    // Sirf banner / bottom bar hide-show ke liye.
+    // VaultScreen ko dobara create nahi karte.
+
+    var isVaultPreviewOpen by remember { mutableStateOf(false) }
+
+    // ---------------- SETTINGS PREVIOUS TAB ----------------
+
+    var settingsPreviousTab by remember {
+        mutableIntStateOf(
+            savedStateHandle?.get<Int>("settingsPreviousTab") ?: 0
+        )
+    }
+
+    // ---------------- NAVIGATION FLAGS ----------------
+
+    val forceAppList =
+        savedStateHandle?.get<Boolean>("forceAppList") ?: false
+
+    val returnToSettings =
+        savedStateHandle?.get<Boolean>("returnToSettings") ?: false
+
+    // ---------------- HANDLE SAVED NAVIGATION STATE ----------------
+
+    LaunchedEffect(openSettings, forceAppList, returnToSettings) {
+
+        when {
+
+            forceAppList -> {
+                selectedTab = 0
+                settingsPreviousTab = 0
+
+                savedStateHandle?.set("settingsPreviousTab", 0)
+                savedStateHandle?.remove<Boolean>("forceAppList")
+                savedStateHandle?.remove<Boolean>("openSettings")
+                savedStateHandle?.remove<Boolean>("returnToSettings")
+            }
+
+            returnToSettings -> {
+                selectedTab = 2
+                savedStateHandle?.remove<Boolean>("returnToSettings")
+            }
+
+            openSettings -> {
+                selectedTab = 2
+                savedStateHandle?.remove<Boolean>("openSettings")
+            }
+        }
+    }
+
+    // ---------------- TAB SELECTION ----------------
+
+    fun selectTab(tab: Int) {
+
+        if (tab == selectedTab) {
+            return
+        }
+
+        // Settings se pehle wala tab save karo
+        if (tab == 2 && (selectedTab == 0 || selectedTab == 1)) {
+            settingsPreviousTab = selectedTab
+            savedStateHandle?.set("settingsPreviousTab", selectedTab)
+        }
+
+        isVaultPreviewOpen = false
+        selectedTab = tab
+    }
+
+    // ---------------- BACK HANDLER ----------------
+
+    BackHandler {
+
+        // Vault preview open ho to VaultScreen ka apna BackHandler handle karega
+        if (isVaultPreviewOpen) {
+            return@BackHandler
+        }
+
+        when (selectedTab) {
+
+            2 -> {
+                val previousTab =
+                    savedStateHandle?.get<Int>("settingsPreviousTab")
+                        ?: settingsPreviousTab
+
+                selectedTab = if (previousTab == 1) 1 else 0
+            }
+
+            1 -> {
+                selectedTab = 0
+                savedStateHandle?.set("settingsPreviousTab", 0)
+            }
+
+            0 -> {
+                navController.navigate("exit")
+            }
+        }
+    }
+
+    // ---------------- MAIN CONTENT ----------------
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+
+            when (selectedTab) {
+
+                0 -> {
+                    AppListScreen(
+                        context = context,
+                        navController = navController
+                    )
+                }
+
+                1 -> {
+                    VaultScreen(
+                        onPreviewStateChange = { isOpen ->
+                            isVaultPreviewOpen = isOpen
+                        }
+                    )
+                }
+
+                2 -> {
+                    SettingsScreen(
+                        onIntruderClick = onIntruderClick,
+                        onLanguageClick = onLanguageClick,
+                        onResetPasswordClick = onResetPasswordClick,
+                        onPremiumClick = {
+                            navController.openPremium(returnTab = 2)
+                        }
+                    )
+                }
+            }
+        }
+
+        // ---------------- BANNER AD ----------------
+
+        if (showBannerAd && !isVaultPreviewOpen && authenticated && premium.allowsAds) {
+
+            AdaptiveBannerAd(
+                context = context,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // ---------------- BOTTOM NAVIGATION ----------------
+
+        if (!isVaultPreviewOpen) {
+
+            AppLockBottomNavigation(
+                selectedTab = selectedTab,
+                onTabSelected = { tab -> selectTab(tab) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AdaptiveBannerAd(
+    context: Context,
+    modifier: Modifier = Modifier
+) {
+
+    val adView = remember { AdView(context) }
+
+    DisposableEffect(adView) {
+
+        adView.adUnitId = TEST_BANNER_AD_UNIT_ID
+
+        val displayMetrics = context.resources.displayMetrics
+
+        val screenWidthDp =
+            (displayMetrics.widthPixels / displayMetrics.density).toInt()
+
+        val adWidthDp = screenWidthDp.coerceAtLeast(1)
+
+        adView.setAdSize(
+            AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+                context,
+                adWidthDp
+            )
+        )
+
+        adView.adListener = object : AdListener() {
+
+            override fun onAdLoaded() {
+                Log.d(TAG, "Adaptive banner loaded")
+            }
+
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                Log.e(
+                    TAG,
+                    "Adaptive banner failed: " +
+                            "code=${adError.code}, " +
+                            "message=${adError.message}"
+                )
+            }
+
+            override fun onAdOpened() {
+                Log.d(TAG, "Adaptive banner opened")
+            }
+
+            override fun onAdClosed() {
+                Log.d(TAG, "Adaptive banner closed")
+            }
+
+            override fun onAdClicked() {
+                Log.d(TAG, "Adaptive banner clicked")
+            }
+
+            override fun onAdImpression() {
+                Log.d(TAG, "Adaptive banner impression")
+            }
+        }
+
+        Log.d(TAG, "Loading adaptive banner")
+
+        adView.loadAd(AdRequest.Builder().build())
+
+        onDispose {
+            Log.d(TAG, "Destroying adaptive banner")
+            adView.destroy()
+        }
+    }
+
+    AndroidView(
+        factory = { adView },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun AppLockBottomNavigation(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 70.dp)
+            .background(Color.White)
+            .padding(
+                horizontal = 12.dp,
+                vertical = 10.dp
+            ),
+
+        horizontalArrangement = Arrangement.SpaceEvenly,
+
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        BottomNavigationItem(
+            selected = selectedTab == 0,
+            icon = R.drawable.group6,
+            text = stringResource(R.string.apps_lock),
+            onClick = { onTabSelected(0) }
+        )
+
+        BottomNavigationItem(
+            selected = selectedTab == 1,
+            icon = R.drawable.group8,
+            text = stringResource(R.string.vault),
+            onClick = { onTabSelected(1) }
+        )
+
+        BottomNavigationItem(
+            selected = selectedTab == 2,
+            icon = R.drawable.group7,
+            text = stringResource(R.string.settings),
+            onClick = { onTabSelected(2) }
+        )
+    }
+}
+
+@Composable
+private fun BottomNavigationItem(
+    selected: Boolean,
+    icon: Int,
+    text: String,
+    onClick: () -> Unit
+) {
+
+    val blueColor = Color(0xFF2196F3)
+
+    val grayColor = Color(0xFFBDBDBD)
+
+    Box(
+        modifier = Modifier
+            .height(38.dp)
+            .clip(RoundedCornerShape(22.dp))
+            .background(
+                color = if (selected) blueColor else Color.Transparent
+            )
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                onClick()
+            }
+            .padding(
+                horizontal = if (selected) 14.dp else 8.dp
+            ),
+
+        contentAlignment = Alignment.Center
+    ) {
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Image(
+                painter = painterResource(id = icon),
+
+                contentDescription = text,
+
+                colorFilter = ColorFilter.tint(
+                    if (selected) Color.White else grayColor
+                ),
+
+                modifier = Modifier
+                    .size(22.dp)
+                    .alpha(if (selected) 1f else 0.9f)
+            )
+
+            Spacer(modifier = Modifier.width(5.dp))
+
+            Text(
+                text = text,
+                color = if (selected) Color.White else grayColor,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}

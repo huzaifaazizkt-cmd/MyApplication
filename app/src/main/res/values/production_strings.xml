@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="protection_active">AppLock protection is active</string>
+    <string name="protection_service_required">Allow Usage Access and Display over other apps to protect apps.</string>
+    <string name="biometric_unavailable">Set up a supported biometric in your device settings first.</string>
+    <string name="retry_biometric">Use biometric</string>
+    <string name="vault_operation_failed">Some files could not be processed. Vault copies were kept; some originals may still be visible. Please try again.</string>
+    <string name="video_playback_failed">This video cannot be played on this device. You can still unhide it.</string>
+    <string name="external_action_failed">No application is available to open this link.</string>
+    <string name="hide_applock_from_recents">Hide AppLock from the recent apps screen</string>
+    <string name="share_app_message">Try AppLock: %1$s</string>
+    <string name="secure_settings_unavailable">Secure settings are unavailable. Please try again.</string>
+    <string name="protection_paused">AppLock protection is paused</string>
+    <!-- Replace these dummy destinations before publishing. -->
+    <string name="privacy_policy_url" translatable="false">https://example.com/privacy</string>
+    <string name="store_listing_url" translatable="false">https://play.google.com/store/apps/details?id=com.example.myapplication</string>
+    <string name="checking_password">Checking…</string>
+    <string name="video_play">Play</string>
+    <string name="video_pause">Pause</string>
+    <string name="protection_connecting">App protection is connecting…</string>
+    <string name="protection_notifications_required">Notifications are off. Enable them to see protection status.</string>
+    <string name="protection_popup_required">Allow AppLock to show windows in the background to protect apps.</string>
+    <string name="intruder_camera_unavailable">Camera unavailable. Check camera access in device settings.</string>
+    <string name="intruder_camera_permission_required">Allow camera access to take intruder photos.</string>
+    <string name="intruder_select_attempts">Choose an attempt count to take intruder photos.</string>
+    <string name="vault_waiting_permission">Confirm access to the selected files…</string>
+    <string name="usage_access_title">Usage Access</string>
+    <string name="usage_access_description">Allow AppLock to detect the app in use.</string>
+    <string name="protection_monitor_unavailable">App activity is unavailable. Check Usage Access and try again.</string>
+    <string name="protection_start_retry">App protection is paused. Tap to start it.</string>
+    <string name="protection_reliability_tip">For reliable protection, review background app settings.</string>
+    <string name="apps_load_failed">Apps could not be loaded. Tap to retry.</string>
+    <string name="apps_empty">No apps found.</string>
+    <string name="app_locked_success">App locked successfully.</string>
+    <string name="app_lock_update_failed">Could not update app protection. Please try again.</string>
+</resources>

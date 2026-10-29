@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="protection_active">حماية AppLock نشطة</string>
+    <string name="protection_service_required">اسمح بالوصول إلى الاستخدام والظهور فوق التطبيقات لحمايتها.</string>
+    <string name="biometric_unavailable">أعِد إعداد وسيلة تحقق بيومترية مدعومة في إعدادات جهازك أولاً.</string>
+    <string name="retry_biometric">استخدام التحقق البيومتري</string>
+    <string name="vault_operation_failed">تعذرت معالجة بعض الملفات. تم الاحتفاظ بنسخ الخزنة؛ قد تظل بعض الملفات الأصلية ظاهرة. حاول مجدداً.</string>
+    <string name="video_playback_failed">لا يمكن تشغيل هذا الفيديو على هذا الجهاز. لا يزال بإمكانك إلغاء إخفائه.</string>
+    <string name="external_action_failed">لا يوجد تطبيق متاح لفتح هذا الرابط.</string>
+    <string name="hide_applock_from_recents">إخفاء AppLock من شاشة التطبيقات الأخيرة</string>
+    <string name="share_app_message">جرّب AppLock: %1$s</string>
+    <string name="secure_settings_unavailable">الإعدادات الآمنة غير متاحة. حاول مجدداً.</string>
+    <string name="protection_paused">حماية AppLock متوقفة مؤقتاً</string>
+    <string name="checking_password">جارٍ التحقق…</string>
+    <string name="video_play">تشغيل</string>
+    <string name="video_pause">إيقاف مؤقت</string>
+    <string name="protection_connecting">جارٍ توصيل حماية التطبيقات…</string>
+    <string name="protection_notifications_required">الإشعارات متوقفة. فعّلها لعرض حالة الحماية.</string>
+    <string name="protection_popup_required">اسمح لـ AppLock بعرض النوافذ في الخلفية لحماية التطبيقات.</string>
+    <string name="intruder_camera_unavailable">الكاميرا غير متاحة. تحقق من الوصول إلى الكاميرا في إعدادات الجهاز.</string>
+    <string name="intruder_camera_permission_required">اسمح بالوصول إلى الكاميرا لالتقاط صور المتطفلين.</string>
+    <string name="intruder_select_attempts">اختر عدد المحاولات لالتقاط صور المتطفلين.</string>
+    <string name="vault_waiting_permission">أكّد الوصول إلى الملفات المحددة…</string>
+    <string name="usage_access_title">الوصول إلى الاستخدام</string>
+    <string name="usage_access_description">اسمح لـ AppLock بمعرفة التطبيق المستخدم.</string>
+    <string name="protection_monitor_unavailable">نشاط التطبيقات غير متاح. تحقق من الوصول إلى الاستخدام وحاول مجددًا.</string>
+    <string name="protection_start_retry">حماية التطبيقات متوقفة. اضغط لتشغيلها.</string>
+    <string name="protection_reliability_tip">لحماية موثوقة، راجع إعدادات تشغيل التطبيقات في الخلفية.</string>
+    <string name="apps_load_failed">تعذر تحميل التطبيقات. اضغط للمحاولة مجددًا.</string>
+    <string name="apps_empty">لم يتم العثور على تطبيقات.</string>
+    <string name="app_locked_success">تم قفل التطبيق بنجاح.</string>
+    <string name="app_lock_update_failed">تعذر تحديث حماية التطبيقات. حاول مجددًا.</string>
+</resources>

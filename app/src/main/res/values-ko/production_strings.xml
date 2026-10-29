@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="protection_active">AppLock 보호가 활성화되었습니다</string>
+    <string name="protection_service_required">앱을 보호하려면 사용 정보 접근과 다른 앱 위에 표시를 허용하세요.</string>
+    <string name="biometric_unavailable">먼저 기기 설정에서 지원되는 생체 인식을 설정하세요.</string>
+    <string name="retry_biometric">생체 인식 사용</string>
+    <string name="vault_operation_failed">일부 파일을 처리하지 못했습니다. 보관함의 사본은 유지되었으며 일부 원본은 계속 표시될 수 있습니다. 다시 시도하세요.</string>
+    <string name="video_playback_failed">이 기기에서 동영상을 재생할 수 없습니다. 숨김은 해제할 수 있습니다.</string>
+    <string name="external_action_failed">이 링크를 열 수 있는 앱이 없습니다.</string>
+    <string name="hide_applock_from_recents">최근 앱 화면에서 AppLock 숨기기</string>
+    <string name="share_app_message">AppLock 사용해 보기: %1$s</string>
+    <string name="secure_settings_unavailable">보안 설정을 사용할 수 없습니다. 다시 시도하세요.</string>
+    <string name="protection_paused">AppLock 보호가 일시 중지되었습니다</string>
+    <string name="checking_password">확인 중…</string>
+    <string name="video_play">재생</string>
+    <string name="video_pause">일시 정지</string>
+    <string name="protection_connecting">앱 보호에 연결 중…</string>
+    <string name="protection_notifications_required">알림이 꺼져 있습니다. 보호 상태를 보려면 켜세요.</string>
+    <string name="protection_popup_required">앱 보호를 위해 AppLock이 백그라운드에서 창을 표시하도록 허용해 주세요.</string>
+    <string name="intruder_camera_unavailable">카메라를 사용할 수 없습니다. 기기 설정에서 카메라 접근을 확인해 주세요.</string>
+    <string name="intruder_camera_permission_required">침입자를 촬영하려면 카메라 접근을 허용해 주세요.</string>
+    <string name="intruder_select_attempts">침입자를 촬영할 시도 횟수를 선택해 주세요.</string>
+    <string name="vault_waiting_permission">선택한 파일에 대한 접근을 확인해 주세요…</string>
+    <string name="usage_access_title">사용 정보 접근</string>
+    <string name="usage_access_description">AppLock이 사용 중인 앱을 감지하도록 허용하세요.</string>
+    <string name="protection_monitor_unavailable">앱 활동을 확인할 수 없습니다. 사용 정보 접근을 확인하고 다시 시도하세요.</string>
+    <string name="protection_start_retry">앱 보호가 일시 중지되었습니다. 눌러 시작하세요.</string>
+    <string name="protection_reliability_tip">안정적인 보호를 위해 백그라운드 앱 설정을 확인하세요.</string>
+    <string name="apps_load_failed">앱을 불러오지 못했습니다. 눌러 다시 시도하세요.</string>
+    <string name="apps_empty">앱을 찾을 수 없습니다.</string>
+    <string name="app_locked_success">앱이 잠겼습니다.</string>
+    <string name="app_lock_update_failed">앱 보호를 업데이트하지 못했습니다. 다시 시도하세요.</string>
+</resources>

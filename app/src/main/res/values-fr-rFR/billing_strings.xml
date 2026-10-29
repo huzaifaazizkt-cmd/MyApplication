@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="billing_restore">Restaurer</string>
+    <string name="billing_restoring">Restauration…</string>
+    <string name="billing_loading">Connexion à Google Play…</string>
+    <string name="billing_checking">Vérification de Premium…</string>
+    <string name="billing_processing">Achat en cours…</string>
+    <string name="billing_pending_short">Paiement en attente</string>
+    <string name="billing_pending">Le paiement est en attente. Premium sera activé une fois le paiement terminé.</string>
+    <string name="billing_retry">Réessayer</string>
+    <string name="billing_unavailable">Google Play est indisponible. Veuillez réessayer.</string>
+    <string name="billing_product_unavailable">Cet achat est actuellement indisponible.</string>
+    <string name="billing_purchase_failed">L’achat n’a pas pu être terminé. Veuillez réessayer.</string>
+    <string name="billing_cancelled">Achat annulé.</string>
+    <string name="billing_nothing_to_restore">Aucun achat précédent trouvé pour ce compte Google Play.</string>
+    <string name="billing_restore_failed">Les achats n’ont pas pu être restaurés. Veuillez réessayer.</string>
+    <string name="billing_save_failed">Premium n’a pas encore été activé. Essayez Restaurer.</string>
+    <string name="billing_congratulations">Félicitations !</string>
+    <string name="billing_premium_activated">Premium est actif. Profitez d’Intrus et de l’application sans publicité.</string>
+    <string name="billing_restored_title">Premium restauré</string>
+    <string name="billing_restored_message">Votre accès Premium est prêt.</string>
+    <string name="billing_owned">Premium actif</string>
+    <string name="billing_continue">Continuer</string>
+    <string name="billing_intruder_locked">Intrus nécessite Premium.</string>
+    <string name="billing_price_unavailable">Prix indisponible</string>
+</resources>
